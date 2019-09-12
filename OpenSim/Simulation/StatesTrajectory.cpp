@@ -98,9 +98,12 @@ bool StatesTrajectory::isCompatibleWith(const Model& model) const {
     // need to check if the first one is compatible with the model.
     const auto& state0 = get(0);
 
-    // We only check the number of speeds because OpenSim does not count
-    // quaternion slots, while the SimTK State contains quaternion slots even if
-    // quaternions are not used.
+    if (model.getNumStateVariables() != state0.getNY()) {
+        return false;
+    }
+    if (model.getNumCoordinates() != state0.getNQ()) {
+        return false;
+    }
     if (model.getNumSpeeds() != state0.getNU()) {
         return false;
     }
@@ -117,6 +120,11 @@ namespace {
         for (int i = 0; i < strings.size(); ++i)
             vec.push_back(strings[i]);
         return vec;
+    }
+    template <>
+    std::vector<std::string> createVector(
+            const std::vector<std::string>& strings) {
+        return strings;
     }
 }
 
@@ -162,8 +170,7 @@ StatesTrajectory StatesTrajectory::createFromStatesStorage(
         const Model& model,
         const Storage& sto,
         bool allowMissingColumns,
-        bool allowExtraColumns,
-        bool assemble) {
+        bool allowExtraColumns) {
 
     // Assemble the required objects.
     // ==============================
@@ -171,11 +178,10 @@ StatesTrajectory StatesTrajectory::createFromStatesStorage(
     // This is what we'll return.
     StatesTrajectory states;
 
-    // Make a copy of the model so that we can get a corresponding state.
-    Model localModel(model);
+    OPENSIM_THROW_IF(!model.hasSystem(), ModelHasNoSystem, model.getName());
     
     // We'll keep editing this state as we loop through time.
-    auto state = localModel.initSystem();
+    auto state = model.getWorkingState();
 
     // The labels of the columns in the storage file.
     const auto& stoLabels = sto.getColumnLabels();
@@ -201,7 +207,7 @@ StatesTrajectory StatesTrajectory::createFromStatesStorage(
 
     // Check if states are missing from the Storage.
     // ---------------------------------------------
-    const auto& modelStateNames = localModel.getStateVariableNames();
+    const auto& modelStateNames = model.getStateVariableNames();
     std::vector<std::string> missingColumnNames;
     // Also, assemble the indices of the states that we will actually set in the
     // trajectory.
@@ -217,7 +223,7 @@ StatesTrajectory StatesTrajectory::createFromStatesStorage(
     }
     OPENSIM_THROW_IF(!allowMissingColumns && !missingColumnNames.empty(),
             MissingColumnsInStatesStorage, 
-            localModel.getName(), missingColumnNames);
+            model.getName(), missingColumnNames);
 
     // Check if the Storage has columns that are not states in the Model.
     // ------------------------------------------------------------------
@@ -233,7 +239,7 @@ StatesTrajectory StatesTrajectory::createFromStatesStorage(
                     extraColumnNames.push_back(stoLabels[ic]);
                 }
             }
-            OPENSIM_THROW(ExtraColumnsInStatesStorage, localModel.getName(),
+            OPENSIM_THROW(ExtraColumnsInStatesStorage, model.getName(),
                     extraColumnNames);
         }
     }
@@ -247,12 +253,9 @@ StatesTrajectory StatesTrajectory::createFromStatesStorage(
     // Working memory for Storage.
     SimTK::Vector dependentValues(numDependentColumns);
 
-    // Working memory for state. Initialize so that missing columns end up as
-    // NaN.
+    // Working memory for State. Initialize to default so that missing
+    // columns end up as NaN.
     SimTK::Vector statesValues(modelStateNames.getSize(), SimTK::NaN);
-
-    // Initialize so that missing columns end up as NaN.
-    state.updY().setToNaN();
 
     // Loop through all rows of the Storage.
     for (int itime = 0; itime < sto.getSize(); ++itime) {
@@ -268,10 +271,7 @@ StatesTrajectory StatesTrajectory::createFromStatesStorage(
             // 'first': index for Storage; 'second': index for Model.
             statesValues[kv.second] = dependentValues[kv.first];
         }
-        localModel.setStateVariableValues(state, statesValues);
-        if (assemble) {
-            localModel.assemble(state);
-        }
+        model.setStateVariableValues(state, statesValues);
 
         // Make a copy of the edited state and put it in the trajectory.
         states.append(state);

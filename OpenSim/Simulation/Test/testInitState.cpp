@@ -93,12 +93,13 @@ void testStates(const string& modelFile)
     state.getY().dump("y1: State after equilibrateMuscles:");
     //==========================================================================
     // Compute the force and torque at the specified times.
-    Manager manager(model);
+
+    RungeKuttaMersonIntegrator integrator(model.getMultibodySystem());
+    Manager manager(model, integrator);
     state.setTime(0.0);
-    manager.initialize(state);
 
     // update state after a short simulation forward in time
-    manager.integrate(0.05);
+    manager.integrate(state, 0.05);
 
     // continuous state variables after simulation
     Vector y2 = state.getY();
@@ -117,12 +118,13 @@ void testStates(const string& modelFile)
     state.getY().dump("y3: State after equilibrateMuscles:");
     //==========================================================================
     // Compute the force and torque at the specified times.
-    Manager manager2(model);
+
+    RungeKuttaMersonIntegrator integrator2(model.getMultibodySystem());
+    Manager manager2(model, integrator);
     state2.setTime(0.0);
-    manager2.initialize(state2);
 
     // update state after a short simulation forward in time
-    manager2.integrate(0.05);
+    manager2.integrate(state2, 0.05);
 
     // get the default continuous state variables updated
     // from the state after the simulation

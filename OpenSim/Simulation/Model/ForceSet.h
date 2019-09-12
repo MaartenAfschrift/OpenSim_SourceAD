@@ -66,19 +66,31 @@ protected:
     // CONSTRUCTION
     //--------------------------------------------------------------------------
 public:
-    /** Use Super's constructors. @see ModelComponentSet */
-    using Super::Super;
+    ForceSet();
+    ForceSet(Model& model);
+    ForceSet(Model& model, const std::string &aFileName, bool aUpdateFromXMLNode = true);
+    ForceSet(const ForceSet &aForceSet);
+    virtual ~ForceSet();
 
 private:
+    void setNull();
+    void setupSerializedMembers();
     void updateActuators();
     void updateMuscles();
 
+    //--------------------------------------------------------------------------
+    // OPERATORS
+    //--------------------------------------------------------------------------
+public:
+#ifndef SWIG
+    ForceSet& operator=(const ForceSet &aSet);
+#endif
     //--------------------------------------------------------------------------
     // GET AND SET
     //--------------------------------------------------------------------------
 public:
     // Override ModelComponentSet method.
-    void extendConnectToModel(Model& aModel) override;
+    void invokeConnectToModel(Model& aModel) override;
 
     // FORCE
     bool remove(int aIndex) override;
@@ -87,19 +99,7 @@ public:
     bool append(Force &aForce);
 #endif
     bool append(ForceSet &aForceSet, bool aAllowDuplicateNames=false);
-    /** Set the force at an index.  A copy of the specified actuator is NOT
-    * made. The force previously set at the index is removed (and deleted).
-    *
-    * @internal This method overrides the method in ModelComponentSet<Force> so 
-    * that several internal variables of the set can be updated.
-    *
-    * @param aIndex Array index where the actuator is to be stored.  aIndex
-    * should be in the range 0 <= aIndex <= getSize();
-    * @param aForce Pointer to the actuator to be set.
-    * @param preserveGroups If true, the new object will be added to the groups
-    * that the object it replaces belonged to.
-    * @return True if successful; false otherwise. */
-    bool set(int aIndex, Force *aForce, bool preserveGroups = false) override;
+    bool set(int aIndex, Force *aForce);
     bool insert(int aIndex, Force *aObject) override;
 
     // subsets 

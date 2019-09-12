@@ -36,8 +36,8 @@ hopper = BuildHopper();
 % [Step 1, Task A]
 % ANSWER{
 hopper.printSubcomponentInfo()
-hopper.getComponent('jointset/slider').printOutputInfo();
-hopper.getComponent('forceset/vastus').printOutputInfo(false); % ignore subcomponents.
+hopper.getComponent('slider').printOutputInfo();
+hopper.getComponent('vastus').printOutputInfo(false); % ignore subcomponents.
 % }
 
 % TODO: Create a TableReporter, give it a name, and set its reporting interval
@@ -54,15 +54,15 @@ reporter = TableReporter();
 reporter.setName('hopper_results');
 reporter.set_report_time_interval(0.2); % seconds
 reporter.addToReport(...
-    hopper.getComponent('jointset/slider/yCoord').getOutput('value'), 'height');
+    hopper.getComponent('slider/yCoord').getOutput('value'), 'height');
 reporter.addToReport(...
-    hopper.getComponent('forceset/vastus').getOutput('activation'), 'vastus_activation');
+    hopper.getComponent('vastus').getOutput('activation'), 'vastus_activation');
 hopper.addComponent(reporter);
 % }
 
-% The second argument determines if the simbody-visualizer should be used.
-% The third argument is the simulation duration.
-osimSimulate(hopper, true, 5.0);
+sHop = hopper.initSystem();
+% The last argument determines if the simbody-visualizer should be used.
+Simulate(hopper, sHop, true);
 
 % TODO: Display the TableReporter's data, and save it to a file.
 % [Step 1, Task C]

@@ -29,6 +29,7 @@
 
 
 #include "osimCommonDLL.h"
+#include "osim_adouble.h"
 
 
 namespace OpenSim {
@@ -60,40 +61,40 @@ public:
     // FILTERS
     //--------------------------------------------------------------------------
     static int
-        SmoothSpline(int aDegree,double aDeltaT,double aCutOffFrequency,
-        int aN,double *aTimes,double *aSignal,double *rFilteredSignal);
+        SmoothSpline(int aDegree,osim_double_adouble aDeltaT,osim_double_adouble aCutOffFrequency,
+        int aN,osim_double_adouble *aTimes,osim_double_adouble *aSignal,osim_double_adouble *rFilteredSignal);
     static int
-        LowpassIIR(double aDeltaT,double aCutOffFrequency,
-        int aN,double *aSignal,double *rFilteredSignal);
+        LowpassIIR(osim_double_adouble aDeltaT,osim_double_adouble aCutOffFrequency,
+        int aN,osim_double_adouble *aSignal,osim_double_adouble *rFilteredSignal);
     static int
-        LowpassFIR(int aOrder,double aDeltaT,double aCutoffFrequency,
-        int aN,double *aSignal,double *rFilteredSignal);
+        LowpassFIR(int aOrder,osim_double_adouble aDeltaT,osim_double_adouble aCutoffFrequency,
+        int aN,osim_double_adouble *aSignal,osim_double_adouble *rFilteredSignal);
     static int
-        BandpassFIR(int aOrder,double aDeltaT,
-        double aLowFrequency,double aHighFrequency,
-        int aN,double *aSignal,double *aFilteredSignal);
+        BandpassFIR(int aOrder,osim_double_adouble aDeltaT,
+        osim_double_adouble aLowFrequency,osim_double_adouble aHighFrequency,
+        int aN,osim_double_adouble *aSignal,osim_double_adouble *aFilteredSignal);
 
     //--------------------------------------------------------------------------
     // PADDING
     //--------------------------------------------------------------------------
-    static double*
-        Pad(int aPad,int aN,const double aSignal[]);
+    static osim_double_adouble*
+        Pad(int aPad,int aN,const osim_double_adouble aSignal[]);
     static void
-        Pad(int aPad,OpenSim::Array<double> &aSignal);
+        Pad(int aPad,OpenSim::Array<osim_double_adouble> &aSignal);
 
     //--------------------------------------------------------------------------
     // POINT REDUCTION
     //--------------------------------------------------------------------------
     static int
-        ReduceNumberOfPoints(double aDistance,
-        Array<double> &rTime,Array<double> &rSignal);
+        ReduceNumberOfPoints(osim_double_adouble aDistance,
+        Array<osim_double_adouble> &rTime,Array<osim_double_adouble> &rSignal);
 
 
     //--------------------------------------------------------------------------
     // CORE MATH
     //--------------------------------------------------------------------------
-    static double sinc(double x);
-    static double hamming(int k,int M);
+    static osim_double_adouble sinc(osim_double_adouble x);
+    static osim_double_adouble hamming(int k,int M);
 
 //=============================================================================
 };  // END class Signal

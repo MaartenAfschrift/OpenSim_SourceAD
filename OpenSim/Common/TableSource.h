@@ -275,7 +275,7 @@ private:
 /** This TableSource_ can hold a TimeSeriesTable_<SimTK::Real> and so its 
 list-output 'column' will have channels of type SimTK::Real (double). Its other
 output 'row' will be of type SimTK::Vector_<SimTK::Real>.                     */
-typedef TableSource_<SimTK::Real> TableSource;
+typedef TableSource_<osim_double_adouble> TableSource;
 
 /** This TableSource_ can hold a TimeSeriesTable_<SimTK::Vec3> and so its 
 list-output 'column' will have channels of type SimTK::Vec3. Its other output

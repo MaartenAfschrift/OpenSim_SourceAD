@@ -52,12 +52,12 @@
 namespace OpenSim {
 
 class Actuator;
-class Analysis;
+//class Analysis;
 class Body;
-class Constraint;
-class ConstraintSet;
-class ContactGeometry;
-class Controller;
+//class Constraint;
+//class ConstraintSet;
+//class ContactGeometry;
+//class Controller;
 class CoordinateSet;
 class Force;
 class Frame;
@@ -105,27 +105,6 @@ public:
     }
 };
 
-class JointFramesHaveSameBaseFrame : public Exception {
-public:
-    JointFramesHaveSameBaseFrame(const std::string& file,
-        size_t line,
-        const std::string& func,
-        const std::string& thisName,
-        const std::string& parentName,
-        const std::string& childName,
-        const std::string& baseName) :
-        Exception(file, line, func) {
-        std::string msg = "Joint '" + thisName + 
-            "' cannot connect parent frame '" +
-            parentName + "' to child frame '" + childName + "'.\n" +
-            "Parent and child frames have the same base frame '" +
-            baseName + "'.";
-        addMessage(msg);
-    }
-};
-
-
-
 //==============================================================================
 //                                  MODEL
 //==============================================================================
@@ -161,65 +140,65 @@ OpenSim_OBJECT_NONTEMPLATE_DEFS(Model, ModelComponent);
 public:
 //==============================================================================
 // PROPERTIES
-//==============================================================================    
-    OpenSim_DECLARE_PROPERTY(credits, std::string,
-        "Credits (e.g., model author names) associated with the model.");
+//==============================================================================
+    //OpenSim_DECLARE_PROPERTY(assembly_accuracy, osim_double_adouble,
+    //"Specify how accurate the resulting configuration of a model assembly "
+    //"should be. This translates to the number of significant digits in the "
+    //"resulting coordinate values. Therefore, if you require initial conditions "
+    //"accurate to four significant digits, use a minimum of 1e-4 as the accuracy."
+    //"The default setting is 1e-9 as to satisfy the most stringent requirements by " 
+    //"default. NOTE: Failure for a model to satisfy the assembly accuracy often "
+    //"indicates inconsistency in the constraints. For example, the feet are welded " 
+    //"at locations measured to five significant digits while the model lacks dofs "
+    //"to change stance width, in which case it cannot achieve 1e-9 accuracy." );
 
-    OpenSim_DECLARE_PROPERTY(publications, std::string,
-        "Publications and references associated with the model.");
-
-    OpenSim_DECLARE_PROPERTY(length_units, std::string,
-        "Units for all lengths.");
-
-    OpenSim_DECLARE_PROPERTY(force_units, std::string,
-        "Units for all forces.");
-        
-    OpenSim_DECLARE_PROPERTY(assembly_accuracy, double,
-    "Specify how accurate the resulting configuration of a model assembly "
-    "should be. This translates to the number of significant digits in the "
-    "resulting coordinate values. Therefore, if you require initial conditions "
-    "accurate to four significant digits, use a minimum of 1e-4 as the accuracy."
-    "The default setting is 1e-9 as to satisfy the most stringent requirements by " 
-    "default. NOTE: Failure for a model to satisfy the assembly accuracy often "
-    "indicates inconsistency in the constraints. For example, the feet are welded " 
-    "at locations measured to five significant digits while the model lacks dofs "
-    "to change stance width, in which case it cannot achieve 1e-9 accuracy." );
-
-    OpenSim_DECLARE_PROPERTY(gravity, SimTK::Vec3,
-        "Acceleration due to gravity, expressed in ground.");
-    
     OpenSim_DECLARE_PROPERTY(ground, Ground,
         "The model's ground reference frame.");
-    
+
+    OpenSim_DECLARE_PROPERTY(gravity,SimTK::Vec3,
+        "Acceleration due to gravity, expressed in ground.");
+
+    OpenSim_DECLARE_PROPERTY(credits,std::string,
+        "Credits (e.g., model author names) associated with the model.");
+
+    OpenSim_DECLARE_PROPERTY(publications,std::string,
+        "Publications and references associated with the model.");
+
+    OpenSim_DECLARE_PROPERTY(length_units,std::string,
+        "Units for all lengths.");
+
+    OpenSim_DECLARE_PROPERTY(force_units,std::string,
+        "Units for all forces.");
+
+    //OpenSim_DECLARE_UNNAMED_PROPERTY(ControllerSet, 
+    //    "Controllers that provide the control inputs for Actuators.");  
+
+    //OpenSim_DECLARE_UNNAMED_PROPERTY(ConstraintSet,
+    //    "Constraints in the model.");
+
+    OpenSim_DECLARE_UNNAMED_PROPERTY(ForceSet,
+        "Forces in the model (includes Actuators).");
+
+    //OpenSim_DECLARE_UNNAMED_PROPERTY(MarkerSet,
+    //    "Markers in the model.");
+
+    //OpenSim_DECLARE_UNNAMED_PROPERTY(ContactGeometrySet,
+    //    "Geometry to be used in contact forces.");
+
+    OpenSim_DECLARE_UNNAMED_PROPERTY(ComponentSet,
+        "Additional components in the model.");
+
+    //OpenSim_DECLARE_UNNAMED_PROPERTY(ProbeSet,
+    //    "Probes in the model.");
+
     OpenSim_DECLARE_UNNAMED_PROPERTY(BodySet,
         "List of bodies that make up this model.");
 
     OpenSim_DECLARE_UNNAMED_PROPERTY(JointSet,
         "List of joints that connect the bodies.");
-    
-    OpenSim_DECLARE_UNNAMED_PROPERTY(ConstraintSet,
-        "Constraints in the model.");
-    
-    OpenSim_DECLARE_UNNAMED_PROPERTY(MarkerSet,
-        "Markers in the model.");
-    
-    OpenSim_DECLARE_UNNAMED_PROPERTY(ForceSet,
-        "Forces in the model (includes Actuators).");
 
-    OpenSim_DECLARE_UNNAMED_PROPERTY(ControllerSet, 
-        "Controllers that provide the control inputs for Actuators.");  
-
-    OpenSim_DECLARE_UNNAMED_PROPERTY(ContactGeometrySet,
-        "Geometry to be used in contact forces.");
-    
-    OpenSim_DECLARE_UNNAMED_PROPERTY(ProbeSet,
-        "Probes in the model.");
-
-    OpenSim_DECLARE_UNNAMED_PROPERTY(ComponentSet,
-        "Additional components in the model.");
-
-    OpenSim_DECLARE_UNNAMED_PROPERTY(ModelVisualPreferences,
-        "Visual preferences for this model.");
+    //OpenSim_DECLARE_UNNAMED_PROPERTY(ModelVisualPreferences,
+    //    "Visual preferences for this model.");
 
 //==============================================================================
 // OUTPUTS
@@ -233,10 +212,10 @@ public:
     OpenSim_DECLARE_OUTPUT(com_acceleration, SimTK::Vec3,
             calcMassCenterAcceleration, SimTK::Stage::Acceleration);
 
-    OpenSim_DECLARE_OUTPUT(kinetic_energy, double,
+    OpenSim_DECLARE_OUTPUT(kinetic_energy, osim_double_adouble,
             calcKineticEnergy, SimTK::Stage::Position);
 
-    OpenSim_DECLARE_OUTPUT(potential_energy, double,
+    OpenSim_DECLARE_OUTPUT(potential_energy, osim_double_adouble,
         calcPotentialEnergy, SimTK::Stage::Velocity);
 
 
@@ -265,14 +244,6 @@ public:
                         format; suffix is typically ".osim". 
     **/
     explicit Model(const std::string& filename) SWIG_DECLARE_EXCEPTION;
-
-    /** Satisfy all connections (Sockets and Inputs) in the model, using this
-     * model as the root Component. This is a convenience form of
-     * Component::finalizeConnections() that uses this model as root.
-     */
-    void finalizeConnections() { finalizeConnections(*this); }
-    // Allow overloading.
-   using Component::finalizeConnections;
 
     /**
      * Perform some set up functions that happen after the
@@ -315,13 +286,13 @@ public:
     /** Get read only access to the ModelDisplayHints object stored with this
     %Model. These should be checked whenever display geometry is being
     generated. **/
-    const ModelDisplayHints& getDisplayHints() const {
-        return get_ModelVisualPreferences().get_ModelDisplayHints();}
+    //const ModelDisplayHints& getDisplayHints() const {
+    //    return get_ModelVisualPreferences().get_ModelDisplayHints();}
     /** Get writable access to the ModelDisplayHints object stored with this
     %Model. The GUI or ModelVisualizer can update these as a result of user
     requests, or an OpenSim API program can set them programmatically. **/
-    ModelDisplayHints& updDisplayHints() { 
-        return upd_ModelVisualPreferences().upd_ModelDisplayHints(); }
+    //ModelDisplayHints& updDisplayHints() { 
+    //    return upd_ModelVisualPreferences().upd_ModelDisplayHints(); }
 
     /** Request or suppress visualization of this %Model. This flag is checked
     during initSystem() and if set causes the %Model to allocate a
@@ -338,27 +309,27 @@ public:
     until initSystem() has been successfully invoked. Use this method prior
     to calling getVisualizer() or updVisualizer() to avoid an
     unpleasant exception. **/
-    bool hasVisualizer() const {return _modelViz != nullptr;}
+    //bool hasVisualizer() const {return _modelViz != nullptr;}
 
     /** Obtain read-only access to the ModelVisualizer. This will throw an 
     exception if visualization was not requested or initSystem() not yet
     called.
     @return A const reference to the allocated ModelVisualizer. **/
-    const ModelVisualizer& getVisualizer() const {
-        if (!hasVisualizer())
-            throw Exception("Model::getVisualizer(): no visualizer present.");
-        return *_modelViz;
-    }
+    //const ModelVisualizer& getVisualizer() const {
+    //    if (!hasVisualizer())
+    //        throw Exception("Model::getVisualizer(): no visualizer present.");
+    //    return *_modelViz;
+    //}
     /** Obtain writable access to the ModelVisualizer. This will throw an 
     exception if visualization was not requested or initSystem() not yet
     called. Writable access to the ModelVisualizer requires that you have 
     writable access to this containing Model.
     @return A non-const reference to the allocated ModelVisualizer. **/
-    ModelVisualizer& updVisualizer() {
-        if (!hasVisualizer())
-            throw Exception("Model::updVisualizer(): no visualizer present.");
-        return *_modelViz; 
-    }
+    //ModelVisualizer& updVisualizer() {
+    //    if (!hasVisualizer())
+    //        throw Exception("Model::updVisualizer(): no visualizer present.");
+    //    return *_modelViz; 
+    //}
     /**@}**/
 
     /** After the %Model and its components have been constructed, call this to
@@ -429,9 +400,7 @@ public:
      * with values populated from originalStorage. Use the default state value if
      * a state is unspecified in the originalStorage. If warnUnspecifiedStates is
      * true then a warning is printed that includes the default value used for
-     * the state value unspecified in originalStorage. The input originalStorage 
-     * must be in meters or radians for Coordinate values and their speeds
-     * (m/s, rad/s) otherwise an Exception is thrown.
+     * the state value unspecified in originalStorage.
      */
     void formStateStorage(const Storage& originalStorage, 
                           Storage& statesStorage,
@@ -448,7 +417,7 @@ public:
      * If assemble is being called due to a coordinate set value, provide the option
      * to weight that coordinate value more heavily if specified.
      */
-    void assemble(SimTK::State& state, const Coordinate *coord = NULL, double weight = 10);
+    void assemble(SimTK::State& state, const Coordinate *coord = NULL, osim_double_adouble weight = 10);
 
 
     /**
@@ -546,46 +515,41 @@ public:
 
     /**@}**/
 
-    /** @name Adding components to the Model
-     * Model takes ownership of the ModelComponent and adds it to a specialized
-     * (typed) Set within the model. Model will maintain Components added using
-     * these methods in separate %Sets of the corresponding type and they will
-     * serialize as part of type specific %Sets. These sets can be useful for
-     * uniquely identifying components that share the same name, but are of
-     * different types since they  live in different %Sets. For example, using
-     * addBody(toesBody) and addJoint(toesJoint) will have unique paths:
-     * "/bodyset/toes" and "/jointset/toes", respectively, even when they have
-     * the same name, "toes".
+    //--------------------------------------------------------------------------
+    // CREATE THE MULTIBODY SYSTEM
+    //--------------------------------------------------------------------------
+    /** @name Add components to the model
+     * Model takes ownership of the Components.
      * @note these are legacy methods and remain as a convenience alternative to
-     * using Component::addComponent().
-     * In contrast, components added using addComponent() are not stored in the
-     * model's %Sets but live in a flat components list (which is also serialized).
-     * Component provides access via getComponentList<%SpecificType> or 
-     * getComponent<%SpecificType> to get any subcomponent, including those that
-     * are contained in Model's %Sets. In this case, either a Body or a Joint has
-     * the pathname "/toes" but both cannot share the same name and will throw
-     * SubcomponentsWithDuplicateName.
+     * using Component::addComponent(). Model will maintain Components added
+     * using these methods in separate %Sets of the corresponding type and they
+     * will serialize as part of type specific %Sets. In contrast, components
+     * added using addComponent() are not stored in the model's %Sets but live in
+     * a flat components list (which is also serialized). Component provides
+     * access via getComponentList<%SpecificType> or getComponent<%SpecificType> 
+     * to get any subcomponent, including those that are contained in Model's %Sets.
      * Future versions of OpenSim are likely to deprecate the use of Sets and
-     * these methods, because they cannot support new Component types without
-     * modifying the API (for more add####() methods), whereas
-     * getComponentList<%SpecificType>() and getComponent<%SpecificType> will
-     * generalize: they do not have these limitations and are applicable for
-     * adding to any Component not just Model.
+     * these methods, because they cannot support new types without modifying the
+     * API (for more add####() methods), whereas getComponentList<%SpecificType>()
+     * and getComponent<%SpecificType> are more general: they do not have these
+     * limitations and are applicable for any Component not just Model.
      */
     // @{
     void addModelComponent(ModelComponent* adoptee);
     void addBody(Body *adoptee);
     void addJoint(Joint *adoptee);
-    void addConstraint(Constraint *adoptee);
+    //void addConstraint(Constraint *adoptee);
     void addForce(Force *adoptee);
-    void addProbe(Probe *adoptee);
-    void addContactGeometry(ContactGeometry *adoptee);
-    void addMarker(Marker *adoptee);
+    //void addProbe(Probe *adoptee);
+    //void addContactGeometry(ContactGeometry *adoptee);
+    //void addMarker(Marker *adoptee);
     // @}
 
     /** remove passed in Probe from model **/
-    void removeProbe(Probe *probe);
-
+    //void removeProbe(Probe *probe);
+    //--------------------------------------------------------------------------
+    // FILE NAME
+    //--------------------------------------------------------------------------
     /** 
      * Get the XML file name used to construct the model. 
      *
@@ -599,6 +563,10 @@ public:
      * @param fileName The XML file name.
      */
     void setInputFileName(const std::string& fileName) { _fileName = fileName; }
+
+    //--------------------------------------------------------------------------
+    // CREDITS
+    //--------------------------------------------------------------------------
 
     /** 
      * Get the credits (e.g., model author names) associated with the model. 
@@ -628,6 +596,9 @@ public:
      */
     void setPublications(const std::string& aPublications) { upd_publications() = aPublications; }
 
+    //--------------------------------------------------------------------------
+    // UNITS
+    //--------------------------------------------------------------------------
     /** 
      * Get the length units associated with the model. 
      *
@@ -642,6 +613,9 @@ public:
      */
     const Units& getForceUnits() const { return _forceUnits; }
 
+    //--------------------------------------------------------------------------
+    // GRAVITY
+    //--------------------------------------------------------------------------
     /**
      * Get the gravity vector in the global frame.
      *
@@ -657,6 +631,9 @@ public:
      */
     bool setGravity(const SimTK::Vec3& aGrav);
 
+    //--------------------------------------------------------------------------
+    // NUMBERS
+    //--------------------------------------------------------------------------
     /**
      * Get the number of markers in the model.
      * @return Number of markers.
@@ -726,8 +703,8 @@ public:
      * Get the subset of Probes in the model
      * @return The set of Probes
      */
-    const ProbeSet& getProbeSet() const { return get_ProbeSet(); };
-    ProbeSet& updProbeSet() { return upd_ProbeSet(); };
+    //const ProbeSet& getProbeSet() const { return get_ProbeSet(); };
+    //ProbeSet& updProbeSet() { return upd_ProbeSet(); };
 
     /**
      * Get the subst of misc ModelComponents in the model
@@ -742,15 +719,18 @@ public:
      * Get the number of analyses in the model.
      * @return The number of analyses.
      */
-    int getNumAnalyses() const;
+    //int getNumAnalyses() const;
 
+    //--------------------------------------------------------------------------
+    // CONTROLS
+    //--------------------------------------------------------------------------
     /**
      * Get the number of controls for this the model.
      * Only valid once underlying system for the model has been created.
      * Throws an exception if called before Model::initSystem()
      * @return number of controls corresponding to all the actuators in the model
      */
-    int getNumControls() const;
+    //int getNumControls() const;
 
     /** Writable access to the default values for controls. These values are used for 
         control value during a simulation unless updated, for example, by a Controller */
@@ -769,7 +749,7 @@ public:
      * @param[in]   s         System state at which to apply the controls
      * @return      writable controls Vector
      */
-    SimTK::Vector& updControls(const SimTK::State& s) const;
+    //SimTK::Vector& updControls(const SimTK::State& s) const;
     
     /**
      * Mark controls as valid after an update at a given state.
@@ -789,7 +769,7 @@ public:
     void setControls(const SimTK::State& s, const SimTK::Vector& controls) const;
 
     /** Const access to controls does not invalidate dynamics */
-    const SimTK::Vector& getControls(const SimTK::State &s) const;
+    //const SimTK::Vector& getControls(const SimTK::State &s) const;
 
     /** Compute the controls for the model.
     Calls down to the Controllers to make their contributions to the controls. 
@@ -799,23 +779,28 @@ public:
     @param[out]  controls    The complete vector of controls into which 
                              individual controller contributions should be
                              added. **/
-    void computeControls(const SimTK::State& state, SimTK::Vector& controls) const;
+    //void computeControls(const SimTK::State& state, SimTK::Vector& controls) const;
 
     /**
      * Get a flag indicating if the model needs controls to operate its actuators
      */
-    bool isControlled() const;
-    void storeControls( const SimTK::State& s, int step );
-    void printControlStorage(const std::string& fileName ) const;
-    TimeSeriesTable getControlsTable() const;
-    const ControllerSet& getControllerSet() const;
-    ControllerSet& updControllerSet();
-    bool getAllControllersEnabled() const;
-    void setAllControllersEnabled( bool enabled );
+    //bool isControlled() const;
+    //void storeControls( const SimTK::State& s, int step );
+    //void printControlStorage(const std::string& fileName ) const;
+    //TimeSeriesTable getControlsTable() const;
+    //const ControllerSet& getControllerSet() const;
+    //ControllerSet& updControllerSet();
+    //bool getAllControllersEnabled() const;
+    //void setAllControllersEnabled( bool enabled );
 
+    //--------------------------------------------------------------------------
+    // CONFIGURATION
+    //--------------------------------------------------------------------------
     void applyDefaultConfiguration(SimTK::State& s );
 
-
+    //--------------------------------------------------------------------------
+    // DYNAMICS ENGINE
+    //--------------------------------------------------------------------------
     /**
      * Get the model's dynamics engine
      *
@@ -828,19 +813,22 @@ public:
     // Subsystem computations
     //--------------------------------------------------------------------------
     void computeStateVariableDerivatives(const SimTK::State &s) const override;
-    double getTotalMass(const SimTK::State &s) const;
+    osim_double_adouble getTotalMass(const SimTK::State &s) const;
     SimTK::Inertia getInertiaAboutMassCenter(const SimTK::State &s) const;
     SimTK::Vec3 calcMassCenterPosition(const SimTK::State &s) const;
     SimTK::Vec3 calcMassCenterVelocity(const SimTK::State &s) const;
     SimTK::Vec3 calcMassCenterAcceleration(const SimTK::State &s) const;
     /** return the total Kinetic Energy for the underlying system.*/
-    double calcKineticEnergy(const SimTK::State &s) const {
+    osim_double_adouble calcKineticEnergy(const SimTK::State &s) const {
         return getMultibodySystem().calcKineticEnergy(s);
     }    
     /** return the total Potential Energy for the underlying system.*/
-    double calcPotentialEnergy(const SimTK::State &s) const {
+    osim_double_adouble calcPotentialEnergy(const SimTK::State &s) const {
         return getMultibodySystem().calcPotentialEnergy(s);
     }
+    //--------------------------------------------------------------------------
+    // STATES
+    //--------------------------------------------------------------------------
 
     int getNumMuscleStates() const;
     int getNumProbeStates() const;
@@ -872,10 +860,6 @@ public:
     std::vector<SimTK::ReferencePtr<const Coordinate>>
         getCoordinatesInMultibodyTreeOrder() const;
 
-    /** Get a warning message if any Coordinates have a MotionType that is NOT
-        consistent with its previous user-specified value that existed in 
-        Model files prior to OpenSim 4.0 */
-    std::string getWarningMesssageForMotionTypeInconsistency() const;
 
     BodySet& updBodySet() { return upd_BodySet(); }
     const BodySet& getBodySet() const { return get_BodySet(); }
@@ -883,11 +867,11 @@ public:
     JointSet& updJointSet(); 
     const JointSet& getJointSet() const;
 
-    AnalysisSet& updAnalysisSet() {return _analysisSet; }
-    const AnalysisSet& getAnalysisSet() const {return _analysisSet; }
+    //AnalysisSet& updAnalysisSet() {return _analysisSet; }
+    //const AnalysisSet& getAnalysisSet() const {return _analysisSet; }
 
-    ContactGeometrySet& updContactGeometrySet() { return upd_ContactGeometrySet(); }
-    const ContactGeometrySet& getContactGeometrySet() const { return get_ContactGeometrySet(); }
+    //ContactGeometrySet& updContactGeometrySet() { return upd_ContactGeometrySet(); }
+    //const ContactGeometrySet& getContactGeometrySet() const { return get_ContactGeometrySet(); }
 
     /** Get a const reference to the Ground reference frame */
     const Ground& getGround() const;
@@ -897,16 +881,16 @@ public:
     //--------------------------------------------------------------------------
     // CONSTRAINTS
     //--------------------------------------------------------------------------
-    ConstraintSet& updConstraintSet() { return upd_ConstraintSet(); }
-    const ConstraintSet& getConstraintSet() const { return get_ConstraintSet(); }
+    //ConstraintSet& updConstraintSet() { return upd_ConstraintSet(); }
+    //const ConstraintSet& getConstraintSet() const { return get_ConstraintSet(); }
 
     //--------------------------------------------------------------------------
     // MARKERS
     //--------------------------------------------------------------------------
-    MarkerSet& updMarkerSet() { return upd_MarkerSet(); }
-    const MarkerSet& getMarkerSet() const { return get_MarkerSet(); }
-
-    void writeMarkerFile(const std::string& aFileName);
+    //MarkerSet& updMarkerSet() { return upd_MarkerSet(); }
+    //const MarkerSet& getMarkerSet() const { return get_MarkerSet(); }
+    //int replaceMarkerSet(const SimTK::State& s, const MarkerSet& aMarkerSet);
+    //void writeMarkerFile(const std::string& aFileName);
 
     /**
     * Update the markers in the model by appending the ones in the
@@ -915,17 +899,17 @@ public:
     *
     * @param newMarkerSet the set of markers used to update the model's set.
     */
-    void updateMarkerSet(MarkerSet& newMarkerSet);
-    int deleteUnusedMarkers(const Array<std::string>& aMarkerNames);
+    //void updateMarkerSet(MarkerSet& newMarkerSet);
+    //int deleteUnusedMarkers(const Array<std::string>& aMarkerNames);
  
     /**
      * Add an Analysis to the %Model.
      *
      * @param adoptee pointer to the Analysis to add
      */
-    void addAnalysis(Analysis *adoptee);
+    //void addAnalysis(Analysis *adoptee);
     /** Add a Controller to the %Model. **/
-    void addController(Controller *adoptee);
+    //void addController(Controller *adoptee);
 
     /**
      * Remove an Analysis from the %Model.
@@ -933,9 +917,9 @@ public:
      * @param analysis  Pointer to the analysis to remove.
      * @param deleteIt  Whether the removed object should be deleted.
      */
-    void removeAnalysis(Analysis* analysis, bool deleteIt=true);
+    //void removeAnalysis(Analysis* analysis, bool deleteIt=true);
     /** Remove a Controller from the %Model. **/
-    void removeController(Controller *aController);
+    /*void removeController(Controller *aController);*/
 
     //--------------------------------------------------------------------------
     // DERIVATIVES
@@ -947,24 +931,19 @@ public:
     /**
      * Scale the model.
      *
-     * @param state      State containing parameter values that might be
-     *                   modified here.
-     * @param scaleSet   The set of XYZ scale factors for the bodies.
-     * @param preserveMassDist
-     *                   Whether the masses of the bodies should be scaled by
-     *                   the scale factors. If `false`, body masses will be
-     *                   adjusted only if `finalMass` has been specified; if
-     *                   `true`, body masses will be scaled by the product of
-     *                   the body's scale factors (and then a second time if
-     *                   `finalMass` has been specified). Inertias are always
-     *                   updated to reflect changes in body dimensions.
-     * @param finalMass  The total mass that the scaled model should have.
-     * @returns          Whether or not scaling was successful.
+     * @param state     State containing parameter values that might be 
+     *                  modified here.
+     * @param scaleSet  The set of XYZ scale factors for the bodies.
+     * @param finalMass The mass that the scaled model should have.
+     * @param preserveMassDist 
+     *                  Whether or not the masses of the individual bodies 
+     *                  should be scaled with the body scale factors.
+     * @returns         Whether or not scaling was successful.
      */
-    bool scale(SimTK::State&    state,
-               const ScaleSet&  scaleSet,
-               bool             preserveMassDist,
-               double           finalMass = -1.0);
+    bool scale(SimTK::State&    state, 
+               const ScaleSet&  scaleSet, 
+               osim_double_adouble           finalMass = -1.0, 
+               bool             preserveMassDist = false);
 
     //--------------------------------------------------------------------------
     // PRINT
@@ -1001,9 +980,7 @@ public:
     /**
      * Get a log of errors/warnings encountered when loading/constructing the model
      */
-    const std::string& getValidationLog() const { return _validationLog; };
-    /** Append to the Model's validation log without affecting is current contents */
-    void appendToValidationLog(const std::string& note);
+    const std::string& getValidationLog() { return _validationLog; };
     void clearValidationLog() { _validationLog = ""; };
 
     /**
@@ -1025,18 +1002,11 @@ public:
     /**@{**/
 
     /** Destructor. */
-    ~Model() override {
-        // Must ensure the System is deleted after the subsystem handles,
-        // otherwise the subsystem handles are "dangling."
-        _contactSubsystem.reset();
-        _forceSubsystem.reset();
-        _gravityForce.reset();
-        _matter.reset();
-    }
+    ~Model() override = default;
 
     /** Override of the default implementation to account for versioning. */
-    void updateFromXMLNode(SimTK::Xml::Element& aNode, 
-                           int versionNumber = -1) override;
+    /*void updateFromXMLNode(SimTK::Xml::Element& aNode, 
+                           int versionNumber = -1) override;*/
     /**@}**/
 
     //--------------------------------------------------------------------------
@@ -1087,7 +1057,7 @@ private:
 
     void createMultibodySystem();
 
-    void createAssemblySolver(const SimTK::State& s);
+    //void createAssemblySolver(const SimTK::State& s);
 
     // To provide access to private _modelComponents member.
     friend class Component; 
@@ -1120,7 +1090,7 @@ private:
     // or added programmatically.
 
     // Set containing the analyses in this model.
-    AnalysisSet     _analysisSet;
+    /*AnalysisSet     _analysisSet;*/
 
     // Set containing the generalized coordinates in this model.
     CoordinateSet   _coordinateSet;
@@ -1157,6 +1127,7 @@ private:
     // subsystems and force elements are owned by the MultibodySystem. However,
     // that memory management happens through Simbody's handles. It's fine for
     // us to manage the heap memory for the handles.
+    SimTK::ResetOnCopy<std::unique_ptr<SimTK::MultibodySystem>> _system;
 
     SimTK::ResetOnCopy<std::unique_ptr<SimTK::SimbodyMatterSubsystem>>
         _matter;     
@@ -1164,20 +1135,15 @@ private:
         _gravityForce;
     SimTK::ResetOnCopy<std::unique_ptr<SimTK::GeneralForceSubsystem>>
         _forceSubsystem;
-    SimTK::ResetOnCopy<std::unique_ptr<SimTK::GeneralContactSubsystem>>
-        _contactSubsystem;
-
-    // We place this after the subsystems so that during copy construction and
-    // copy assignment, the subsystem handles are copied first. If the system
-    // is copied first, the handles end up "dangling."
-    SimTK::ResetOnCopy<std::unique_ptr<SimTK::MultibodySystem>> _system;
+    //SimTK::ResetOnCopy<std::unique_ptr<SimTK::GeneralContactSubsystem>>
+    //    _contactSubsystem;
 
     // System-dependent objects.
 
     // Assembly solver used for satisfying constraints and other configuration
     // goals. This object is owned by the Model, and should not be copied
     // when the Model is copied.
-    SimTK::ResetOnCopy<std::unique_ptr<AssemblySolver>> _assemblySolver;
+    //SimTK::ResetOnCopy<std::unique_ptr<AssemblySolver>> _assemblySolver;
 
     // Model controls as a shared pool (Vector) of individual Actuator controls
     SimTK::MeasureIndex   _modelControlsIndex;
@@ -1194,7 +1160,7 @@ private:
     // If visualization has been requested at the API level, we'll allocate 
     // a ModelVisualizer. The Model owns this object, but it should not be
     // copied.
-    SimTK::ResetOnCopy<std::unique_ptr<ModelVisualizer>> _modelViz;
+    /*SimTK::ResetOnCopy<std::unique_ptr<ModelVisualizer>> _modelViz;*/
 
 //==============================================================================
 };  // END of class Model

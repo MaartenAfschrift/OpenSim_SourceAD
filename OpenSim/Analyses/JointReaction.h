@@ -1,5 +1,5 @@
-#ifndef OPENSIM_JOINT_REACTION_H_
-#define OPENSIM_JOINT_REACTION_H_
+#ifndef _JointReaction_h_
+#define _JointReaction_h_
 /* -------------------------------------------------------------------------- *
  *                         OpenSim:  JointReaction.h                          *
  * -------------------------------------------------------------------------- *
@@ -185,11 +185,11 @@ public:
     // INTEGRATION
     //----------------------------------------------------------------------
     int
-        begin( const SimTK::State& s ) override;
+        begin( SimTK::State& s ) override;
     int
         step( const SimTK::State& s, int setNumber ) override;
     int
-        end( const SimTK::State& s ) override;
+        end( SimTK::State& s ) override;
 
 
     //-------------------------------------------------------------------------
@@ -215,4 +215,4 @@ protected:
 //=============================================================================
 //=============================================================================
 
-#endif // #ifndef OPENSIM_JOINT_REACTION_H_
+#endif // #ifndef __JointReaction_h__

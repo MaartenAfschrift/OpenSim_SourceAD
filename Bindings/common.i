@@ -6,14 +6,15 @@
 %rename(OpenSimObject) OpenSim::Object;
 %rename(OpenSimException) OpenSim::Exception;
 
+/* rest of header files to be wrapped */
+%include <OpenSim/version.h>
+
 // osimCommon Library
 %include <OpenSim/Common/osimCommonDLL.h>
-%include <OpenSim/Common/About.h>
 %include <OpenSim/Common/Exception.h>
 %include <OpenSim/Common/Array.h>
 %include <OpenSim/Common/ArrayPtrs.h>
 %include <OpenSim/Common/AbstractProperty.h>
-%ignore OpenSim::Property<std::string>::appendValue(std::string const *);
 %include <OpenSim/Common/Property.h>
 %include <OpenSim/Common/PropertyGroup.h>
 %template(ArrayPtrsPropertyGroup) OpenSim::ArrayPtrs<OpenSim::PropertyGroup>;
@@ -22,7 +23,6 @@
 %include <OpenSim/Common/ObjectGroup.h>
 
 %include <OpenSim/Common/Set.h>
-%template(OpenSimObjectSet) OpenSim::Set<OpenSim::Object, OpenSim::Object>;
 %include <OpenSim/Common/StateVector.h>
 %template(ArrayStateVector) OpenSim::Array<OpenSim::StateVector>;
 %include <OpenSim/Common/StorageInterface.h>
@@ -32,7 +32,7 @@
 %include <OpenSim/Common/IO.h>
 %include <OpenSim/Common/Function.h>
 
-%template(SetFunctions) OpenSim::Set<OpenSim::Function, OpenSim::Object>;
+%template(SetFunctions) OpenSim::Set<OpenSim::Function>;
 %include <OpenSim/Common/FunctionSet.h>
 
 %include <OpenSim/Common/Constant.h>
@@ -82,7 +82,7 @@ namespace OpenSim {
 %template(OutputVec3) OpenSim::Output<SimTK::Vec3>;
 %template(OutputTransform) OpenSim::Output<SimTK::Transform>;
 %template(OutputVector) OpenSim::Output<SimTK::Vector>;
-%template(OutputSpatialVec) OpenSim::Output<SimTK::SpatialVec>;
+
 
 namespace OpenSim {
     %ignore Input::downcast(AbstractInput&); // suppress warning 509.
@@ -102,11 +102,7 @@ namespace OpenSim {
 // Can't wrap the return type of this function.
 %ignore OpenSim::Component::getOutputs;
 
-%include <OpenSim/Common/Path.h>
-%include <OpenSim/Common/ComponentPath.h>
-
 %include <OpenSim/Common/Component.h>
-%template(findComponent) OpenSim::Component::findComponent<OpenSim::Component>;
 
 %template(ComponentsList) OpenSim::ComponentList<const OpenSim::Component>;
 %template(ComponentIterator) OpenSim::ComponentListIterator<const OpenSim::Component>;
@@ -114,7 +110,7 @@ namespace OpenSim {
 
 
 %include <OpenSim/Common/Scale.h>
-%template(SetScales) OpenSim::Set<OpenSim::Scale, OpenSim::Object>;
+%template(SetScales) OpenSim::Set<OpenSim::Scale>;
 %include <OpenSim/Common/ScaleSet.h>
 %include <OpenSim/Common/MarkerFrame.h>
 %include <OpenSim/Common/MarkerData.h>
@@ -123,19 +119,15 @@ namespace OpenSim {
 %shared_ptr(OpenSim::DataTable_<double, double>);
 %shared_ptr(OpenSim::DataTable_<double, SimTK::Vec3>);
 %shared_ptr(OpenSim::DataTable_<double, SimTK::UnitVec3>);
-%shared_ptr(OpenSim::DataTable_<double, SimTK::Quaternion_<double>>);
+%shared_ptr(OpenSim::DataTable_<double, SimTK::Quaternion>);
 %shared_ptr(OpenSim::DataTable_<double, SimTK::Vec6>);
 %shared_ptr(OpenSim::DataTable_<double, SimTK::SpatialVec>);
-%shared_ptr(OpenSim::DataTable_<double, SimTK::Mat33>);
-%shared_ptr(OpenSim::DataTable_<double, SimTK::Rotation_<double>>);
 %shared_ptr(OpenSim::TimeSeriesTable_<double>);
 %shared_ptr(OpenSim::TimeSeriesTable_<SimTK::Vec3>);
 %shared_ptr(OpenSim::TimeSeriesTable_<SimTK::UnitVec3>);
-%shared_ptr(OpenSim::TimeSeriesTable_<SimTK::Quaternion_<double>>);
+%shared_ptr(OpenSim::TimeSeriesTable_<SimTK::Quaternion>);
 %shared_ptr(OpenSim::TimeSeriesTable_<SimTK::Vec6>);
 %shared_ptr(OpenSim::TimeSeriesTable_<SimTK::SpatialVec>);
-%shared_ptr(OpenSim::TimeSeriesTable_<SimTK::Mat33>);
-%shared_ptr(OpenSim::TimeSeriesTable_<SimTK::Rotation_<double>>);
 %ignore OpenSim::AbstractDataTable::clone;
 %ignore OpenSim::AbstractDataTable::getTableMetaData;
 %ignore OpenSim::AbstractDataTable::updTableMetaData;
@@ -188,15 +180,15 @@ namespace OpenSim {
 %ignore OpenSim::DataTable_::DataTable_(const DataTable_<double, double>&,
                                         const std::vector<std::string>&);
 %ignore OpenSim::DataTable_<double, double>::flatten;
+%extend OpenSim::DataTable_ {
+    OpenSim::DataTable_<ETX, ETY>* clone() const {
+        return new OpenSim::DataTable_<ETX, ETY>{*$self};
+    }
+}
 // A version of SWIG between 3.0.6 and 3.0.12 broke the ability to extend class
 // templates with more than 1 template parameter, so we must enumerate the
 // possible template arguments (not necesary for TimeSeriesTable's clone; that
 // template has only 1 param.).
-//%extend OpenSim::DataTable_ {
-//    OpenSim::DataTable_<ETX, ETY>* clone() const {
-//        return new OpenSim::DataTable_<ETX, ETY>{*$self};
-//    }
-//}
 %define DATATABLE_CLONE(ETX, ETY)
 %extend OpenSim::DataTable_<ETX, ETY> {
     OpenSim::DataTable_<ETX, ETY>* clone() const {
@@ -207,10 +199,9 @@ namespace OpenSim {
 DATATABLE_CLONE(double, double)
 DATATABLE_CLONE(double, SimTK::Vec3)
 DATATABLE_CLONE(double, SimTK::UnitVec3)
-DATATABLE_CLONE(double, SimTK::Quaternion_<double>)
+DATATABLE_CLONE(double, SimTK::Quaternion)
 DATATABLE_CLONE(double, SimTK::Vec6)
 DATATABLE_CLONE(double, SimTK::SpatialVec)
-DATATABLE_CLONE(double, SimTK::Rotation_<double>)
 %extend OpenSim::DataTable_<double, double> {
     DataTable_<double, SimTK::Vec3>
     packVec3() {
@@ -228,11 +219,11 @@ DATATABLE_CLONE(double, SimTK::Rotation_<double>)
     packUnitVec3(std::vector<std::string> suffixes) {
         return $self->pack<SimTK::UnitVec3>();
     }
-    DataTable_<double, SimTK::Quaternion_<double>>
+    DataTable_<double, SimTK::Quaternion>
     packQuaternion() {
         return $self->pack<SimTK::Quaternion>();
     }
-    DataTable_<double, SimTK::Quaternion_<double>>
+    DataTable_<double, SimTK::Quaternion>
     packQuaternion(std::vector<std::string> suffixes) {
         return $self->pack<SimTK::Quaternion>();
     }
@@ -269,11 +260,11 @@ DATATABLE_CLONE(double, SimTK::Rotation_<double>)
     packUnitVec3(std::vector<std::string> suffixes) {
         return $self->pack<SimTK::UnitVec3>();
     }
-    TimeSeriesTable_<SimTK::Quaternion_<double>>
+    TimeSeriesTable_<SimTK::Quaternion>
     packQuaternion() {
         return $self->pack<SimTK::Quaternion>();
     }
-    TimeSeriesTable_<SimTK::Quaternion_<double>>
+    TimeSeriesTable_<SimTK::Quaternion>
     packQuaternion(std::vector<std::string> suffixes) {
         return $self->pack<SimTK::Quaternion>();
     }
@@ -334,22 +325,18 @@ DATATABLE_CLONE(double, SimTK::Rotation_<double>)
 %template(DataTable)           OpenSim::DataTable_<double, double>;
 %template(DataTableVec3)       OpenSim::DataTable_<double, SimTK::Vec3>;
 %template(DataTableUnitVec3)   OpenSim::DataTable_<double, SimTK::UnitVec3>;
-%template(DataTableQuaternion) OpenSim::DataTable_<double, SimTK::Quaternion_<double>>;
+%template(DataTableQuaternion) OpenSim::DataTable_<double, SimTK::Quaternion>;
 %template(DataTableVec6)       OpenSim::DataTable_<double, SimTK::Vec6>;
 %template(DataTableSpatialVec) OpenSim::DataTable_<double, SimTK::SpatialVec>;
-%template(DataTableMat33)      OpenSim::DataTable_<double, SimTK::Mat33>;
-%template(DataTableRotation)   OpenSim::DataTable_<double, SimTK::Rotation_<double>>;
 
 %template(TimeSeriesTable)         OpenSim::TimeSeriesTable_<double>;
 %template(TimeSeriesTableVec3)     OpenSim::TimeSeriesTable_<SimTK::Vec3>;
 %template(TimeSeriesTableUnitVec3) OpenSim::TimeSeriesTable_<SimTK::UnitVec3>;
 %template(TimeSeriesTableQuaternion)
-                                   OpenSim::TimeSeriesTable_<SimTK::Quaternion_<double>>;
+                                   OpenSim::TimeSeriesTable_<SimTK::Quaternion>;
 %template(TimeSeriesTableVec6)     OpenSim::TimeSeriesTable_<SimTK::Vec6>;
 %template(TimeSeriesTableSpatialVec)
                                    OpenSim::TimeSeriesTable_<SimTK::SpatialVec>;
-%template(TimeSeriesTableMat33)    OpenSim::TimeSeriesTable_<SimTK::Mat33>;
-%template(TimeSeriesTableRotation) OpenSim::TimeSeriesTable_<SimTK::Rotation_<double>>;
 
 %include <OpenSim/Common/Event.h>
 %template(StdVectorEvent) std::vector<OpenSim::Event>;
@@ -359,9 +346,6 @@ DATATABLE_CLONE(double, SimTK::Rotation_<double>)
 %shared_ptr(OpenSim::DataAdapter)
 %shared_ptr(OpenSim::FileAdapter)
 %shared_ptr(OpenSim::DelimFileAdapter)
-%shared_ptr(OpenSim::IMUDataReader)
-%shared_ptr(OpenSim::XsensDataReader)
-%shared_ptr(OpenSim::APDMDataReader)
 %shared_ptr(OpenSim::STOFileAdapter_<duoble>)
 %shared_ptr(OpenSim::STOFileAdapter_<SimTK::Vec3>)
 %shared_ptr(OpenSim::STOFileAdapter_<SimTK::UnitVec3>)
@@ -376,12 +360,6 @@ DATATABLE_CLONE(double, SimTK::Rotation_<double>)
 %template(StdMapStringAbstractDataTable)
         std::map<std::string, std::shared_ptr<OpenSim::AbstractDataTable>>;
 %include <OpenSim/Common/DataAdapter.h>
-%include <OpenSim/Common/ExperimentalSensor.h>
-%include <OpenSim/Common/IMUDataReader.h>
-%include <OpenSim/Common/XsensDataReaderSettings.h>
-%include <OpenSim/Common/XsensDataReader.h>
-
-
 %include <OpenSim/Common/FileAdapter.h>
 namespace OpenSim {
     %ignore TRCFileAdapter::TRCFileAdapter(TRCFileAdapter &&);
@@ -390,8 +368,6 @@ namespace OpenSim {
 }
 %include <OpenSim/Common/TRCFileAdapter.h>
 %include <OpenSim/Common/DelimFileAdapter.h>
-%include <OpenSim/Common/APDMDataReaderSettings.h>
-%include <OpenSim/Common/APDMDataReader.h>
 %ignore OpenSim::createSTOFileAdapterForReading;
 %ignore OpenSim::createSTOFileAdapterForWriting;
 %ignore OpenSim::STOFileAdapter_::STOFileAdapter_(STOFileAdapter_&&);
@@ -404,29 +380,7 @@ namespace OpenSim {
 %template(STOFileAdapterSpatialVec) OpenSim::STOFileAdapter_<SimTK::SpatialVec>;
 
 %include <OpenSim/Common/CSVFileAdapter.h>
-%include <OpenSim/Common/XsensDataReader.h>
 %include <OpenSim/Common/C3DFileAdapter.h>
-
-%extend OpenSim::C3DFileAdapter {
-    void setLocationForForceExpression(unsigned int wrt) {
-        C3DFileAdapter::ForceLocation location;
-        switch(wrt) {
-            case 0:
-                location = C3DFileAdapter::ForceLocation::OriginOfForcePlate;
-                break;
-            case 1:
-                location = C3DFileAdapter::ForceLocation::CenterOfPressure;
-                break;
-            case 2:
-                location = C3DFileAdapter::ForceLocation::PointOfWrenchApplication;
-                break;
-            default:
-                throw OpenSim::Exception{
-                    "An invalid C3DFileAdapter::ForceLocation was provided."};
-        }
-        $self->setLocationForForceExpression(location);
-    };
-};
 
 namespace OpenSim {
     %ignore TableSource_::TableSource_(TableSource_ &&);
@@ -441,30 +395,8 @@ namespace OpenSim {
 %template(ReporterVector) OpenSim::Reporter<SimTK::Vector>;
 %template(TableReporter) OpenSim::TableReporter_<SimTK::Real>;
 %template(TableReporterVec3) OpenSim::TableReporter_<SimTK::Vec3>;
-%template(TableReporterSpatialVec) OpenSim::TableReporter_<SimTK::SpatialVec>;
 %template(TableReporterVector) OpenSim::TableReporter_<SimTK::Vector, SimTK::Real>;
 %template(ConsoleReporter) OpenSim::ConsoleReporter_<SimTK::Real>;
 %template(ConsoleReporterVec3) OpenSim::ConsoleReporter_<SimTK::Vec3>;
 
 %include <OpenSim/Common/GCVSplineSet.h>
-
-
-// Compensate for insufficient C++11 support in SWIG
-// =================================================
-/*
-Extend concrete Sets to use the inherited base constructors.
-This is only necessary because SWIG does not generate these inherited
-constructors provided by C++11's 'using' (e.g. using Set::Set) declaration.
-Note that CustomJoint and EllipsoidJoint do implement their own
-constructors because they have additional arguments.
-*/
-%define EXPOSE_SET_CONSTRUCTORS_HELPER(NAME)
-%extend OpenSim::NAME {
-    NAME() {
-        return new NAME();
-    }
-    NAME(const std::string& file, bool updateFromXML=true) throw(OpenSim::Exception) {
-        return new NAME(file, updateFromXML);
-    }
-};
-%enddef

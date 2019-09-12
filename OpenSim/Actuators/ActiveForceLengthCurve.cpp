@@ -170,13 +170,6 @@ double ActiveForceLengthCurve::calcDerivative(double normFiberLength,
     return m_curve.calcDerivative(normFiberLength,order);
 }
 
-double ActiveForceLengthCurve::
-    calcDerivative(const std::vector<int>& derivComponents,
-                   const SimTK::Vector& x) const
-{
-    return m_curve.calcDerivative(derivComponents, x);
-}
-
 SimTK::Vec2 ActiveForceLengthCurve::getCurveDomain() const
 {
     SimTK_ASSERT(isObjectUpToDateWithProperties(),

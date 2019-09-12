@@ -71,6 +71,7 @@ const SimTK::Vec3& Point::getLocationInGround(const SimTK::State& s) const
         // mark cache as up-to-date
         getSystem().getDefaultSubsystem().
             markCacheValueRealized(s, _locationIndex);
+
     }
     return SimTK::Value<SimTK::Vec3>::downcast(
         getSystem().getDefaultSubsystem().
@@ -116,21 +117,24 @@ const SimTK::Vec3& Point::getAccelerationInGround(const SimTK::State& s) const
 //=============================================================================
 // Helpful Point Calculations
 //=============================================================================
-double Point::calcDistanceBetween(const SimTK::State& s, const Point& o) const
+osim_double_adouble Point::calcDistanceBetween(const SimTK::State& s, const Point& o) const
 {
+	//std::cout << "getLocationInGround(s)" << getLocationInGround(s) << std::endl;
+	//std::cout << "o.getLocationInGround(s)" << o.getLocationInGround(s) << std::endl;
+
     return (getLocationInGround(s) - o.getLocationInGround(s)).norm();
 }
 
-double Point::calcDistanceBetween(const SimTK::State& s,
+osim_double_adouble Point::calcDistanceBetween(const SimTK::State& s,
     const Frame& f, const SimTK::Vec3& p) const
 {
     return (getLocationInGround(s) - f.getTransformInGround(s)*p).norm();
 }
 
-double Point::calcSpeedBetween(const SimTK::State& s, const Point& o) const
+osim_double_adouble Point::calcSpeedBetween(const SimTK::State& s, const Point& o) const
 {
     const auto r = getLocationInGround(s) - o.getLocationInGround(s);
-    const double d = r.norm();
+    const osim_double_adouble d = r.norm();
     const auto v = getVelocityInGround(s) - o.getVelocityInGround(s);
     if (d < SimTK::Eps) // avoid divide by zero
         return v.norm();

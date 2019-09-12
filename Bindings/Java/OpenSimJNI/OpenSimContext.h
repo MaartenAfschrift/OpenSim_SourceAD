@@ -88,8 +88,8 @@ OpenSim_DECLARE_CONCRETE_OBJECT(OpenSimContext, Object);
 public:
     OpenSimContext(SimTK::State* s, Model* model);
 
-    void setState( SimTK::State* s) { _configState.reset(s); }
-    void setModel( Model* m) { _model.reset(m); }
+    void setState( SimTK::State* s) { _configState = s; }
+    void setModel( Model* m) { _model = m; }
 
     /** Get reference to the single instance of SimTK::State maintained by the Context object **/
     const SimTK::State& getCurrentStateRef() const { return (*_configState); };
@@ -153,8 +153,6 @@ public:
     void setRangeMax(ConditionalPathPoint& via, double d);
     bool replacePathPoint(GeometryPath& p, AbstractPathPoint& mp, AbstractPathPoint& newPoint);
     void setLocation(PathPoint& mp, int i, double d);
-
-    void setLocation(PathPoint& mp, const SimTK::Vec3& newLocation);
     void setEndPoint(PathWrap& mw, int newEndPt);
     void addPathPoint(GeometryPath& p, int menuChoice, PhysicalFrame& body);
     bool deletePathPoint(GeometryPath& p, int menuChoice);
@@ -221,19 +219,17 @@ public:
 
     void cacheModelAndState();
     void restoreStateFromCachedModel()  SWIG_DECLARE_EXCEPTION;
-    void setSocketConnecteePath(AbstractSocket& socket,
-            const std::string& newValue)   SWIG_DECLARE_EXCEPTION;
 //=============================================================================
 // DATA
 //=============================================================================
 
 private:
     // SimTK::State supporting the OpenSim::Model 
-    SimTK::ReferencePtr<SimTK::State> _configState;
+    SimTK::State* _configState;
     // The OpenSim::model 
-    SimTK::ReferencePtr<Model> _model;
+    Model* _model;
 
-    SimTK::ResetOnCopy<std::unique_ptr<Model> > clonedModel;
+    Model* clonedModel;
     SimTK::State clonedState;
 }; // class OpenSimContext
 
@@ -371,28 +367,17 @@ public:
         pd.setValue(6, array6);
     }
     //=================Vec3 Properties, treated as three Doubles ==================
-    static double getValueVec3(const AbstractProperty& p, int index)
-    {
+    static double getValueVec3(const AbstractProperty& p, int index) 
+    {   
         const Property<SimTK::Vec3>& pd = dynamic_cast<const Property<SimTK::Vec3>&>(p);
         const SimTK::Vec3& vec3 = pd.getValue();
-        return vec3[index];
+        return vec3[index]; 
     }
-    static void setValueVec3(double v, AbstractProperty& p, int index)
-    {
+    static void setValueVec3(double v, AbstractProperty& p, int index) 
+    {   
         Property<SimTK::Vec3>& pd = dynamic_cast<Property<SimTK::Vec3>&>(p);
         pd.updValue()[index] = v;
-    }
-    static double getValueVec6(const AbstractProperty& p, int index)
-    {
-        const Property<SimTK::Vec6>& pd = dynamic_cast<const Property<SimTK::Vec6>&>(p);
-        const SimTK::Vec6& vec6 = pd.getValue();
-        return vec6[index];
-    }
-    static void setValueVec6(double v, AbstractProperty& p, int index)
-    {
-        Property<SimTK::Vec6>& pd = dynamic_cast<Property<SimTK::Vec6>&>(p);
-        pd.updValue()[index] = v;
-    }
+     }
     // ================ String arrays ===================================================
     static OpenSim::Array<std::string> getValueStringArray(const AbstractProperty& p)
     {

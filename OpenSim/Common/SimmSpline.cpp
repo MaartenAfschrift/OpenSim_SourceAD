@@ -64,7 +64,7 @@ SimmSpline::SimmSpline() :
 //_____________________________________________________________________________
 /**
  */
-SimmSpline::SimmSpline(int aN,const double *aX,const double *aY,
+SimmSpline::SimmSpline(int aN,const osim_double_adouble *aX,const osim_double_adouble *aY,
     const string &aName) :
     _x(_propX.getValueDblArray()),
     _y(_propY.getValueDblArray()),
@@ -137,13 +137,13 @@ void SimmSpline::setupProperties()
 {
     // X- INDEPENDENT VARIABLES
     _propX.setName("x");
-    Array<double> x(0.0);
+    Array<osim_double_adouble> x(0.0);
     _propX.setValue(x);
     _propertySet.append( &_propX );
 
     // Y- DEPENDENT VARIABLES
     _propY.setName("y");
-    Array<double> y(0.0);
+    Array<osim_double_adouble> y(0.0);
     _propY.setValue(y);
     _propertySet.append( &_propY );
 }
@@ -190,7 +190,7 @@ void SimmSpline::init(Function* aFunction)
             // A SimmSpline must have at least 2 data points.
             // If aFunction is a Constant, use its Y value for both data points.
             // If it is not, make up two data points.
-            double x[2] = {0.0, 1.0}, y[2];
+            osim_double_adouble x[2] = {0.0, 1.0}, y[2];
             Constant* cons = dynamic_cast<Constant*>(aFunction);
             if (cons != NULL) {
                 y[0] = y[1] = cons->calcValue(SimTK::Vector(0));
@@ -199,7 +199,7 @@ void SimmSpline::init(Function* aFunction)
             }
             *this = SimmSpline(2, x, y);
         } else if (xyFunc.getNumberOfPoints() == 1) {
-            double x[2], y[2];
+            osim_double_adouble x[2], y[2];
             x[0] = xyFunc.getXValues()[0];
             x[1] = x[0] + 1.0;
             y[0] = y[1] = xyFunc.getYValues()[0];
@@ -262,7 +262,7 @@ int SimmSpline::getSize() const
  * @return Pointer to the independent variable data points.
  * @see getN();
  */
-const Array<double>& SimmSpline::getX() const
+const Array<osim_double_adouble>& SimmSpline::getX() const
 {
     return(_x);
 }
@@ -274,7 +274,7 @@ const Array<double>& SimmSpline::getX() const
  * @return Pointer to the coefficients.
  * @see getCoefficients();
  */
-const Array<double>& SimmSpline::getY() const
+const Array<osim_double_adouble>& SimmSpline::getY() const
 {
     return(_y);
 }
@@ -286,7 +286,7 @@ const Array<double>& SimmSpline::getY() const
  * @return Pointer to the independent variable data points.
  * @see getN();
  */
-const double* SimmSpline::getXValues() const
+const osim_double_adouble* SimmSpline::getXValues() const
 {
     return(&_x[0]);
 }
@@ -296,7 +296,7 @@ const double* SimmSpline::getXValues() const
  *
  * @return Pointer to the independent variable data points.
  */
-const double* SimmSpline::getYValues() const
+const osim_double_adouble* SimmSpline::getYValues() const
 {
     return(&_y[0]);
 }
@@ -309,11 +309,11 @@ const double* SimmSpline::getYValues() const
 /**
  * Update this object based on its XML node.
  */
-void SimmSpline::updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber)
-{
-    Function::updateFromXMLNode(aNode, versionNumber);
-    calcCoefficients();
-}   
+//void SimmSpline::updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber)
+//{
+//    Function::updateFromXMLNode(aNode, versionNumber);
+//    calcCoefficients();
+//}   
 
 //=============================================================================
 // EVALUATION
@@ -322,7 +322,7 @@ void SimmSpline::calcCoefficients()
 {
    int n = _x.getSize();
     int nm1, nm2, i, j;
-   double t;
+   osim_double_adouble t;
 
    if (n < 2)
       return;
@@ -333,7 +333,8 @@ void SimmSpline::calcCoefficients()
 
    if (n == 2)
    {
-      t = MAX(TINY_NUMBER,_x[1]-_x[0]);
+      //t = MAX(TINY_NUMBER,_x[1]-_x[0]);
+	   t = fmax(TINY_NUMBER, _x[1] - _x[0]);
       _b[0] = _b[1] = (_y[1]-_y[0])/t;
       _c[0] = _c[1] = 0.0;
       _d[0] = _d[1] = 0.0;
@@ -347,11 +348,13 @@ void SimmSpline::calcCoefficients()
     * b = diagonal, d = offdiagonal, c = right-hand side
     */
 
-   _d[0] = MAX(TINY_NUMBER,_x[1] - _x[0]);
+   //_d[0] = MAX(TINY_NUMBER,_x[1] - _x[0]);
+   _d[0] = fmax(TINY_NUMBER, _x[1] - _x[0]);
    _c[1] = (_y[1]-_y[0])/_d[0];
    for (i=1; i<nm1; i++)
    {
-      _d[i] = MAX(TINY_NUMBER,_x[i+1] - _x[i]);
+      //_d[i] = MAX(TINY_NUMBER,_x[i+1] - _x[i]);
+	  _d[i] = fmax(TINY_NUMBER, _x[i + 1] - _x[i]);
       _b[i] = 2.0*(_d[i-1]+_d[i]);
       _c[i+1] = (_y[i+1]-_y[i])/_d[i];
       _c[i] = _c[i+1] - _c[i];
@@ -368,14 +371,20 @@ void SimmSpline::calcCoefficients()
 
    if (n > 3)
    {
-      double d1, d2, d3, d20, d30, d31;
+      osim_double_adouble d1, d2, d3, d20, d30, d31;
 
-      d31 = MAX(TINY_NUMBER,_x[3] - _x[1]);
-      d20 = MAX(TINY_NUMBER,_x[2] - _x[0]);
-      d1 = MAX(TINY_NUMBER,_x[nm1]-_x[n-3]);
-      d2 = MAX(TINY_NUMBER,_x[nm2]-_x[n-4]);
-      d30 = MAX(TINY_NUMBER,_x[3] - _x[0]);
-      d3 = MAX(TINY_NUMBER,_x[nm1]-_x[n-4]);
+      //d31 = MAX(TINY_NUMBER,_x[3] - _x[1]);
+      //d20 = MAX(TINY_NUMBER,_x[2] - _x[0]);
+      //d1 = MAX(TINY_NUMBER,_x[nm1]-_x[n-3]);
+      //d2 = MAX(TINY_NUMBER,_x[nm2]-_x[n-4]);
+      //d30 = MAX(TINY_NUMBER,_x[3] - _x[0]);
+      //d3 = MAX(TINY_NUMBER,_x[nm1]-_x[n-4]);
+	  d31 = fmax(TINY_NUMBER, _x[3] - _x[1]);
+	  d20 = fmax(TINY_NUMBER, _x[2] - _x[0]);
+	  d1 = fmax(TINY_NUMBER, _x[nm1] - _x[n - 3]);
+	  d2 = fmax(TINY_NUMBER, _x[nm2] - _x[n - 4]);
+	  d30 = fmax(TINY_NUMBER, _x[3] - _x[0]);
+	  d3 = fmax(TINY_NUMBER, _x[nm1] - _x[n - 4]);
       _c[0] = _c[2]/d31 - _c[1]/d20;
       _c[nm1] = _c[nm2]/d1 - _c[n-3]/d2;
       _c[0] = _c[0]*_d[0]*_d[0]/d30;
@@ -415,7 +424,7 @@ void SimmSpline::calcCoefficients()
 
 }
 
-double SimmSpline::getX(int aIndex) const
+osim_double_adouble SimmSpline::getX(int aIndex) const
 {
     if (aIndex >= 0 && aIndex < _x.getSize())
         return _x.get(aIndex);
@@ -425,7 +434,7 @@ double SimmSpline::getX(int aIndex) const
     }
 }
 
-double SimmSpline::getY(int aIndex) const
+osim_double_adouble SimmSpline::getY(int aIndex) const
 {
     if (aIndex >= 0 && aIndex < _y.getSize())
         return _y.get(aIndex);
@@ -435,7 +444,7 @@ double SimmSpline::getY(int aIndex) const
     }
 }
 
-void SimmSpline::setX(int aIndex, double aValue)
+void SimmSpline::setX(int aIndex, osim_double_adouble aValue)
 {
     if (aIndex >= 0 && aIndex < _x.getSize()) {
         _x[aIndex] = aValue;
@@ -445,7 +454,7 @@ void SimmSpline::setX(int aIndex, double aValue)
     }
 }
 
-void SimmSpline::setY(int aIndex, double aValue)
+void SimmSpline::setY(int aIndex, osim_double_adouble aValue)
 {
     if (aIndex >= 0 && aIndex < _y.getSize()) {
         _y[aIndex] = aValue;
@@ -492,7 +501,7 @@ bool SimmSpline::deletePoints(const Array<int>& indices)
    return pointsDeleted;
 }
 
-int SimmSpline::addPoint(double aX, double aY)
+int SimmSpline::addPoint(osim_double_adouble aX, osim_double_adouble aY)
 {
     int i=0;
     for (i=0; i<_x.getSize(); i++)
@@ -508,7 +517,7 @@ int SimmSpline::addPoint(double aX, double aY)
     return i;
 }
 
-double SimmSpline::calcValue(const Vector& x) const
+osim_double_adouble SimmSpline::calcValue(const Vector& x) const
 {
     // NOT A NUMBER
     if(!_y.getSize()) return(SimTK::NaN);
@@ -517,10 +526,10 @@ double SimmSpline::calcValue(const Vector& x) const
     if(!_d.getSize()) return(SimTK::NaN);
 
     int i, j, k;
-    double dx;
+    osim_double_adouble dx;
 
     int n = _x.getSize();
-    double aX = x[0];
+    osim_double_adouble aX = x[0];
 
    /* Check if the abscissa is out of range of the function. If it is,
     * then use the slope of the function at the appropriate end point to
@@ -575,7 +584,7 @@ double SimmSpline::calcValue(const Vector& x) const
    return _y[k] + dx*(_b[k] + dx*(_c[k] + dx*_d[k]));
 }
 
-double SimmSpline::calcDerivative(const std::vector<int>& derivComponents, const Vector& x) const
+osim_double_adouble SimmSpline::calcDerivative(const std::vector<int>& derivComponents, const Vector& x) const
 {
     // NOT A NUMBER
     if(!_y.getSize()) return(SimTK::NaN);
@@ -584,10 +593,10 @@ double SimmSpline::calcDerivative(const std::vector<int>& derivComponents, const
     if(!_d.getSize()) return(SimTK::NaN);
 
     int i, j, k;
-    double dx;
+    osim_double_adouble dx;
 
     int n = _x.getSize();
-    double aX = x[0];
+    osim_double_adouble aX = x[0];
     int aDerivOrder = (int)derivComponents.size();
     if (aDerivOrder < 1 || aDerivOrder > 2)
         throw Exception("SimmSpline::calcDerivative(): derivative order must be 1 or 2.");

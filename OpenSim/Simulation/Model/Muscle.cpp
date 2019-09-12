@@ -38,7 +38,7 @@ using namespace OpenSim;
 using SimTK::Vec3;
 
 static const Vec3 DefaultMuscleColor(.8, .1, .1); // Red for backward compatibility
-
+//static int counter=0;
 //=============================================================================
 // CONSTRUCTOR
 //=============================================================================
@@ -52,92 +52,92 @@ Muscle::Muscle()
 //_____________________________________________________________________________
 // Override default implementation by object to intercept and fix the XML node
 // underneath the model to match current version.
-void Muscle::updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber)
-{
-    if ( versionNumber < XMLDocument::getLatestVersion()) {
-        if (Object::getDebugLevel()>=1)
-            cout << "Updating Muscle object to latest format..." << endl;
-        
-        if (versionNumber <= 20301){
-            SimTK::Xml::element_iterator pathIter = 
-                                            aNode.element_begin("GeometryPath");
-            if (pathIter != aNode.element_end()) {
-                XMLDocument::renameChildNode(*pathIter, "MusclePointSet", "PathPointSet");
-                XMLDocument::renameChildNode(*pathIter, "MuscleWrapSet", "PathWrapSet");
-            } else { // There was no GeometryPath, just MusclePointSet
-                SimTK::Xml::element_iterator musclePointSetIter = aNode.element_begin("MusclePointSet");
-                bool pathPointSetFound=false;
-                if (musclePointSetIter != aNode.element_end()){
-                    XMLDocument::renameChildNode(aNode, "MusclePointSet", "PathPointSet");
-                    pathPointSetFound=true;
-                }
-                bool pathWrapSetFound=false;
-                SimTK::Xml::element_iterator muscleWrapSetIter = aNode.element_begin("MuscleWrapSet");
-                if (muscleWrapSetIter != aNode.element_end()){
-                    XMLDocument::renameChildNode(aNode, "MuscleWrapSet", "PathWrapSet");
-                    pathWrapSetFound=true;
-                }
-                // Now create a "GeometryPath" node and move MusclePointSet & MuscleWrapSet under it
-                SimTK::Xml::Element myPathElement("GeometryPath");
-                SimTK::Xml::Node moveNode;
-                if (pathPointSetFound) {
-                    SimTK::Xml::element_iterator  pathPointSetIter = aNode.element_begin("PathPointSet");
-                    moveNode = aNode.removeNode(pathPointSetIter);
-                    myPathElement.insertNodeAfter(myPathElement.element_end(),moveNode);
-                }
-                if (pathWrapSetFound) {
-                    SimTK::Xml::element_iterator  pathWrapSetIter = aNode.element_begin("PathWrapSet");
-                    moveNode = aNode.removeNode(pathWrapSetIter);
-                    myPathElement.insertNodeAfter(myPathElement.element_end(),moveNode);
-                }
-                aNode.insertNodeAfter(aNode.element_end(), myPathElement);
-            }
-            XMLDocument::renameChildNode(aNode, "pennation_angle", "pennation_angle_at_optimal");
-        }
-        if (versionNumber < 30513) {
-            SimTK::Xml::element_iterator minControlElt =
-                aNode.element_begin("min_control");
-            double minControl = 0;
-            if (minControlElt != aNode.element_end()) {
-                minControlElt->getValueAs<double>(minControl);
-                // If the min_control value is 0, then remove the min_control
-                // property in XML since it is likely a result of a mistake. In
-                // previous versions, the min_control property was no updated
-                // to reflect the Muscle's min_activation. Removing it allows
-                // the Muscle to use the appropriate default specified by the
-                // derived concrete Muscle.
-                if (SimTK::isNumericallyEqual(minControl, 0.0)) {
-                    aNode.removeNode(minControlElt);
-                }
-            }
-            SimTK::Xml::element_iterator maxControlElt =
-                aNode.element_begin("max_control");
-            double maxControl = 0;
-            if (maxControlElt != aNode.element_end()) {
-                maxControlElt->getValueAs<double>(maxControl);
-                // allow Muscle to use its default
-                if (SimTK::isNumericallyEqual(maxControl, 1.0)) {
-                    aNode.removeNode(maxControlElt);
-                }
-            }
-        }
-        if (versionNumber < 30516) {
-            // Find GeometryPath node and insert <default_color>
-            SimTK::Xml::element_iterator  geomPathIter = aNode.element_begin("GeometryPath");
-            if (geomPathIter != aNode.element_end()) {
-                SimTK::Xml::element_iterator  defaultColorIter = geomPathIter->element_begin("default_color");
-                if (defaultColorIter == geomPathIter->element_end()) {
-                    SimTK::Xml::Element myDefaultColorEement("default_color");
-                    myDefaultColorEement.setValue(".8 .1 .1"); // DefaultMuscleColor
-                    geomPathIter->appendNode(myDefaultColorEement);
-                }
-            }
-        }
-
-    }
-    // Call base class now assuming aNode has been corrected for current version
-    Super::updateFromXMLNode(aNode, versionNumber);
-}
+//void Muscle::updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber)
+//{
+//    if ( versionNumber < XMLDocument::getLatestVersion()) {
+//        if (Object::getDebugLevel()>=1)
+//            cout << "Updating Muscle object to latest format..." << endl;
+//        
+//        if (versionNumber <= 20301){
+//            SimTK::Xml::element_iterator pathIter = 
+//                                            aNode.element_begin("GeometryPath");
+//            if (pathIter != aNode.element_end()) {
+//                XMLDocument::renameChildNode(*pathIter, "MusclePointSet", "PathPointSet");
+//                XMLDocument::renameChildNode(*pathIter, "MuscleWrapSet", "PathWrapSet");
+//            } else { // There was no GeometryPath, just MusclePointSet
+//                SimTK::Xml::element_iterator musclePointSetIter = aNode.element_begin("MusclePointSet");
+//                bool pathPointSetFound=false;
+//                if (musclePointSetIter != aNode.element_end()){
+//                    XMLDocument::renameChildNode(aNode, "MusclePointSet", "PathPointSet");
+//                    pathPointSetFound=true;
+//                }
+//                bool pathWrapSetFound=false;
+//                SimTK::Xml::element_iterator muscleWrapSetIter = aNode.element_begin("MuscleWrapSet");
+//                if (muscleWrapSetIter != aNode.element_end()){
+//                    XMLDocument::renameChildNode(aNode, "MuscleWrapSet", "PathWrapSet");
+//                    pathWrapSetFound=true;
+//                }
+//                // Now create a "GeometryPath" node and move MusclePointSet & MuscleWrapSet under it
+//                SimTK::Xml::Element myPathElement("GeometryPath");
+//                SimTK::Xml::Node moveNode;
+//                if (pathPointSetFound) {
+//                    SimTK::Xml::element_iterator  pathPointSetIter = aNode.element_begin("PathPointSet");
+//                    moveNode = aNode.removeNode(pathPointSetIter);
+//                    myPathElement.insertNodeAfter(myPathElement.element_end(),moveNode);
+//                }
+//                if (pathWrapSetFound) {
+//                    SimTK::Xml::element_iterator  pathWrapSetIter = aNode.element_begin("PathWrapSet");
+//                    moveNode = aNode.removeNode(pathWrapSetIter);
+//                    myPathElement.insertNodeAfter(myPathElement.element_end(),moveNode);
+//                }
+//                aNode.insertNodeAfter(aNode.element_end(), myPathElement);
+//            }
+//            XMLDocument::renameChildNode(aNode, "pennation_angle", "pennation_angle_at_optimal");
+//        }
+//        if (versionNumber < 30513) {
+//            SimTK::Xml::element_iterator minControlElt =
+//                aNode.element_begin("min_control");
+//            osim_double_adouble minControl = 0;
+//            if (minControlElt != aNode.element_end()) {
+//                minControlElt->getValueAs<osim_double_adouble>(minControl);
+//                // If the min_control value is 0, then remove the min_control
+//                // property in XML since it is likely a result of a mistake. In
+//                // previous versions, the min_control property was no updated
+//                // to reflect the Muscle's min_activation. Removing it allows
+//                // the Muscle to use the appropriate default specified by the
+//                // derived concrete Muscle.
+//                if (SimTK::isNumericallyEqual(minControl, 0.0)) {
+//                    aNode.removeNode(minControlElt);
+//                }
+//            }
+//            SimTK::Xml::element_iterator maxControlElt =
+//                aNode.element_begin("max_control");
+//            osim_double_adouble maxControl = 0;
+//            if (maxControlElt != aNode.element_end()) {
+//                maxControlElt->getValueAs<osim_double_adouble>(maxControl);
+//                // allow Muscle to use its default
+//                if (SimTK::isNumericallyEqual(maxControl, 1.0)) {
+//                    aNode.removeNode(maxControlElt);
+//                }
+//            }
+//        }
+//        if (versionNumber < 30516) {
+//            // Find GeometryPath node and insert <default_color>
+//            SimTK::Xml::element_iterator  geomPathIter = aNode.element_begin("GeometryPath");
+//            if (geomPathIter != aNode.element_end()) {
+//                SimTK::Xml::element_iterator  defaultColorIter = geomPathIter->element_begin("default_color");
+//                if (defaultColorIter == geomPathIter->element_end()) {
+//                    SimTK::Xml::Element myDefaultColorEement("default_color");
+//                    myDefaultColorEement.setValue(".8 .1 .1"); // DefaultMuscleColor
+//                    geomPathIter->appendNode(myDefaultColorEement);
+//                }
+//            }
+//        }
+//
+//    }
+//    // Call base class now assuming aNode has been corrected for current version
+//    //Super::updateFromXMLNode(aNode, versionNumber);
+//}
 
 
 //_____________________________________________________________________________
@@ -157,41 +157,41 @@ void Muscle::constructProperties()
     // By default the min and max controls on muscle are 0.0 and 1.0
     setMinControl(0.0);
     setMaxControl(1.0);
-    upd_GeometryPath().setDefaultColor(DefaultMuscleColor);
+    //upd_GeometryPath().setDefaultColor(DefaultMuscleColor);
 }
 
 
 //--------------------------------------------------------------------------
 // MUSCLE PARAMETERS GETTERS AND SETTERS
 //--------------------------------------------------------------------------
-double Muscle::getMaxIsometricForce() const
+osim_double_adouble Muscle::getMaxIsometricForce() const
 {   return get_max_isometric_force(); }
 
-double Muscle::getOptimalFiberLength() const
+osim_double_adouble Muscle::getOptimalFiberLength() const
 {   return get_optimal_fiber_length(); }
 
-double Muscle::getTendonSlackLength() const 
+osim_double_adouble Muscle::getTendonSlackLength() const 
 {   return get_tendon_slack_length(); }
 
-double Muscle::getPennationAngleAtOptimalFiberLength() const 
+osim_double_adouble Muscle::getPennationAngleAtOptimalFiberLength() const 
 {   return get_pennation_angle_at_optimal(); }
 
-double Muscle::getMaxContractionVelocity() const 
+osim_double_adouble Muscle::getMaxContractionVelocity() const 
 {   return get_max_contraction_velocity(); }
 
-void Muscle::setMaxIsometricForce(double aMaxIsometricForce)
+void Muscle::setMaxIsometricForce(osim_double_adouble aMaxIsometricForce)
 {   set_max_isometric_force(aMaxIsometricForce); }
 
-void Muscle::setOptimalFiberLength(double aOptimalFiberLength) 
+void Muscle::setOptimalFiberLength(osim_double_adouble aOptimalFiberLength) 
 {   set_optimal_fiber_length(aOptimalFiberLength); }
 
-void Muscle::setTendonSlackLength(double aTendonSlackLength) 
+void Muscle::setTendonSlackLength(osim_double_adouble aTendonSlackLength) 
 {   set_tendon_slack_length(aTendonSlackLength); }
 
-void Muscle::setPennationAngleAtOptimalFiberLength(double aPennationAngle)
+void Muscle::setPennationAngleAtOptimalFiberLength(osim_double_adouble aPennationAngle)
 {   set_pennation_angle_at_optimal(aPennationAngle); }
 
-void Muscle::setMaxContractionVelocity(double aMaxContractionVelocity) 
+void Muscle::setMaxContractionVelocity(osim_double_adouble aMaxContractionVelocity) 
 {   set_max_contraction_velocity(aMaxContractionVelocity); }
 
 
@@ -285,173 +285,173 @@ void Muscle::setIgnoreActivationDynamics(SimTK::State& s, bool ignore) const
 //**
 // * get the excitation value for this Muscle 
 // */
-double Muscle::getExcitation( const SimTK::State& s) const {
-    return( getControl(s) );
-}
+//osim_double_adouble Muscle::getExcitation( const SimTK::State& s) const {
+//    return( getControl(s) );
+//}
 
 
 /* get the activation level of the muscle, which modulates the active force of the muscle 
     and has a normalized (0 to 1) value */
-double Muscle::getActivation(const SimTK::State& s) const
+osim_double_adouble Muscle::getActivation(const SimTK::State& s) const
 {
     return getMuscleDynamicsInfo(s).activation;
 }
 
 /* get the current working fiber length (m) for the muscle */
-double Muscle::getFiberLength(const SimTK::State& s) const 
+osim_double_adouble Muscle::getFiberLength(const SimTK::State& s) const 
 {
     return getMuscleLengthInfo(s).fiberLength;
 }
 
 /* get the current pennation angle (radians) between the fiber and tendon at the current fiber length  */
-double Muscle::getPennationAngle(const SimTK::State& s) const
+osim_double_adouble Muscle::getPennationAngle(const SimTK::State& s) const
 {
     return getMuscleLengthInfo(s).pennationAngle;
 }
 
 /* get the cosine of the current pennation angle (radians) between the fiber and tendon at the current fiber length  */
-double Muscle::getCosPennationAngle(const SimTK::State& s) const
+osim_double_adouble Muscle::getCosPennationAngle(const SimTK::State& s) const
 {
     return getMuscleLengthInfo(s).cosPennationAngle;
 }
 
 /* get the current tendon length (m)  given the current joint angles and fiber length */
-double Muscle::getTendonLength(const SimTK::State& s) const
+osim_double_adouble Muscle::getTendonLength(const SimTK::State& s) const
 {
     return getMuscleLengthInfo(s).tendonLength;
 }
 
 /* get the current normalized fiber length (fiber_length/optimal_fiber_length) */
-double Muscle::getNormalizedFiberLength(const SimTK::State& s) const
+osim_double_adouble Muscle::getNormalizedFiberLength(const SimTK::State& s) const
 {
     return getMuscleLengthInfo(s).normFiberLength;
 }
 
 /* get the current fiber length (m) projected (*cos(pennationAngle)) onto the tendon direction */
-double Muscle::getFiberLengthAlongTendon(const SimTK::State& s) const
+osim_double_adouble Muscle::getFiberLengthAlongTendon(const SimTK::State& s) const
 {
     return getMuscleLengthInfo(s).fiberLength * getMuscleLengthInfo(s).cosPennationAngle; 
 }
 
 /* get the current tendon strain (delta_l/lo is dimensionless)  */
-double Muscle::getTendonStrain(const SimTK::State& s) const
+osim_double_adouble Muscle::getTendonStrain(const SimTK::State& s) const
 {
     return getMuscleLengthInfo(s).tendonStrain;
 }
 
 /* the potential energy (J) stored in the fiber due to its parallel elastic element */
-double Muscle::getFiberPotentialEnergy(const SimTK::State& s) const
+osim_double_adouble Muscle::getFiberPotentialEnergy(const SimTK::State& s) const
 {
     return getMusclePotentialEnergyInfo(s).fiberPotentialEnergy;
 }
 
 /* the potential energy (J) stored in the tendon */ 
-double Muscle::getTendonPotentialEnergy(const SimTK::State& s) const
+osim_double_adouble Muscle::getTendonPotentialEnergy(const SimTK::State& s) const
 {
     return getMusclePotentialEnergyInfo(s).tendonPotentialEnergy;
 }
 
 /* the total potential energy (J) stored in the muscle */   
-double Muscle::getMusclePotentialEnergy(const SimTK::State& s) const
+osim_double_adouble Muscle::getMusclePotentialEnergy(const SimTK::State& s) const
 {
     return getMusclePotentialEnergyInfo(s).musclePotentialEnergy;
 }
 
 /* get the passive fiber (parallel elastic element) force multiplier */
-double Muscle::getPassiveForceMultiplier(const SimTK::State& s) const
+osim_double_adouble Muscle::getPassiveForceMultiplier(const SimTK::State& s) const
 {
     return getMuscleLengthInfo(s).fiberPassiveForceLengthMultiplier;
 }
 
 /* get the active fiber (contractile element) force multiplier due to current fiber length */
-double Muscle::getActiveForceLengthMultiplier(const SimTK::State& s) const
+osim_double_adouble Muscle::getActiveForceLengthMultiplier(const SimTK::State& s) const
 {
     return getMuscleLengthInfo(s).fiberActiveForceLengthMultiplier;
 }
 
 /* get current fiber velocity (m/s) positive is lengthening */
-double Muscle::getFiberVelocity(const SimTK::State& s) const
+osim_double_adouble Muscle::getFiberVelocity(const SimTK::State& s) const
 {
     return getFiberVelocityInfo(s).fiberVelocity;
 }
 
 /* get normalized fiber velocity (fiber_length/s / max_contraction_velocity) */
-double Muscle::getNormalizedFiberVelocity(const SimTK::State& s) const
+osim_double_adouble Muscle::getNormalizedFiberVelocity(const SimTK::State& s) const
 {
     return getFiberVelocityInfo(s).normFiberVelocity;
 }
 
 /* get the current fiber velocity (m/s) projected onto the tendon direction */
-double Muscle::getFiberVelocityAlongTendon(const SimTK::State& s) const 
+osim_double_adouble Muscle::getFiberVelocityAlongTendon(const SimTK::State& s) const 
 {
     return getFiberVelocityInfo(s).fiberVelocityAlongTendon;
 }
 
 /* get the tendon velocity (m/s) */
-double Muscle::getTendonVelocity(const SimTK::State& s) const
+osim_double_adouble Muscle::getTendonVelocity(const SimTK::State& s) const
 {
     return getFiberVelocityInfo(s).tendonVelocity;
 }
 
 /* get the dimensionless factor resulting from the fiber's force-velocity curve */
-double Muscle::getForceVelocityMultiplier(const SimTK::State& s) const
+osim_double_adouble Muscle::getForceVelocityMultiplier(const SimTK::State& s) const
 {
     return getFiberVelocityInfo(s).fiberForceVelocityMultiplier;
 }
 
 /* get pennation angular velocity (radians/s) */
-double Muscle::getPennationAngularVelocity(const SimTK::State& s) const
+osim_double_adouble Muscle::getPennationAngularVelocity(const SimTK::State& s) const
 {
     return getFiberVelocityInfo(s).pennationAngularVelocity;
 }
 
 /* get the current fiber force (N)*/
-double Muscle::getFiberForce(const SimTK::State& s) const
+osim_double_adouble Muscle::getFiberForce(const SimTK::State& s) const
 {
     return getMuscleDynamicsInfo(s).fiberForce;
 }
 
 /* get the current fiber force (N) applied to the tendon */
-double Muscle::getFiberForceAlongTendon(const SimTK::State& s) const
+osim_double_adouble Muscle::getFiberForceAlongTendon(const SimTK::State& s) const
 {
     return getMuscleDynamicsInfo(s).fiberForceAlongTendon; 
 }
 
 
 /* get the current active fiber force (N) due to activation*force_length*force_velocity relationships */
-double Muscle::getActiveFiberForce(const SimTK::State& s) const
+osim_double_adouble Muscle::getActiveFiberForce(const SimTK::State& s) const
 {
     return getMuscleDynamicsInfo(s).activeFiberForce;
 }
 
 /* get the total force applied by all passive elements in the fiber (N) */
-double Muscle::getPassiveFiberForce(const SimTK::State& s) const 
+osim_double_adouble Muscle::getPassiveFiberForce(const SimTK::State& s) const 
 {
     return getMuscleDynamicsInfo(s).passiveFiberForce;
 }
 
 /* get the current active fiber force (N) projected onto the tendon direction */
-double Muscle::getActiveFiberForceAlongTendon(const SimTK::State& s) const
+osim_double_adouble Muscle::getActiveFiberForceAlongTendon(const SimTK::State& s) const
 {
     return getMuscleDynamicsInfo(s).activeFiberForce * getMuscleLengthInfo(s).cosPennationAngle;
 }
 
 /* get the total force applied by all passive elements in the fiber (N)
    projected onto the tendon direction */
-double Muscle::getPassiveFiberForceAlongTendon(const SimTK::State& s) const 
+osim_double_adouble Muscle::getPassiveFiberForceAlongTendon(const SimTK::State& s) const 
 {
     return getMuscleDynamicsInfo(s).passiveFiberForce * getMuscleLengthInfo(s).cosPennationAngle;
 }
 
 /* get the current tendon force (N) applied to bones */
-double Muscle::getTendonForce(const SimTK::State& s) const
+osim_double_adouble Muscle::getTendonForce(const SimTK::State& s) const
 {
     return getMaxIsometricForce() * getMuscleDynamicsInfo(s).normTendonForce;
 }
 
 /* get the current fiber stiffness (N/m) defined as the partial derivative
     of fiber force w.r.t. fiber length */
-double Muscle::getFiberStiffness(const SimTK::State& s) const
+osim_double_adouble Muscle::getFiberStiffness(const SimTK::State& s) const
 {
     return getMuscleDynamicsInfo(s).fiberStiffness;
 }
@@ -459,7 +459,7 @@ double Muscle::getFiberStiffness(const SimTK::State& s) const
 /* get the current fiber stiffness (N/m) defined as the partial derivative
     of fiber force along the tendon w.r.t. small changes in fiber length 
     along the tendon*/
-double Muscle::getFiberStiffnessAlongTendon(const SimTK::State& s) const
+osim_double_adouble Muscle::getFiberStiffnessAlongTendon(const SimTK::State& s) const
 {
     return getMuscleDynamicsInfo(s).fiberStiffnessAlongTendon;
 }
@@ -467,47 +467,47 @@ double Muscle::getFiberStiffnessAlongTendon(const SimTK::State& s) const
 
 /* get the current tendon stiffness (N/m) defined as the partial derivative
     of tendon force w.r.t. tendon length */
-double Muscle::getTendonStiffness(const SimTK::State& s) const
+osim_double_adouble Muscle::getTendonStiffness(const SimTK::State& s) const
 {
     return getMuscleDynamicsInfo(s).tendonStiffness;
 }
 
 /* get the current muscle stiffness (N/m) defined as the partial derivative
     of muscle force w.r.t. muscle length */
-double Muscle::getMuscleStiffness(const SimTK::State& s) const
+osim_double_adouble Muscle::getMuscleStiffness(const SimTK::State& s) const
 {
     return getMuscleDynamicsInfo(s).muscleStiffness;
 }
 
 /* get the current fiber power (W) */
-double Muscle::getFiberActivePower(const SimTK::State& s) const
+osim_double_adouble Muscle::getFiberActivePower(const SimTK::State& s) const
 {
     return getMuscleDynamicsInfo(s).fiberActivePower;
 }
 
 /* get the current fiber active power (W) */
-double Muscle::getFiberPassivePower(const SimTK::State& s) const
+osim_double_adouble Muscle::getFiberPassivePower(const SimTK::State& s) const
 {
     return getMuscleDynamicsInfo(s).fiberPassivePower;
 }
 
 /* get the current tendon power (W) */
-double Muscle::getTendonPower(const SimTK::State& s) const
+osim_double_adouble Muscle::getTendonPower(const SimTK::State& s) const
 {
     return getMuscleDynamicsInfo(s).tendonPower;
 }
 
 /* get the current muscle power (W) */
-double Muscle::getMusclePower(const SimTK::State& s) const
+osim_double_adouble Muscle::getMusclePower(const SimTK::State& s) const
 {
     return getMuscleDynamicsInfo(s).musclePower;
 }
 
 
-void Muscle::setExcitation(SimTK::State& s, double excitation) const
-{
-    setControls(SimTK::Vector(1, excitation), _model->updControls(s));
-}
+//void Muscle::setExcitation(SimTK::State& s, osim_double_adouble excitation) const
+//{
+//    setControls(SimTK::Vector(1, excitation), _model->updControls(s));
+//}
 
 /* Access to muscle calculation data structures */
 const Muscle::MuscleLengthInfo& Muscle::getMuscleLengthInfo(const SimTK::State& s) const
@@ -594,7 +594,7 @@ updMusclePotentialEnergyInfo(const SimTK::State& s) const
  * Get the stress in this muscle actuator.  It is calculated as the force 
  * divided by the maximum isometric force (which is proportional to its area).
  */
-double Muscle::getStress(const SimTK::State& s) const
+osim_double_adouble Muscle::getStress(const SimTK::State& s) const
 {
     return getActuation(s) / getMaxIsometricForce();
 }
@@ -639,8 +639,8 @@ void Muscle::calcMusclePotentialEnergyInfo(const SimTK::State& s,
 //=============================================================================
 // Required by CMC and Static Optimization
 //=============================================================================
-double Muscle::calcInextensibleTendonActiveFiberForce(SimTK::State& s, 
-                                                  double activation) const
+osim_double_adouble Muscle::calcInextensibleTendonActiveFiberForce(SimTK::State& s, 
+                                                  osim_double_adouble activation) const
 {
     const MuscleLengthInfo& mli = getMuscleLengthInfo(s);
     const FiberVelocityInfo& fvi = getFiberVelocityInfo(s);
@@ -660,13 +660,11 @@ void Muscle::computeForce(const SimTK::State& s,
                           SimTK::Vector_<SimTK::SpatialVec>& bodyForces, 
                           SimTK::Vector& generalizedForces) const
 {
-    // This calls compute actuation.
-    Super::computeForce(s, bodyForces, generalizedForces); 
+    Super::computeForce(s, bodyForces, generalizedForces); // Calls compute actuation.
 
-    if (getDebugLevel() < 0) return;
-    // NOTE: Actuation could be negative, in particular during CMC, when the 
-    // optimizer is computing gradients, but in those cases the actuation will 
-    // be overridden and will not be computed by the muscle.
+    // NOTE: Actuation could be negative, in particular during CMC, when the optimizer
+    // is computing gradients, but in those cases the actuation will be 
+    // overridden and will not be computed by the muscle
     if (!isActuationOverridden(s) && (getActuation(s) < -SimTK::SqrtEps)) {
         string msg = getConcreteClassName()
             + "::computeForce, muscle "+ getName() + " force < 0";
@@ -675,18 +673,18 @@ void Muscle::computeForce(const SimTK::State& s,
     }
 }
 
-double Muscle::computePotentialEnergy(const SimTK::State& s) const
+osim_double_adouble Muscle::computePotentialEnergy(const SimTK::State& s) const
 {
     const MusclePotentialEnergyInfo& mpei = getMusclePotentialEnergyInfo(s);
     return mpei.musclePotentialEnergy;
 }
 
-SimTK::Vec3 Muscle::computePathColor(const SimTK::State& state) const {
-    const double activation = 
-        SimTK::clamp(0., getActivation(state), 1.);
-    const SimTK::Vec3 color(activation, 0, 1-activation); // blue to red
-    return color;
-}
+//SimTK::Vec3 Muscle::computePathColor(const SimTK::State& state) const {
+//    const osim_double_adouble activation = 
+//        SimTK::clamp(0., getActivation(state), 1.);
+//    const SimTK::Vec3 color(activation, 0, 1-activation); // blue to red
+//    return color;
+//}
 
 
 void Muscle::updateGeometry(const SimTK::State& s)

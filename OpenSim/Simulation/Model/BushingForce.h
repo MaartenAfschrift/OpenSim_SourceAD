@@ -74,16 +74,6 @@ public:
     /** Convenience Constructor.
     Create a BushingForce between two PhysicalFrames, frame1 and frame2.
     @param[in] name         the name of this BushingForce
-    @param[in] frame1       the bushing's first PhysicalFrame
-    @param[in] frame2       the bushing's second PhysicalFrame
-    */
-    BushingForce(const std::string& name,
-                 const PhysicalFrame& frame1,
-                 const PhysicalFrame& frame2);
-
-    /** Convenience Constructor.
-    Create a BushingForce between two PhysicalFrames, frame1 and frame2.
-    @param[in] name         the name of this BushingForce
     @param[in] frame1Name   the name of the bushing's first PhysicalFrame
     @param[in] frame2Name   the name of the bushing's second PhysicalFrame
     */
@@ -91,47 +81,12 @@ public:
                  const std::string& frame1Name,
                  const std::string& frame2Name);
 
-    /** Construct a BushingForce given physical frames that it
-     * tries to keep aligned by generating a passive force according to the
-     * physical properties of the bushing. See property declarations for more
-     * information. */
-    BushingForce(const std::string& name,
-                 const PhysicalFrame& frame1,
-                 const PhysicalFrame& frame2,
-                 const SimTK::Vec3& transStiffness,
-                 const SimTK::Vec3& rotStiffness,
-                 const SimTK::Vec3& transDamping,
-                 const SimTK::Vec3& rotDamping);
-
     /** Construct a BushingForce given the names of physical frames that it
-     * tries to keep aligned by generating a passive force according to the
-     * physical properties of the bushing. See property declarations for more
-     * information. */
+    tries to keep aligned by generating a passive force according to the physical
+    properties of the bushing. See property declarations for more information. */
     BushingForce(const std::string& name,
                  const std::string& frame1Name,
                  const std::string& frame2Name,
-                 const SimTK::Vec3& transStiffness,
-                 const SimTK::Vec3& rotStiffness,
-                 const SimTK::Vec3& transDamping,
-                 const SimTK::Vec3& rotDamping);
-
-    /** Convenience Constructor
-    Construct a BushingForce between two frames with offset transforms on the
-    respective frames.
-
-    @param[in] name              the name of this BushingForce
-    @param[in] frame1            first PhysicalFrame that the bushing connects
-    @param[in] transformInFrame1 offset Transform on the first frame
-    @param[in] frame2            second PhysicalFrame that the bushing connects
-    @param[in] transformInFrame2 offset Transform on the second frame
-    @param[in] transStiffness    translational (dx, dy, dz) stiffnesses
-    @param[in] rotStiffness      rotational (dq_x, dq_y, dq_z) stiffnesses
-    @param[in] transDamping      translational (dx/dt, dy/dt, dz/dt) damping
-    @param[in] rotDamping        rotational (dq_x/dt, dq_y/dt, dq_z/dt) damping
-    */
-    BushingForce(const std::string &name,
-                 const PhysicalFrame& frame1, const SimTK::Transform& transformInFrame1,
-                 const PhysicalFrame& frame2, const SimTK::Transform& transformInFrame2,
                  const SimTK::Vec3& transStiffness,
                  const SimTK::Vec3& rotStiffness,
                  const SimTK::Vec3& transDamping,
@@ -193,7 +148,7 @@ public:
     // assignment operator.
 
     /** Potential energy is the elastic energy stored in the bushing. */
-    double computePotentialEnergy(const SimTK::State& s) const final override;
+    osim_double_adouble computePotentialEnergy(const SimTK::State& s) const final override;
 
     //--------------------------------------------------------------------------
     // Reporting
@@ -204,7 +159,7 @@ public:
     OpenSim::Array<std::string> getRecordLabels() const override;
     /**
     *  Provide the value(s) to be reported that correspond to the labels */
-    OpenSim::Array<double> getRecordValues(const SimTK::State& state) const override;
+    OpenSim::Array<osim_double_adouble> getRecordValues(const SimTK::State& state) const override;
 
 private:
     //--------------------------------------------------------------------------

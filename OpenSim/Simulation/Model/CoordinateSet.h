@@ -1,5 +1,5 @@
-#ifndef OPENSIM_COORDINATE_SET_H_
-#define OPENSIM_COORDINATE_SET_H_
+#ifndef __CoordinateSet_h__
+#define __CoordinateSet_h__
 /* -------------------------------------------------------------------------- *
  *                         OpenSim:  CoordinateSet.h                          *
  * -------------------------------------------------------------------------- *
@@ -23,10 +23,14 @@
  * limitations under the License.                                             *
  * -------------------------------------------------------------------------- */
 
-#include <OpenSim/Common/Set.h>
+#include <OpenSim/Simulation/osimSimulationDLL.h>
+#include <OpenSim/Simulation/Model/ModelComponentSet.h>
 #include <OpenSim/Simulation/SimbodyEngine/Coordinate.h>
 
+
 namespace OpenSim {
+
+class Model;
 //=============================================================================
 //=============================================================================
 /**
@@ -34,12 +38,18 @@ namespace OpenSim {
  *
  * @authors Peter Loan, Ajay Seth
  */
-class OSIMSIMULATION_API CoordinateSet : public Set<Coordinate> {
-OpenSim_DECLARE_CONCRETE_OBJECT(CoordinateSet, Set<Coordinate>);
+
+class OSIMSIMULATION_API CoordinateSet : public ModelComponentSet<Coordinate> {
+OpenSim_DECLARE_CONCRETE_OBJECT(CoordinateSet, ModelComponentSet<Coordinate>);
 
 public:
-    /** Use Super's constructors. @see Set */
-    using Super::Super;
+    CoordinateSet();
+    CoordinateSet(Model& model) : Super(model) {}
+    //CoordinateSet(Model& model, const std::string &aFileName, 
+    //              bool aUpdateFromXMLNode=true)
+    //:   Super(model, aFileName, aUpdateFromXMLNode) {}
+    CoordinateSet(const CoordinateSet& aCoordinateSet);
+    ~CoordinateSet(void);
 
     /**
      * Populate this %Set as a flat list of all Model Coordinates given 
@@ -47,6 +57,12 @@ public:
      */
     void populate(Model& model);
 
+    //--------------------------------------------------------------------------
+    // OPERATORS
+    //--------------------------------------------------------------------------
+#ifndef SWIG
+    CoordinateSet& operator=(const CoordinateSet &aCoordinateSet);
+#endif
     void getSpeedNames(OpenSim::Array<std::string> &rNames) const;
 
 //=============================================================================
@@ -56,4 +72,4 @@ public:
 
 } // end of namespace OpenSim
 
-#endif // OPENSIM_COORDINATE_SET_H_
+#endif // __CoordinateSet_h__

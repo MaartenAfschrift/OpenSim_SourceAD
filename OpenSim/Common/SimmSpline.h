@@ -58,16 +58,16 @@ protected:
     /** Array of values for the independent variables (i.e., the spline knot
     sequence).  This array must be monotonically increasing. */
     PropertyDblArray _propX;
-    Array<double> &_x;
+    Array<osim_double_adouble> &_x;
 
     /** Y values. */
     PropertyDblArray _propY;
-    Array<double> &_y;
+    Array<osim_double_adouble> &_y;
 
 private:
-    Array<double> _b;
-    Array<double> _c;
-    Array<double> _d;
+    Array<osim_double_adouble> _b;
+    Array<osim_double_adouble> _c;
+    Array<osim_double_adouble> _d;
 
 //=============================================================================
 // METHODS
@@ -77,7 +77,7 @@ public:
     // CONSTRUCTION
     //--------------------------------------------------------------------------
     SimmSpline();
-    SimmSpline(int aN,const double *aTimes,const double *aValues,
+    SimmSpline(int aN,const osim_double_adouble *aTimes,const osim_double_adouble *aValues,
         const std::string &aName="");
     SimmSpline(const SimmSpline &aSpline);
     virtual ~SimmSpline();
@@ -101,30 +101,30 @@ public:
     //--------------------------------------------------------------------------
 public:
     int getSize() const;
-    const Array<double>& getX() const;
-    const Array<double>& getY() const;
-    virtual const double* getXValues() const;
-    virtual const double* getYValues() const;
+    const Array<osim_double_adouble>& getX() const;
+    const Array<osim_double_adouble>& getY() const;
+    virtual const osim_double_adouble* getXValues() const;
+    virtual const osim_double_adouble* getYValues() const;
     virtual int getNumberOfPoints() const { return _x.getSize(); }
-    virtual double getX(int aIndex) const;
-    virtual double getY(int aIndex) const;
-    virtual double getZ(int aIndex) const { return 0.0; }
-    virtual void setX(int aIndex, double aValue);
-    virtual void setY(int aIndex, double aValue);
+    virtual osim_double_adouble getX(int aIndex) const;
+    virtual osim_double_adouble getY(int aIndex) const;
+    virtual osim_double_adouble getZ(int aIndex) const { return 0.0; }
+    virtual void setX(int aIndex, osim_double_adouble aValue);
+    virtual void setY(int aIndex, osim_double_adouble aValue);
     virtual bool deletePoint(int aIndex);
     virtual bool deletePoints(const Array<int>& indices);
-    virtual int addPoint(double aX, double aY);
+    virtual int addPoint(osim_double_adouble aX, osim_double_adouble aY);
 
     //--------------------------------------------------------------------------
     // EVALUATION
     //--------------------------------------------------------------------------
-    double calcValue(const SimTK::Vector& x) const override;
-    double calcDerivative(const std::vector<int>& derivComponents, const SimTK::Vector& x) const override;
+	osim_double_adouble calcValue(const SimTK::Vector& x) const override;
+	osim_double_adouble calcDerivative(const std::vector<int>& derivComponents, const SimTK::Vector& x) const override;
     int getArgumentSize() const override;
     int getMaxDerivativeOrder() const override;
     SimTK::Function* createSimTKFunction() const override;
 
-    void updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber=-1) override;
+    //void updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber=-1) override;
 
 private:
     void calcCoefficients();

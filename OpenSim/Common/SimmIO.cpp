@@ -27,6 +27,7 @@
 #include <time.h>
 #include "SimmIO.h"
 #include "SimTKcommon/Scalar.h"
+#include "osim_adouble.h"
 
 //=============================================================================
 // STATICS
@@ -258,7 +259,7 @@ bool OpenSim::readIntegerFromString(string &aString, int *rNumber)
  * @param rNumber double that is read is returned here.
  * @return True if double was read, false if not.
  */
-bool OpenSim::readDoubleFromString(string &aString, double *rNumber, bool allowNaNs)
+bool OpenSim::readDoubleFromString(string &aString, osim_double_adouble *rNumber, bool allowNaNs)
 {
    size_t i, end;
    string buffer;
@@ -276,7 +277,7 @@ bool OpenSim::readDoubleFromString(string &aString, double *rNumber, bool allowN
            std::transform(prefix.begin(), prefix.end(),prefix.begin(), ::toupper);
            if (prefix==NaNString){
                 aString.erase(0, 3);
-                *rNumber = SimTK::NaN;
+                *rNumber = SimTK::NaN.value();
                 return true;
            }
        }
@@ -338,7 +339,7 @@ bool OpenSim::readVectorFromString(string &aString, SimTK::Vec3 &rVec)
  * @param rVZ Z coordinate of vector is returned here.
  * @return True if vector was read, false if not.
  */
-bool OpenSim::readVectorFromString(string &aString, double *rVX, double *rVY, double *rVZ)
+bool OpenSim::readVectorFromString(string &aString, osim_double_adouble *rVX, osim_double_adouble *rVY, osim_double_adouble *rVZ)
 {
    bool ok = true;
 
@@ -359,10 +360,10 @@ bool OpenSim::readVectorFromString(string &aString, double *rVX, double *rVY, do
  * @param rVec vector of coordinates is returned here.
  * @return True if coordinates were read, false if not.
  */
-bool OpenSim::readCoordinatesFromString(string &aString, double rVec[3], bool allowNaNs)
+bool OpenSim::readCoordinatesFromString(string &aString, osim_double_adouble rVec[3], bool allowNaNs)
 {
    int numTabs = 0, numCoords = 0;
-   double value;
+   osim_double_adouble value;
 
    while (!aString.empty())
    {

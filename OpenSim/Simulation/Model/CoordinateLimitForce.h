@@ -60,23 +60,23 @@ public:
 //==============================================================================
     OpenSim_DECLARE_PROPERTY(coordinate, std::string,
         "Coordinate (name) to be limited.");
-    OpenSim_DECLARE_PROPERTY(upper_stiffness, double,
+    OpenSim_DECLARE_PROPERTY(upper_stiffness, osim_double_adouble,
         "Stiffness of the passive limit force when coordinate exceeds upper "
         "limit. Note, rotational stiffness expected in N*m/degree.");
-    OpenSim_DECLARE_PROPERTY(upper_limit, double,
+    OpenSim_DECLARE_PROPERTY(upper_limit, osim_double_adouble,
         "The upper limit of the coordinate range of motion (rotations in "
         "degrees).");
-    OpenSim_DECLARE_PROPERTY(lower_stiffness, double,
+    OpenSim_DECLARE_PROPERTY(lower_stiffness, osim_double_adouble,
         "Stiffness of the passive limit force when coordinate exceeds lower "
         "limit. Note, rotational stiffness expected in N*m/degree.");
-    OpenSim_DECLARE_PROPERTY(lower_limit, double,
+    OpenSim_DECLARE_PROPERTY(lower_limit, osim_double_adouble,
         "The lower limit of the coordinate range of motion (rotations in "
         "degrees).");
-    OpenSim_DECLARE_PROPERTY(damping, double,
+    OpenSim_DECLARE_PROPERTY(damping, osim_double_adouble,
         "Damping factor on the coordinate's speed applied only when limit "
         "is exceeded. For translational has units N/(m/s) and rotational has "
         "Nm/(degree/s)");
-    OpenSim_DECLARE_PROPERTY(transition, double,
+    OpenSim_DECLARE_PROPERTY(transition, osim_double_adouble,
         "Transition region width in the units of the coordinate (rotations "
         "in degrees). Dictates the transition from zero to constant stiffness "
         "as coordinate exceeds its limit.");
@@ -100,8 +100,8 @@ public:
     like smoother (i.e. larger transition regions).
     @param[in]  coordName   Coordinate whose range is to be limited.
     @param[in]  q_upper     Coordinate's upper limit value.
-    @param[in]  K_upper     Upper limit stiffness when coordinate > q_upper
     @param[in]  q_lower     Coordinate's lower limit value.
+    @param[in]  K_upper     Upper limit stiffness when coordinate > q_upper
     @param[in]  K_lower     Lower limit stiffness when coordinate < q_lower
     @param[in]  damping     Damping factor when coordinate is beyond the limits
     @param[in]  dq          Transition region (displacement) for force to be
@@ -109,9 +109,9 @@ public:
     @param[in]  computeDissipationEnergy  
                             Whether to compute dissipated energy (false).
     **/
-    CoordinateLimitForce(const std::string& coordName, double q_upper,
-        double K_upper, double q_lower, double K_lower, double damping,
-        double dq, bool computeDissipationEnergy=false);
+    CoordinateLimitForce(const std::string& coordName, osim_double_adouble q_upper,
+        osim_double_adouble K_upper, osim_double_adouble q_lower, osim_double_adouble K_lower, osim_double_adouble damping,
+        osim_double_adouble dq, bool computeDissipationEnergy=false);
 
     //use compiler default copy constructor and assignment operator
 
@@ -125,33 +125,33 @@ public:
     // Properties
     /** Stiffness of the passive limit force when coordinate exceeds upper 
     limit. Note, rotational stiffness expected in N*m/degree. */
-    void setUpperStiffness(double aUpperStiffness);
-    double getUpperStiffness() const;
+    void setUpperStiffness(osim_double_adouble aUpperStiffness);
+    osim_double_adouble getUpperStiffness() const;
     
     /** Upper limit of the coordinate range of motion (rotations in degrees).*/
-    void setUpperLimit(double aUpperLimit);
-    double getUpperLimit() const;
+    void setUpperLimit(osim_double_adouble aUpperLimit);
+    osim_double_adouble getUpperLimit() const;
     
     /** Stiffness of the passive limit force when coordinate exceeds lower 
     limit. Note, rotational stiffness expected in N*m/degree. */
-    void setLowerStiffness(double aLowerStiffness);
-    double getLowerStiffness() const;
+    void setLowerStiffness(osim_double_adouble aLowerStiffness);
+    osim_double_adouble getLowerStiffness() const;
     
     /** Lower limit of the coordinate range of motion (rotations in degrees).*/
-    void setLowerLimit(double aLowerLimit);
-    double getLowerLimit() const;
+    void setLowerLimit(osim_double_adouble aLowerLimit);
+    osim_double_adouble getLowerLimit() const;
     
     /** Damping factor on the coordinate's speed applied only when limit is 
     exceeded. For translational has units N/(m/s) and rotational has 
     Nm/(degree/s). */
-    void setDamping(double aDamping);
-    double getDamping() const;
+    void setDamping(osim_double_adouble aDamping);
+    osim_double_adouble getDamping() const;
 
     /** Transition region width with lengths is m and angles in degrees).
     Specifies the transition from zero to a constant stiffness as 
     coordinate exceeds its limit.*/
-    void setTransition(double aTransition);
-    double getTransition() const;
+    void setTransition(osim_double_adouble aTransition);
+    osim_double_adouble getTransition() const;
 
     /** Option to compute the dissipation energy due to damping in the 
     CoordinateLimitForce. If true the dissipation power is automatically 
@@ -168,7 +168,7 @@ public:
     @return
         The dissipated power (a nonnegative scalar).
     @see getDissipatedEnergy() for the time-integrated power loss **/
-    double getPowerDissipation(const SimTK::State& s) const;
+    osim_double_adouble getPowerDissipation(const SimTK::State& s) const;
 
     /** Obtain energy dissipated by this CoordinateLimitForce over time
     in units of energy in J. 
@@ -177,17 +177,17 @@ public:
         dissipated energy 
     @return
         The dissipated energy (a nonnegative scalar). **/
-    double getDissipatedEnergy(const SimTK::State& s) const;
+    osim_double_adouble getDissipatedEnergy(const SimTK::State& s) const;
 
     //--------------------------------------------------------------------------
     // COMPUTATIONS
     //--------------------------------------------------------------------------
     /** Force calculation operator. **/
-    double calcLimitForce( const SimTK::State& s) const;
+    osim_double_adouble calcLimitForce( const SimTK::State& s) const;
 
     /** Contribute this Force component's potential energy to the accounting
     of the total system energy. **/
-    double computePotentialEnergy(const SimTK::State& s) const override;
+    osim_double_adouble computePotentialEnergy(const SimTK::State& s) const override;
 
 
     //--------------------------------------------------------------------------
@@ -202,7 +202,7 @@ public:
      * Given SimTK::State object extract all the values necessary to report forces, application location
      * frame, etc. used in conjunction with getRecordLabels and should return same size Array
      */
-    Array<double> getRecordValues(const SimTK::State& state) const override ;
+    Array<osim_double_adouble> getRecordValues(const SimTK::State& state) const override ;
 
 protected:
     //--------------------------------------------------------------------------
@@ -237,17 +237,17 @@ private:
     SimTK::ResetOnCopy<std::unique_ptr<SimTK::Function::Step> > _loStep;
 
     // Scaling for coordinate values in m or degrees (rotational) 
-    double _w;
+    osim_double_adouble _w;
 
     // Coordinate limits in internal (SI) units (m or rad)
-    double _qup;
-    double _qlow;
+    osim_double_adouble _qup;
+    osim_double_adouble _qlow;
     // Constant stiffnesses in internal (SI) N/m or Nm/rad
-    double _Kup;
-    double _Klow;
+    osim_double_adouble _Kup;
+    osim_double_adouble _Klow;
 
     // Damping in internal (SI) units of N/(m/s) or Nm/(rad/s)
-    double _damp;
+    osim_double_adouble _damp;
 
     // Corresponding generalized coordinate to which the coordinate actuator
     // is applied.

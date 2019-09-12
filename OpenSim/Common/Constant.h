@@ -49,7 +49,7 @@ OpenSim_DECLARE_CONCRETE_OBJECT(Constant, Function);
 //=============================================================================
 protected:
     PropertyDbl _valueProp;
-    double &_value;
+	osim_double_adouble &_value;
 
 //=============================================================================
 // METHODS
@@ -59,7 +59,7 @@ public:
     // CONSTRUCTION
     //--------------------------------------------------------------------------
     Constant();
-    Constant(double value);
+    Constant(osim_double_adouble value);
     Constant(const Constant &aSpline);
     virtual ~Constant();
 
@@ -80,16 +80,16 @@ public:
     // SET AND GET
     //--------------------------------------------------------------------------
 public:
-    void setValue(double aValue);
+    void setValue(osim_double_adouble aValue);
 
     //--------------------------------------------------------------------------
     // EVALUATION
     //--------------------------------------------------------------------------
-    double calcValue(const SimTK::Vector& xUnused) const override
+	osim_double_adouble calcValue(const SimTK::Vector& xUnused) const override
     {
         return _value;
     }
-    const double getValue() const { return _value; }
+    const osim_double_adouble getValue() const { return _value; }
     SimTK::Function* createSimTKFunction() const override;
 //=============================================================================
 };  // END class Constant

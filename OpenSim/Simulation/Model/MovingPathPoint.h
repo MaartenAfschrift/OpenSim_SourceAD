@@ -81,7 +81,7 @@ public:
     MovingPathPoint();
     virtual ~MovingPathPoint();
 
-    void updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber) override;
+    //void updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber) override;
 
     bool hasXCoordinate() const;
     bool hasYCoordinate() const;
@@ -107,9 +107,7 @@ public:
 
     SimTK::Vec3 getdPointdQ(const SimTK::State& s) const override; 
 
-    /** Scale the underlying MultiplierFunctions associated with the
-        MovingPathPoint. */
-    void extendScale(const SimTK::State& s, const ScaleSet& scaleSet) override;
+   void scale(const SimTK::Vec3& aScaleFactors) override;
 
 private:
     void constructProperties();

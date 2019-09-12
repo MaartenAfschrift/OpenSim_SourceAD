@@ -45,7 +45,7 @@ const int PointKinematicsBUFFER_LENGTH = 2048;
 //=============================================================================
 namespace OpenSim { 
 
-class PhysicalFrame;
+class Body;
 class Model;
 class Storage;
 
@@ -68,8 +68,8 @@ public:
 private:
     //char _buffer[PointKinematicsBUFFER_LENGTH];
     //char _tmp[PointKinematicsBUFFER_LENGTH];
-    const PhysicalFrame *_body;
-    const PhysicalFrame *_relativeToBody;
+    Body *_body;
+    Body *_relativeToBody;
 protected:
     // Properties
     PropertyStr _bodyNameProp;
@@ -121,10 +121,10 @@ public:
     //--------------------------------------------------------------------------
     // BODY
     void setBodyPoint(const std::string& aBody, const SimTK::Vec3& aPoint);
-    void setBody(const PhysicalFrame* aBody);
-    void setRelativeToBody(const PhysicalFrame* aBody);
-    const PhysicalFrame* getBody() const;
-    const PhysicalFrame* getRelativeToBody() const;
+    void setBody(Body* aBody);
+    void setRelativeToBody(Body* aBody);
+    Body* getBody();
+    Body* getRelativeToBody();
     // POINT
     void setPoint(const SimTK::Vec3& aPoint);
     void getPoint(SimTK::Vec3& rPoint);
@@ -144,9 +144,12 @@ public:
     // ANALYSIS
     //--------------------------------------------------------------------------
 
-    int begin(const SimTK::State& s) override;
-    int step(const SimTK::State& s, int setNumber) override;
-    int end(const SimTK::State& s) override;
+    int
+        begin( SimTK::State& s) override;
+    int
+        step(const SimTK::State& s, int setNumber) override;
+    int
+        end( SimTK::State& s) override;
 protected:
     virtual int
         record(const SimTK::State& s );

@@ -28,7 +28,7 @@ using namespace SimTK;
 
 namespace OpenSim {
 
-CoordinateReference::CoordinateReference() : Reference_<double>(),
+CoordinateReference::CoordinateReference() : Reference_<osim_double_adouble>(),
     _coordinateValueFunction(_coordinateValueFunctionProp.getValueObjPtrRef()),
     _defaultWeight(_defaultWeightProp.getValueDbl())
 {
@@ -45,7 +45,7 @@ CoordinateReference::CoordinateReference() : Reference_<double>(),
  * @param referenceFunction is its function returning its value
  */
 CoordinateReference::CoordinateReference(const std::string name, 
-    const Function &referenceFunction) : Reference_<double>(name),
+    const Function &referenceFunction) : Reference_<osim_double_adouble>(name),
     _coordinateValueFunction(_coordinateValueFunctionProp.getValueObjPtrRef()),
     _defaultWeight(_defaultWeightProp.getValueDbl())
 {
@@ -89,7 +89,7 @@ const SimTK::Array_<std::string>& CoordinateReference::getNames() const
 
 
 /** get the values of the CoordinateReference */
-void CoordinateReference::getValues(const SimTK::State &s, SimTK::Array_<double> &values) const
+void CoordinateReference::getValues(const SimTK::State &s, SimTK::Array_<osim_double_adouble> &values) const
 {
     SimTK::Vector t(1, s.getTime());
     values.resize(getNumRefs());
@@ -98,7 +98,7 @@ void CoordinateReference::getValues(const SimTK::State &s, SimTK::Array_<double>
 
 
 /** get the weighting (importance) of meeting this Reference */
-void CoordinateReference::getWeights(const SimTK::State &s, SimTK::Array_<double> &weights) const
+void CoordinateReference::getWeights(const SimTK::State &s, SimTK::Array_<osim_double_adouble> &weights) const
 {
     weights.resize(getNumRefs());
     weights[0] = _defaultWeight;
@@ -106,14 +106,14 @@ void CoordinateReference::getWeights(const SimTK::State &s, SimTK::Array_<double
 
 
 /** get the value of the CoordinateReference */
-double CoordinateReference::getValue(const SimTK::State &s) const
+osim_double_adouble CoordinateReference::getValue(const SimTK::State &s) const
 {
     SimTK::Vector t(1, s.getTime());
     return _coordinateValueFunction->calcValue(t);
 }
 
 /** get the speed value of the CoordinateReference */
-double CoordinateReference::getSpeedValue(const SimTK::State &s) const
+osim_double_adouble CoordinateReference::getSpeedValue(const SimTK::State &s) const
 {
     SimTK::Vector t(1, s.getTime());
     std::vector<int> order(1, 0);
@@ -121,7 +121,7 @@ double CoordinateReference::getSpeedValue(const SimTK::State &s) const
 }
 
 /** get the acceleration value of the CoordinateReference */
-double CoordinateReference::getAccelerationValue(const SimTK::State &s) const
+osim_double_adouble CoordinateReference::getAccelerationValue(const SimTK::State &s) const
 {
     SimTK::Vector t(1, s.getTime());
     std::vector<int> order(2, 0);
@@ -129,13 +129,13 @@ double CoordinateReference::getAccelerationValue(const SimTK::State &s) const
 }
 
 /** get the weight of the CoordinateReference */
-double CoordinateReference::getWeight(const SimTK::State &s) const
+osim_double_adouble CoordinateReference::getWeight(const SimTK::State &s) const
 {
-    return Reference_<double>::getWeights(s)[0];
+    return Reference_<osim_double_adouble>::getWeights(s)[0];
 }
 
 /** set the weight of the CoordinateReference */
-void CoordinateReference::setWeight(double weight)
+void CoordinateReference::setWeight(osim_double_adouble weight)
 {
     _defaultWeight = weight;
 }

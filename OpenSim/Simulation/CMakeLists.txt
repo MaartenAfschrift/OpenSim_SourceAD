@@ -5,8 +5,7 @@ set(SIMULATION_SUBDIRS
         Manager
         Model
         Wrap
-        SimbodyEngine
-        OpenSense)
+        SimbodyEngine)
 
 set(SOURCES)
 set(INCLUDES)
@@ -20,7 +19,7 @@ endforeach()
 OpenSimAddLibrary(
     KIT Simulation
     AUTHORS "Ajay_Seth-Michael_Sherman-Ayman_Habib"
-    LINKLIBS ${Simbody_LIBRARIES} osimCommon osimLepton
+    LINKLIBS ${Simbody_LIBRARIES_TO_USE} osimCommon osimLepton
     INCLUDES ${INCLUDES}
     SOURCES ${SOURCES}
     TESTDIRS SimbodyEngine Test

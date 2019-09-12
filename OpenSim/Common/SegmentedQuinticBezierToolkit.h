@@ -27,6 +27,7 @@
 #include "SimTKmath.h"
 #include "SimTKcommon/internal/BigMatrix.h"
 #include "SimTKcommon/internal/System.h"
+#include "osim_adouble.h"
 
 
 namespace OpenSim {
@@ -192,8 +193,8 @@ class OSIMCOMMON_API SegmentedQuinticBezierToolkit
 
             @endcode
         */
-        static double calcU(double ax, const SimTK::Vector& bezierPtsX, 
-            const SimTK::Spline& splineUX, double tol, int maxIter);
+        static osim_double_adouble calcU(osim_double_adouble ax, const SimTK::Vector& bezierPtsX, 
+            const SimTK::Spline& splineUX, osim_double_adouble tol, int maxIter);
 
 
 
@@ -247,9 +248,9 @@ class OSIMCOMMON_API SegmentedQuinticBezierToolkit
 
 
         */
-        static int calcIndex(double x, const SimTK::Matrix& bezierPtsX);
+        static int calcIndex(osim_double_adouble x, const SimTK::Matrix& bezierPtsX);
         
-        static int calcIndex(double x, const SimTK::Array_<SimTK::Vector>& bezierPtsX);
+        static int calcIndex(osim_double_adouble x, const SimTK::Array_<SimTK::Vector>& bezierPtsX);
 
 
         
@@ -318,7 +319,7 @@ class OSIMCOMMON_API SegmentedQuinticBezierToolkit
 
 
         */
-        static double calcQuinticBezierCurveVal(double u, 
+        static osim_double_adouble calcQuinticBezierCurveVal(osim_double_adouble u, 
                             const SimTK::Vector& pts);
 
         /**
@@ -386,7 +387,7 @@ class OSIMCOMMON_API SegmentedQuinticBezierToolkit
             double dxdu  =calcQuinticBezierCurveDerivU(u,vX,1);
             @endcode
         */
-        static double calcQuinticBezierCurveDerivU(double u, 
+        static osim_double_adouble calcQuinticBezierCurveDerivU(osim_double_adouble u, 
                            const SimTK::Vector& pts,int order);
 
         /**
@@ -460,7 +461,7 @@ class OSIMCOMMON_API SegmentedQuinticBezierToolkit
             @endcode
 
         */        
-        static double  calcQuinticBezierCurveDerivDYDX(double u,
+        static osim_double_adouble  calcQuinticBezierCurveDerivDYDX(osim_double_adouble u,
               const SimTK::Vector& xpts, const SimTK::Vector& ypts, int order);
 
         
@@ -522,9 +523,9 @@ class OSIMCOMMON_API SegmentedQuinticBezierToolkit
             @endcode
 
         */
-        static SimTK::Matrix calcQuinticBezierCornerControlPoints(double x0, 
-            double y0, double dydx0, double x1, double y1, double dydx1, 
-            double curviness);
+        static SimTK::Matrix calcQuinticBezierCornerControlPoints(osim_double_adouble x0, 
+            osim_double_adouble y0, osim_double_adouble dydx0, osim_double_adouble x1, osim_double_adouble y1, osim_double_adouble dydx1, 
+            osim_double_adouble curviness);
 
         /**
         This function numerically integrates the Bezier curve y(x).
@@ -655,7 +656,7 @@ class OSIMCOMMON_API SegmentedQuinticBezierToolkit
 
         */
         static SimTK::Matrix calcNumIntBezierYfcnX(const SimTK::Vector& vX, 
-            double ic0, double intAcc, double uTol, int uMaxIter,
+            osim_double_adouble ic0, osim_double_adouble intAcc, osim_double_adouble uTol, int uMaxIter,
             const SimTK::Matrix& mX, const SimTK::Matrix& mY,
             const SimTK::Array_<SimTK::Spline>& aSplineUX, 
             bool flag_intLeftToRight,const std::string& name);
@@ -678,7 +679,7 @@ class OSIMCOMMON_API SegmentedQuinticBezierToolkit
                           const SimTK::Matrix& data, std::string& filename);
 
         static void printBezierSplineFitCurves(
-            const SimTK::Function_<double>& curveFit,SimTK::Matrix& ctrlPts, 
+            const SimTK::Function_<osim_double_adouble>& curveFit,SimTK::Matrix& ctrlPts, 
             SimTK::Vector& xVal, SimTK::Vector& yVal, std::string& filename);        
 
         /**
@@ -687,7 +688,7 @@ class OSIMCOMMON_API SegmentedQuinticBezierToolkit
         @param u    The parameter to be clamped
         @retval u but restricted to 0,1.
         */
-        static double clampU(double u);
+        static osim_double_adouble clampU(osim_double_adouble u);
 
         
 ///@cond
@@ -704,14 +705,14 @@ class BezierData {
         SimTK::Matrix _mY;
         /**An n element array containing the approximate spline fits of the
         inverse function of x(u), namely u(x)*/
-        SimTK::Array_< SimTK::Spline_<double> > _aArraySplineUX;
+        SimTK::Array_< SimTK::Spline_<osim_double_adouble> > _aArraySplineUX;
         /**The initial value of the integral*/
-        double _initalValue;
+        osim_double_adouble _initalValue;
         /**The tolerance to use when computing u. Solving u(x) can only be done
         numerically at the moment, first by getting a good guess (using the
         splines) and then using Newton's method to polish the value up. This
         is the tolerance that is used in the polishing stage*/
-        double _uTol;
+        osim_double_adouble _uTol;
         /**The maximum number of iterations allowed when evaluating u(x) using
         Newton's method. In practice the guesses are usually very close to the
         actual solution, so only 1-3 iterations are required.*/
@@ -721,7 +722,7 @@ class BezierData {
         is integrated from its right most control point to its left most.*/
         bool  _flag_intLeftToRight;
         /**The starting value*/
-        double _startValue; 
+        osim_double_adouble _startValue; 
 
         /**The name of the curve being integrated. This is used to generate
         useful error messages when something fails*/
@@ -784,20 +785,20 @@ class MySystemGuts : public SimTK::System::Guts {
     int realizeAccelerationImpl(const SimTK::State& state) const override {
         SimTK::Real x = state.getTime();
 
-        if(bdata._flag_intLeftToRight == false){
-            x = (SimTK::Real)bdata._startValue-state.getTime();
-        }
+		if (bdata._flag_intLeftToRight == false) {
+			x = (SimTK::Real)bdata._startValue - state.getTime();
+		}
 
         // HERE'S THE CALL TO YOUR FUNCTION
         //Get the index within the spline set
         
         int idx = SegmentedQuinticBezierToolkit::calcIndex(x,bdata._mX);
         //Get the value of u that corresponds to x
-        double u = SegmentedQuinticBezierToolkit::calcU(x,bdata._mX(idx),
+        osim_double_adouble u = SegmentedQuinticBezierToolkit::calcU(x,bdata._mX(idx),
             bdata._aArraySplineUX[idx],bdata._uTol,bdata._uMaxIter);
 
         //Compute the value of the curve at u;
-        double y=SegmentedQuinticBezierToolkit::
+        osim_double_adouble y=SegmentedQuinticBezierToolkit::
             calcQuinticBezierCurveVal(u,bdata._mY(idx));
         state.updZDot()[0] = y;
         return 0;

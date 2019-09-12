@@ -24,7 +24,6 @@
  * -------------------------------------------------------------------------- */
 // INCLUDE
 #include <OpenSim/Simulation/Model/ModelComponent.h>
-#include <OpenSim/Simulation/Model/PhysicalOffsetFrame.h>
 #include <OpenSim/Simulation/SimbodyEngine/Body.h>
 #include <OpenSim/Simulation/SimbodyEngine/Coordinate.h>
 #include <simbody/internal/MobilizedBody.h>
@@ -32,21 +31,7 @@
 namespace OpenSim {
 
 class Model;
-
-class JointFramesAreTheSame : public Exception {
-public:
-    JointFramesAreTheSame(const std::string& file,
-        size_t line,
-        const std::string& func,
-        const std::string& thisName,
-        const std::string& sameName) :
-        Exception(file, line, func) {
-        std::string msg = "Joint '" + thisName + "' cannot connect frame '" +
-            sameName + "' to itself.";
-        addMessage(msg);
-    }
-};
-
+class ScaleSet;
 
 /**
 An OpenSim Joint is an OpenSim::ModelComponent which connects two PhysicalFrames
@@ -117,13 +102,12 @@ public:
         "List containing the generalized coordinates (q's) that parameterize "
         "this joint.");
 
-    OpenSim_DECLARE_LIST_PROPERTY(frames, PhysicalOffsetFrame,
-        "Physical offset frames owned by the Joint that are typically used to "
-        "satisfy the owning Joint's parent and child frame connections "
-        "(sockets). PhysicalOffsetFrames are often used to describe the fixed "
-        "transformation from a Body's origin to another location of interest "
-        "on the Body (e.g., the joint center). When the joint is deleted, so "
-        "are the PhysicalOffsetFrame components in this list.");
+    OpenSim_DECLARE_LIST_PROPERTY(frames, PhysicalFrame,
+        "Physical frames owned by the Joint that are used to satisfy the Joint's "
+        "parent and child frame connections. For examples, PhysicalOffsetFrames "
+        "are often used to offset the connection from a Body's origin to another "
+        "location of interest (e.g. the joint center). That offset can be added "
+        "to the Joint. When the joint is delete so are the Frames in this list.");
 
 //==============================================================================
 // SOCKETS
@@ -136,7 +120,7 @@ public:
 //==============================================================================
 // OUTPUTS
 //==============================================================================
-    OpenSim_DECLARE_OUTPUT(power, double, calcPower, SimTK::Stage::Acceleration);
+    OpenSim_DECLARE_OUTPUT(power, osim_double_adouble, calcPower, SimTK::Stage::Acceleration);
     OpenSim_DECLARE_OUTPUT(reaction_on_parent, SimTK::SpatialVec,
         calcReactionOnParentExpressedInGround, SimTK::Stage::Acceleration);
     OpenSim_DECLARE_OUTPUT(reaction_on_child, SimTK::SpatialVec,
@@ -225,11 +209,6 @@ public:
     // Utility
     bool isCoordinateUsed(const Coordinate& aCoordinate) const;
 
-    /** Add a frame to the *frames* property in this Joint. The frame is
-     * adopted, and should have been dynamically allocated.
-     * Use this function instead of append_frames(). */
-    void addFrame(PhysicalOffsetFrame* frame);
-
     // Computation
     /** Given some system mobility (generalized) forces, calculate the 
     equivalent spatial body force for this Joint. Keep in mind that there are 
@@ -280,7 +259,20 @@ public:
         that case, the power is non-zero and the supplied SimTK::State
         must already have been realized to %Acceleration stage so that 
         constraint forces are available. */
-    virtual double calcPower(const SimTK::State &s) const;
+    virtual osim_double_adouble calcPower(const SimTK::State &s) const;
+
+    // SCALE
+    /**
+    * Scale a joint based on XYZ scale factors for PhysicalFrames.
+    * Generic behavior is to scale the locations of parent and child offsets
+    * according to scale factors of the physical frame upon which they are located.
+    *
+    * Joint subclasses should invoke this method before scaling joint specific
+    * properties
+    *
+    * @param aScaleSet Set of XYZ scale factors for the bodies.
+    */
+    virtual void scale(const ScaleSet& aScaleSet);
 
 #ifndef SWIG
     /// @class CoordinateIndex
@@ -328,7 +320,6 @@ protected:
 
     // build Joint transforms from properties
     void extendFinalizeFromProperties() override;
-    void extendConnectToModel(Model& model) override;
     void extendAddToSystem(SimTK::MultibodySystem& system) const override;
     void extendInitStateFromProperties(SimTK::State& s) const override;
     void extendSetPropertiesFromState(const SimTK::State& state) override;
@@ -344,14 +335,14 @@ protected:
     void setCoordinateModel(Coordinate *aCoord, Model *aModel) const {aCoord->_model = aModel;}
 
     /** Updating XML formating to latest revision */
-    void updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber) override;
+    /*void updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber) override;*/
 
     /** Calculate the equivalent spatial force, FB_G, acting on a mobilized body
         specified by index acting at its mobilizer frame B, expressed in ground. */
-    SimTK::SpatialVec 
-        calcEquivalentSpatialForceForMobilizedBody(const SimTK::State &s,
-            const SimTK::MobilizedBodyIndex mbx, 
-            const SimTK::Vector &mobilityForces) const;
+    //SimTK::SpatialVec 
+    //    calcEquivalentSpatialForceForMobilizedBody(const SimTK::State &s,
+    //        const SimTK::MobilizedBodyIndex mbx, 
+    //        const SimTK::Vector &mobilityForces) const;
 
     /** Return the equivalent (internal) SimTK::Rigid::Body for the parent/child
         OpenSim::Body. Not valid until after extendAddToSystem on the Body has been called.*/
@@ -489,10 +480,10 @@ private:
         return mobod.getDefaultQ().size();
     }
 
-    // Only Model::extendConnectToModel() should access private members
-    // of the Joint to set whether the Joint is connected to a slave body.
-    // See Model::createMultibodyTree();
-    friend Model;
+    // Only Model's connectToModel can access private
+    // members of the Joint to set Joint connected to a slave body
+    // of a master body.
+    friend Model; // void Model::extendConnectToModel(Model &model);
 
     void setSlaveBodyForParent(Body& slaveForParent){
         _slaveBodyForParent = slaveForParent;
@@ -517,6 +508,8 @@ private:
     SimTK::ReferencePtr<Body> _slaveBodyForChild;
 
     SimTK::Array_<Coordinate::MotionType> _motionTypes;
+
+    friend class JointSet;
 
 //==============================================================================
 };  // END of class Joint

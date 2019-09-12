@@ -107,12 +107,10 @@ void Millard2012EquilibriumMuscle::extendFinalizeFromProperties()
     if(!get_ignore_tendon_compliance() && !use_fiber_damping) {
         // Compliant tendon with no damping.
         OPENSIM_THROW_IF_FRMOBJ(get_minimum_activation() < 0.01,
-            InvalidPropertyValue, getProperty_minimum_activation().getName(),
-            "Minimum activation cannot be less than 0.01");
+            InvalidPropertyValue, getProperty_minimum_activation().getName());
 
         OPENSIM_THROW_IF_FRMOBJ(getMinControl() < get_minimum_activation(),
-            InvalidPropertyValue, getProperty_min_control().getName(),
-            "Minimum control cannot be less than minimum activation");
+            InvalidPropertyValue, getProperty_min_control().getName());
 
         if (falCurve.getMinValue() < 0.1)
             falCurve.setMinValue(0.1);
@@ -122,12 +120,10 @@ void Millard2012EquilibriumMuscle::extendFinalizeFromProperties()
 
     } else { //singularity-free model still cannot have excitations below 0
         OPENSIM_THROW_IF_FRMOBJ(get_minimum_activation() < 0.0,
-            InvalidPropertyValue, getProperty_minimum_activation().getName(),
-            "Minimum activation cannot be less than zero");
+            InvalidPropertyValue, getProperty_minimum_activation().getName());
 
-        OPENSIM_THROW_IF_FRMOBJ(getMinControl() < get_minimum_activation(),
-            InvalidPropertyValue, getProperty_min_control().getName(),
-            "Minimum control cannot be less than minimum activation");
+        OPENSIM_THROW_IF_FRMOBJ(getMinControl() < 0.0,
+            InvalidPropertyValue, getProperty_min_control().getName());
 
         set_minimum_activation(clamp(0, get_minimum_activation(), 1));
         falCurve.setMinValue(0.0);
@@ -151,44 +147,34 @@ void Millard2012EquilibriumMuscle::extendFinalizeFromProperties()
     fpeCurve.ensureCurveUpToDate();
     fseCurve.ensureCurveUpToDate();
 
-    // Propagate properties down to pennation model subcomponent. If any of the
-    // new property values are invalid, restore the subcomponent's current
-    // property values (to avoid throwing again when the subcomponent's
-    // extendFinalizeFromProperties() method is called directly) and then
-    // re-throw the exception thrown by the subcomponent.
+    // Set properties of pennation model subcomponent. Values of
+    // optimal_fiber_length, pennation_angle_at_optimal, and
+    // maximum_pennation_angle are checked by
+    // MuscleFixedWidthPennationModel::extendFinalizeFromProperties().
     auto& penMdl =
         updMemberSubcomponent<MuscleFixedWidthPennationModel>(penMdlIdx);
-    MuscleFixedWidthPennationModel penMdlCopy(penMdl);
     penMdl.set_optimal_fiber_length(getOptimalFiberLength());
     penMdl.set_pennation_angle_at_optimal(getPennationAngleAtOptimalFiberLength());
     penMdl.set_maximum_pennation_angle(get_maximum_pennation_angle());
-    try {
-        penMdl.finalizeFromProperties();
-    } catch (const InvalidPropertyValue&) {
-        penMdl = penMdlCopy;
-        throw;
-    }
 
-    // Propagate properties down to activation dynamics model subcomponent.
-    // Handle invalid properties as above for pennation model.
+    // Set properties of activation dynamics model subcomponent. Values of
+    // activation_time_constant, deactivation_time_constant, and
+    // minimum_activation are checked by
+    // MuscleFirstOrderActivationDynamicModel::extendFinalizeFromProperties().
     if (!get_ignore_activation_dynamics()) {
         auto& actMdl =
             updMemberSubcomponent<MuscleFirstOrderActivationDynamicModel>(actMdlIdx);
-        MuscleFirstOrderActivationDynamicModel actMdlCopy(actMdl);
         actMdl.set_activation_time_constant(get_activation_time_constant());
         actMdl.set_deactivation_time_constant(get_deactivation_time_constant());
         actMdl.set_minimum_activation(get_minimum_activation());
-        try {
-            actMdl.finalizeFromProperties();
-        } catch (const InvalidPropertyValue&) {
-            actMdl = actMdlCopy;
-            throw;
-        }
     }
 
     // Compute and store values that are used for clamping the fiber length.
     const double minActiveFiberLength = falCurve.getMinActiveFiberLength()
                                         * getOptimalFiberLength();
+    // Must update the pennation model's internal data members before requesting
+    // the minimum fiber length.
+    penMdl.finalizeFromProperties();
     const double minPennatedFiberLength = penMdl.getMinimumFiberLength();
     m_minimumFiberLength = max(SimTK::SignificantReal,
         max(minActiveFiberLength, minPennatedFiberLength));
@@ -205,6 +191,7 @@ Millard2012EquilibriumMuscle::Millard2012EquilibriumMuscle()
 {
     setNull();
     constructProperties();
+    finalizeFromProperties();
 }
 
 Millard2012EquilibriumMuscle::Millard2012EquilibriumMuscle(
@@ -219,6 +206,8 @@ double aTendonSlackLength, double aPennationAngle)
     setOptimalFiberLength(aOptimalFiberLength);
     setTendonSlackLength(aTendonSlackLength);
     setPennationAngleAtOptimalFiberLength(aPennationAngle);
+
+    finalizeFromProperties();
 }
 
 //==============================================================================
@@ -470,21 +459,18 @@ computeFiberEquilibrium(SimTK::State& s, bool solveForVelocity) const
 }
 
 //==============================================================================
-// SCALING
+// PROTECTED METHODS
 //==============================================================================
 void Millard2012EquilibriumMuscle::
-extendPostScale(const SimTK::State& s, const ScaleSet& scaleSet)
+postScale(const SimTK::State& s, const ScaleSet& aScaleSet)
 {
-    Super::extendPostScale(s, scaleSet);
-
     GeometryPath& path = upd_GeometryPath();
-    if (path.getPreScaleLength(s) > 0.0)
-    {
-        double scaleFactor = path.getLength(s) / path.getPreScaleLength(s);
+    path.postScale(s, aScaleSet);
+
+    if (path.getPreScaleLength(s) > 0.0) {
+        double scaleFactor = getLength(s) / path.getPreScaleLength(s);
         upd_optimal_fiber_length() *= scaleFactor;
         upd_tendon_slack_length() *= scaleFactor;
-
-        // Clear the pre-scale length that was stored in the GeometryPath.
         path.setPreScaleLength(s, 0.0);
     }
 }

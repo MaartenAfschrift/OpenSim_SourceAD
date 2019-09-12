@@ -64,7 +64,7 @@ public:
     PropertyTransform(const std::string &aName,
         const SimTK::Transform& aTransform);
     PropertyTransform(const std::string &aName,
-        const Array<double> &aArray);
+        const Array<osim_double_adouble> &aArray);
     PropertyTransform(const PropertyTransform &aProperty);
     PropertyTransform* clone() const override;
 
@@ -87,10 +87,10 @@ public:
 #ifndef SWIG
     virtual const SimTK::Transform& getValueTransform() const;
 #endif
-    void setValue(int aSize,const double aArray[]) override;
-    void getRotationsAndTranslationsAsArray6(double aArray[]) const;
+    void setValue(int aSize,const osim_double_adouble aArray[]) override;
+    void getRotationsAndTranslationsAsArray6(osim_double_adouble aArray[]) const;
 
-    void setValue(const Array<double> &aArray) override{
+    void setValue(const Array<osim_double_adouble> &aArray) override{
         setValue(6, &aArray[0]);
     };
     // VALUE as String

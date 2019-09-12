@@ -116,7 +116,7 @@ public:
     /** Alternate signature that writes the axis value to its argument. **/
     void getAxis(SimTK::Vec3& axis) const {axis = getAxis();}
     /** Get one component (0,1, or 2) of the axis vector. **/
-    double getAxis(int which) const 
+    osim_double_adouble getAxis(int which) const 
     {   assert(0<=which && which<=2); return getAxis()[which]; }
 
     /** Determine whether a custom function has been specified to map between 
@@ -150,7 +150,7 @@ public:
     applies. **/
     const Joint& getJoint() const { return *_joint; }
 
-    double getValue(const SimTK::State& s );
+    osim_double_adouble getValue(const SimTK::State& s );
 
 
     /** Connect the %TransformAxis to its owning Joint after the model has
@@ -162,8 +162,8 @@ private:
     // deprecated property name "coordinate" (if it appears in \a node) with 
     // the current property name "coordinates". Then we'll invoke the base
     // class implementation.
-    void updateFromXMLNode(SimTK::Xml::Element& node, 
-                           int                  versionNumber=-1) override;
+    //void updateFromXMLNode(SimTK::Xml::Element& node, 
+    //                       int                  versionNumber=-1) override;
 
     void setNull();
     void constructProperties();

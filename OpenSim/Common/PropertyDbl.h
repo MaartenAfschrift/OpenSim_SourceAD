@@ -31,6 +31,7 @@
 #include "osimCommonDLL.h"
 #include <string>
 #include "Property_Deprecated.h"
+#include "osim_adouble.h"
 
 //=============================================================================
 //=============================================================================
@@ -51,7 +52,7 @@ class OSIMCOMMON_API PropertyDbl : public Property_Deprecated
 //=============================================================================
 private:
     /** Value. */
-    double _value;
+    osim_double_adouble _value;
 
 //=============================================================================
 // METHODS
@@ -61,7 +62,7 @@ private:
     //--------------------------------------------------------------------------
 public:
     PropertyDbl();
-    PropertyDbl(const std::string &aName,double aValue);
+    PropertyDbl(const std::string &aName,osim_double_adouble aValue);
     PropertyDbl(const PropertyDbl &aProperty);
     PropertyDbl* clone() const override;
     virtual ~PropertyDbl() { };
@@ -80,11 +81,11 @@ public:
     // TYPE
     std::string getTypeName() const override;
     // VALUE
-    void setValue(double aValue) override;
+    void setValue(osim_double_adouble aValue) override;
 #ifndef SWIG
-    double& getValueDbl() override;
+    osim_double_adouble& getValueDbl() override;
 #endif
-    const double& getValueDbl() const override;
+    const osim_double_adouble& getValueDbl() const override;
     // VALUE as String
     std::string toString() const override;
 

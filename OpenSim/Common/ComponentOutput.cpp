@@ -25,7 +25,6 @@
 #include "Component.h"
 
 using namespace OpenSim;
-
 std::string AbstractOutput::getPathName() const {
-    return getOwner().getAbsolutePathString() + "|" + getName();
+    return getOwner().getAbsolutePathName() + "/" + getName();
 }

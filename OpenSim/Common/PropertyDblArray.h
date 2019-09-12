@@ -57,7 +57,7 @@ class OSIMCOMMON_API PropertyDblArray : public Property_Deprecated
 //=============================================================================
 protected:
     /** Array of doubles. */
-    Array<double> _array;
+    Array<osim_double_adouble> _array;
 
 //=============================================================================
 // METHODS
@@ -68,9 +68,9 @@ protected:
 public:
     PropertyDblArray();
     PropertyDblArray(const std::string &aName,
-        const Array<double> &aArray);
+        const Array<osim_double_adouble> &aArray);
     PropertyDblArray(const std::string &aName,
-        int aSize,const double aArray[]);
+        int aSize,const osim_double_adouble aArray[]);
     PropertyDblArray(const PropertyDblArray &aProperty);
 
     bool isArrayProperty() const override {return true;}
@@ -96,12 +96,12 @@ public:
     // TYPE
     std::string getTypeName() const override;
     // VALUE
-    void setValue(const Array<double> &aArray) override;
-    void setValue(int aSize,const double aArray[]) override;
+    void setValue(const Array<osim_double_adouble> &aArray) override;
+    void setValue(int aSize,const osim_double_adouble aArray[]) override;
 
-    Array<double>& getValueDblArray() override;
+    Array<osim_double_adouble>& getValueDblArray() override;
 #ifndef SWIG
-    const Array<double>& getValueDblArray() const override;
+    const Array<osim_double_adouble>& getValueDblArray() const override;
 #endif
     // VALUE as String
     std::string toString() const override;

@@ -9,7 +9,7 @@
  * National Institutes of Health (U54 GM072970, R24 HD065690) and by DARPA    *
  * through the Warrior Web program.                                           *
  *                                                                            *
- * Copyright (c) 2005-2018 Stanford University and the Authors                *
+ * Copyright (c) 2005-2017 Stanford University and the Authors                *
  * Author(s): Michael A. Sherman                                              *
  *                                                                            *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may    *
@@ -28,6 +28,7 @@
 
 namespace OpenSim {
 
+class Model;
 //=============================================================================
 //=============================================================================
 /**
@@ -42,10 +43,15 @@ OpenSim_DECLARE_CONCRETE_OBJECT(ComponentSet,
                                 ModelComponentSet<ModelComponent>);
 
 public:
-    /** Use Super's constructors. @see ModelComponentSet */
-    using Super::Super;
+    ComponentSet() : Super() {}
 
-    // default copy, assignment operator, and destructor
+    explicit ComponentSet(Model& model) : Super(model) {}
+
+    //ComponentSet(Model& model, const std::string &aFileName, 
+    //             bool aUpdateFromXMLNode=true)
+    //:   Super(model, aFileName, aUpdateFromXMLNode) {}
+
+    // default copy constructor, copy assignment, destructor
 
 //=============================================================================
 };  // END of class ComponentSet

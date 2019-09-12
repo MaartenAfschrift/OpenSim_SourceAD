@@ -54,9 +54,9 @@ protected:
 //=============================================================================
 public:
     FunctionAdapter(const OpenSim::Function &aFunction);
-    double calcValue(const SimTK::Vector& x) const override;
-    double calcDerivative(const std::vector<int>& derivComponents, const SimTK::Vector& x) const;
-    double calcDerivative(const SimTK::Array_<int>& derivComponents, const SimTK::Vector& x) const override;
+	osim_double_adouble calcValue(const SimTK::Vector& x) const override;
+	osim_double_adouble calcDerivative(const std::vector<int>& derivComponents, const SimTK::Vector& x) const;
+	osim_double_adouble calcDerivative(const SimTK::Array_<int>& derivComponents, const SimTK::Vector& x) const override;
     int getArgumentSize() const override;
     int getMaxDerivativeOrder() const override;
 private:

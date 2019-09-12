@@ -46,8 +46,8 @@ CoordinateLimitForce::CoordinateLimitForce()
 //_____________________________________________________________________________
 // Convenience constructor.
 CoordinateLimitForce::CoordinateLimitForce
-   (const string& coordName, double q_upper, 
-    double K_upper, double q_lower, double K_lower, double damping, double dq, 
+   (const string& coordName, osim_double_adouble q_upper, 
+    osim_double_adouble K_upper, osim_double_adouble q_lower, osim_double_adouble K_lower, osim_double_adouble damping, osim_double_adouble dq, 
     bool computeDissipationEnergy) : Force()
 {
     setNull();
@@ -109,32 +109,32 @@ void CoordinateLimitForce::constructProperties()
 //=============================================================================
 // GET AND SET CoordinateLimitForce Stiffness and Damping parameters
 //=============================================================================
-void CoordinateLimitForce::setUpperStiffness(double aUpperStiffness)
+void CoordinateLimitForce::setUpperStiffness(osim_double_adouble aUpperStiffness)
 {
     set_upper_stiffness(aUpperStiffness);
 }
 
-void CoordinateLimitForce::setUpperLimit(double aUpperLimit)
+void CoordinateLimitForce::setUpperLimit(osim_double_adouble aUpperLimit)
 {
     set_upper_limit(aUpperLimit);
 }
 
-void CoordinateLimitForce::setLowerStiffness(double aLowerStiffness)
+void CoordinateLimitForce::setLowerStiffness(osim_double_adouble aLowerStiffness)
 {
     set_lower_stiffness(aLowerStiffness);
 }
 
-void CoordinateLimitForce::setLowerLimit(double aLowerLimit)
+void CoordinateLimitForce::setLowerLimit(osim_double_adouble aLowerLimit)
 {
     set_lower_limit(aLowerLimit);
 }
 
-void CoordinateLimitForce::setDamping(double aDamping)
+void CoordinateLimitForce::setDamping(osim_double_adouble aDamping)
 {
     set_damping(aDamping);
 }
 
-void CoordinateLimitForce::setTransition(double aTransition)
+void CoordinateLimitForce::setTransition(osim_double_adouble aTransition)
 {
     set_transition(aTransition);
 }
@@ -148,31 +148,31 @@ void CoordinateLimitForce::setComputeDissipationEnergy(bool flag)
 /**
  * Get the parameters.
  */
-double CoordinateLimitForce::getUpperStiffness() const
+osim_double_adouble CoordinateLimitForce::getUpperStiffness() const
 {
     return get_upper_stiffness();
 }
 
-double CoordinateLimitForce::getUpperLimit() const
+osim_double_adouble CoordinateLimitForce::getUpperLimit() const
 {
     return get_upper_limit();
 }
 
-double CoordinateLimitForce::getLowerStiffness() const
+osim_double_adouble CoordinateLimitForce::getLowerStiffness() const
 {
     return get_lower_stiffness();
 }
-double CoordinateLimitForce::getLowerLimit() const
+osim_double_adouble CoordinateLimitForce::getLowerLimit() const
 {
     return get_lower_limit();
 }
 
-double CoordinateLimitForce::getDamping() const
+osim_double_adouble CoordinateLimitForce::getDamping() const
 {
     return get_damping();
 }
 
-double CoordinateLimitForce::getTransition() const
+osim_double_adouble CoordinateLimitForce::getTransition() const
 {
     return get_transition();
 }
@@ -196,12 +196,12 @@ void CoordinateLimitForce::extendConnectToModel(Model& aModel)
     string errorMessage;
 
     const string& coordName = get_coordinate();
-    const double& upperStiffness = get_upper_stiffness();
-    const double& upperLimit = get_upper_limit();
-    const double& lowerStiffness = get_lower_stiffness();
-    const double& lowerLimit = get_lower_limit();
-    const double& transition = get_transition();
-    const double& damping = get_damping();
+    const osim_double_adouble& upperStiffness = get_upper_stiffness();
+    const osim_double_adouble& upperLimit = get_upper_limit();
+    const osim_double_adouble& lowerStiffness = get_lower_stiffness();
+    const osim_double_adouble& lowerLimit = get_lower_limit();
+    const osim_double_adouble& transition = get_transition();
+    const osim_double_adouble& damping = get_damping();
 
     // Look up the coordinate
     if (!_model->updCoordinateSet().contains(coordName)) {
@@ -234,7 +234,7 @@ void CoordinateLimitForce::extendAddToSystem(SimTK::MultibodySystem& system) con
 {
     Super::extendAddToSystem(system);
 
-    addCacheVariable<double>("dissipationPower", 0.0, SimTK::Stage::Dynamics);
+    addCacheVariable<osim_double_adouble>("dissipationPower", 0.0, SimTK::Stage::Dynamics);
 
     if(isComputingDissipationEnergy()){
         addStateVariable("dissipatedEnergy");
@@ -256,39 +256,39 @@ void CoordinateLimitForce::computeForce( const SimTK::State& s,
     applyGeneralizedForce(s, *_coord, calcLimitForce(s), mobilityForces);
 }
 
-double CoordinateLimitForce::calcLimitForce( const SimTK::State& s) const
+osim_double_adouble CoordinateLimitForce::calcLimitForce( const SimTK::State& s) const
 {
-    double q = _coord->getValue(s);
+    osim_double_adouble q = _coord->getValue(s);
     SimTK::Vector qv(1,q);
-    double K_up = _upStep->calcValue(qv);
-    double K_low = _loStep->calcValue(qv);
+    osim_double_adouble K_up = _upStep->calcValue(qv);
+    osim_double_adouble K_low = _loStep->calcValue(qv);
 
-    double qdot = _coord->getSpeedValue(s);
-    double f_up = -K_up*(q - _qup);
-    double f_low = K_low*(_qlow - q);
+    osim_double_adouble qdot = _coord->getSpeedValue(s);
+    osim_double_adouble f_up = -K_up*(q - _qup);
+    osim_double_adouble f_low = K_low*(_qlow - q);
 
     // dividing the stiffness by the constant yields the transition function that can 
     // also be applied to damping
-    double f_damp = -_damp*(K_up/_Kup + K_low/_Klow)*qdot;
+    osim_double_adouble f_damp = -_damp*(K_up/_Kup + K_low/_Klow)*qdot;
 
     // dissipative power is negative power but is already implied by "dissipation"
     // so negate power so that dissipation power is a positive number
-    double dissPower = -qdot*f_damp;
-    setCacheVariableValue<double>(s, "dissipationPower", dissPower);
+    osim_double_adouble dissPower = -qdot*f_damp;
+    setCacheVariableValue<osim_double_adouble>(s, "dissipationPower", dissPower);
 
-    double f_limit = f_up + f_low + f_damp;
+    osim_double_adouble f_limit = f_up + f_low + f_damp;
 
     return f_limit;
 }
 
 // Potential energy stored in the limit spring
-double CoordinateLimitForce::computePotentialEnergy(const SimTK::State& s) const
+osim_double_adouble CoordinateLimitForce::computePotentialEnergy(const SimTK::State& s) const
 {
-    double q = _coord->getValue(s);
+    osim_double_adouble q = _coord->getValue(s);
     SimTK::Vector qv(1,q);
 
-    double K=0;
-    double delta = 0;
+    osim_double_adouble K=0;
+    osim_double_adouble delta = 0;
     if(q > _qup){ // against upper limit
         K = _Kup;
         delta = q-_qup;
@@ -302,14 +302,14 @@ double CoordinateLimitForce::computePotentialEnergy(const SimTK::State& s) const
         return 0.0;
     }
     
-    const double &trans = _w*get_transition();
+    const osim_double_adouble &trans = _w*get_transition();
 
     if(delta >= trans){
         // = 5/14*K*trans^2 - 1/2*K*trans^2 + 1/2*K*(delta)^2
         return K*((-2.0/14.0)*trans*trans + 0.5*(delta)*(delta));
     }
     else{
-        double x = delta/trans;
+        osim_double_adouble x = delta/trans;
         // This is the integral of K(x)*x*dx evaluated at
         // x = delta/trans, where 
         // K(x) = K*(10*x^3-15*x^4+6*x^5) is the definition of an
@@ -319,13 +319,13 @@ double CoordinateLimitForce::computePotentialEnergy(const SimTK::State& s) const
     }
 }
 // power dissipated by the damping term of the coordinate limit force
-double CoordinateLimitForce::getPowerDissipation(const SimTK::State& s) const
+osim_double_adouble CoordinateLimitForce::getPowerDissipation(const SimTK::State& s) const
 {
-    return  getCacheVariableValue<double>(s, "dissipationPower");
+    return  getCacheVariableValue<osim_double_adouble>(s, "dissipationPower");
 }
 
 // energy dissipated by the damping term of the coordinate limit force
-double CoordinateLimitForce::getDissipatedEnergy(const SimTK::State& s) const
+osim_double_adouble CoordinateLimitForce::getDissipatedEnergy(const SimTK::State& s) const
 {
     if(isComputingDissipationEnergy()){
         return getStateVariableValue(s, "dissipatedEnergy");
@@ -360,8 +360,8 @@ Array<std::string> CoordinateLimitForce::getRecordLabels() const {
  * Given SimTK::State object extract all the values necessary to report forces, application location
  * frame, etc. used in conjunction with getRecordLabels and should return same size Array
  */
-Array<double> CoordinateLimitForce::getRecordValues(const SimTK::State& state) const {
-    OpenSim::Array<double> values(0.0, 0, 2);
+Array<osim_double_adouble> CoordinateLimitForce::getRecordValues(const SimTK::State& state) const {
+    OpenSim::Array<osim_double_adouble> values(0.0, 0, 2);
     values.append(calcLimitForce(state));
     values.append(computePotentialEnergy(state));
     return values;

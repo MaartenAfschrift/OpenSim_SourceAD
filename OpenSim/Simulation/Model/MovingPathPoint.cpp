@@ -30,7 +30,7 @@
 #include <OpenSim/Common/MultiplierFunction.h>
 #include <OpenSim/Simulation/Model/PhysicalFrame.h>
 #include <OpenSim/Simulation/SimbodyEngine/Coordinate.h>
-#include <OpenSim/Common/ScaleSet.h>
+
 
 //=============================================================================
 // STATICS
@@ -145,79 +145,48 @@ void MovingPathPoint::extendConnectToModel(Model& model)
  * Override default implementation by Object to intercept and fix the XML node
  * underneath the MovingPathPoint to match the current version.
  */
-void MovingPathPoint::updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber)
-{
-    int documentVersion = versionNumber;
-    if (documentVersion < 30000) {
-        if (Object::getDebugLevel()>=1)
-            cout << "Updating MovingPathPoint object to latest format..." << endl;
-        XMLDocument::renameChildNode(aNode, "XAttachment", "x_location");
-        XMLDocument::renameChildNode(aNode,"YAttachment", "y_location");
-        XMLDocument::renameChildNode(aNode,"ZAttachment", "z_location");
-    }
-    if (documentVersion < 30505) {
-        // replace old properties with latest use of Connectors
-        SimTK::Xml::element_iterator xCoord = aNode.element_begin("x_coordinate");
-        SimTK::Xml::element_iterator yCoord = aNode.element_begin("y_coordinate");
-        SimTK::Xml::element_iterator zCoord = aNode.element_begin("z_coordinate");
-
-        std::string xCoord_name(""), yCoord_name(""), zCoord_name("");
-        // If default constructed then elements not serialized since they are
-        // default values. Check that we have associated elements, then extract
-        // their values.
-        if (xCoord != aNode.element_end())
-            xCoord->getValueAs<std::string>(xCoord_name);
-        if (yCoord != aNode.element_end())
-            yCoord->getValueAs<std::string>(yCoord_name);
-        if (zCoord != aNode.element_end())
-            zCoord->getValueAs<std::string>(zCoord_name);
-
-        // Helper function to try creating relative paths to the coordinates.
-        auto createConnecteeName = [](SimTK::Xml::Element& elem, 
-                const std::string& coordName) -> std::string {
-            if (coordName.empty()) return coordName;
-            // As a backup, we will specify just the coordinate name as the
-            // connectee name...
-            std::string connectee_name = coordName;
-            // ...but if possible, we try to create a relative path from this
-            // PathPoint to the coordinate.
-            SimTK::Xml::Element coordElem = 
-                XMLDocument::findElementWithName(elem, coordName);
-            if (coordElem.isValid() && coordElem.hasParentElement()) {
-                // We found an Xml Element with the coordinate's name.
-                const auto jointElem = coordElem.getParentElement();
-                std::string jointName =
-                    jointElem.getOptionalAttributeValue("name");
-                // PathPoints in pre-4.0 models are necessarily 3 levels deep
-                // (model, muscle, geometry path), and Coordinates were
-                // necessarily 2 level deep.
-                // Here we create the correct relative path (accounting for sets
-                // being components).
-                if (jointName.empty())
-                    jointName = IO::Lowercase(jointElem.getElementTag());
-                connectee_name = XMLDocument::updateConnecteePath30517(
-                        "jointset", jointName + "/" + coordName);
-            }
-            return connectee_name;
-        };
-        
-        XMLDocument::addConnector(aNode, "Connector_Coordinate_", 
-            "x_coordinate", createConnecteeName(aNode, xCoord_name));
-        XMLDocument::addConnector(aNode, "Connector_Coordinate_", 
-            "y_coordinate", createConnecteeName(aNode, yCoord_name));
-        XMLDocument::addConnector(aNode, "Connector_Coordinate_", 
-            "z_coordinate", createConnecteeName(aNode, zCoord_name));
-    }
-
-    // Call base class now assuming _node has been corrected for current version
-    Super::updateFromXMLNode(aNode, versionNumber);
-}
+//void MovingPathPoint::updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber)
+//{
+//    int documentVersion = versionNumber;
+//    if (documentVersion < 30000) {
+//        if (Object::getDebugLevel()>=1)
+//            cout << "Updating MovingPathPoint object to latest format..." << endl;
+//        XMLDocument::renameChildNode(aNode, "XAttachment", "x_location");
+//        XMLDocument::renameChildNode(aNode,"YAttachment", "y_location");
+//        XMLDocument::renameChildNode(aNode,"ZAttachment", "z_location");
+//    }
+//    if (documentVersion < 30505) {
+//        // replace old properties with latest use of Connectors
+//        SimTK::Xml::element_iterator xCoord = aNode.element_begin("x_coordinate");
+//        SimTK::Xml::element_iterator yCoord = aNode.element_begin("y_coordinate");
+//        SimTK::Xml::element_iterator zCoord = aNode.element_begin("z_coordinate");
+//
+//        std::string xCoord_name(""), yCoord_name(""), zCoord_name("");
+//        // If default constructed then elements not serialized since they are default
+//        // values. Check that we have associated elements, then extract their values.
+//        if (xCoord != aNode.element_end())
+//            xCoord->getValueAs<std::string>(xCoord_name);
+//        if (yCoord != aNode.element_end())
+//            yCoord->getValueAs<std::string>(yCoord_name);
+//        if (zCoord != aNode.element_end())
+//            zCoord->getValueAs<std::string>(zCoord_name);
+//        XMLDocument::addConnector(aNode, "Connector_Coordinate_", 
+//            "x_coordinate", xCoord_name);
+//        XMLDocument::addConnector(aNode, "Connector_Coordinate_", 
+//            "y_coordinate", yCoord_name);
+//        XMLDocument::addConnector(aNode, "Connector_Coordinate_", 
+//            "z_coordinate", zCoord_name);
+//    }
+//
+//    // Call base class now assuming _node has been corrected for current version
+//    Super::updateFromXMLNode(aNode, versionNumber);
+//}
 
 SimTK::Vec3 MovingPathPoint::getLocation(const SimTK::State& s) const
 {
     SimTK::Vec3 pInF(0);
     if (!_xCoordinate.empty()) {
-        const double xval = SimTK::clamp(_xCoordinate->getRangeMin(),
+        const osim_double_adouble xval = SimTK::clamp(_xCoordinate->getRangeMin(),
             _xCoordinate->getValue(s),
             _xCoordinate->getRangeMax());
         pInF[0] = get_x_location().calcValue(SimTK::Vector(1, xval));
@@ -226,7 +195,7 @@ SimTK::Vec3 MovingPathPoint::getLocation(const SimTK::State& s) const
         pInF[0] = get_x_location().calcValue(SimTK::Vector(1, 0.0));
 
     if (!_yCoordinate.empty()) {
-        const double yval = SimTK::clamp(_yCoordinate->getRangeMin(),
+        const osim_double_adouble yval = SimTK::clamp(_yCoordinate->getRangeMin(),
             _yCoordinate->getValue(s),
             _yCoordinate->getRangeMax());
         pInF[1] = get_y_location().calcValue(SimTK::Vector(1, yval));
@@ -235,7 +204,7 @@ SimTK::Vec3 MovingPathPoint::getLocation(const SimTK::State& s) const
         pInF[1] = get_y_location().calcValue(SimTK::Vector(1, 0.0));
 
     if (!_zCoordinate.empty()) {
-        const double zval = SimTK::clamp(_zCoordinate->getRangeMin(),
+        const osim_double_adouble zval = SimTK::clamp(_zCoordinate->getRangeMin(),
             _zCoordinate->getValue(s),
             _zCoordinate->getRangeMax());
         pInF[2] = get_z_location().calcValue(SimTK::Vector(1, zval));
@@ -314,27 +283,20 @@ SimTK::Vec3 MovingPathPoint::getdPointdQ(const SimTK::State& s) const
     return dPdq_B;
 }
 
-void MovingPathPoint::
-extendScale(const SimTK::State& s, const ScaleSet& scaleSet)
+
+void MovingPathPoint::scale(const SimTK::Vec3& aScaleFactors)
 {
-    Super::extendScale(s, scaleSet);
-
-    // Get scale factors (if an entry for the parent Frame's base Body exists).
-    const Vec3& scaleFactors = getScaleFactors(scaleSet, getParentFrame());
-    if (scaleFactors == ModelComponent::InvalidScaleFactors)
-        return;
-
     if (!_xCoordinate.empty()) {
         // If the function is already a MultiplierFunction, just update its scale factor.
         // Otherwise, make a MultiplierFunction from it and make the muscle point use
         // the new MultiplierFunction.
         MultiplierFunction* mf = dynamic_cast<MultiplierFunction*>(&upd_x_location());
         if (mf) {
-            mf->setScale(mf->getScale() * scaleFactors[0]);
+            mf->setScale(mf->getScale() * aScaleFactors[0]);
         } else {
             // Make a copy of the original function and delete the original
             // (so its node will be removed from the XML document).
-            set_x_location(MultiplierFunction(get_x_location().clone(), scaleFactors[0]));
+            set_x_location(MultiplierFunction(get_x_location().clone(), aScaleFactors[0]));
         }
     }
 
@@ -344,11 +306,11 @@ extendScale(const SimTK::State& s, const ScaleSet& scaleSet)
         // the new MultiplierFunction.
         MultiplierFunction* mf = dynamic_cast<MultiplierFunction*>(&upd_y_location());
         if (mf) {
-            mf->setScale(mf->getScale() * scaleFactors[1]);
+            mf->setScale(mf->getScale() * aScaleFactors[1]);
         } else {
             // Make a copy of the original function and delete the original
             // (so its node will be removed from the XML document).
-            set_y_location(MultiplierFunction(get_y_location().clone(), scaleFactors[1]));
+            set_y_location(MultiplierFunction(get_y_location().clone(), aScaleFactors[1]));
         }
     }
 
@@ -358,9 +320,9 @@ extendScale(const SimTK::State& s, const ScaleSet& scaleSet)
         // the new MultiplierFunction.
         MultiplierFunction* mf = dynamic_cast<MultiplierFunction*>(&upd_z_location());
         if (mf) {
-            mf->setScale(mf->getScale() * scaleFactors[2]);
+            mf->setScale(mf->getScale() * aScaleFactors[2]);
         } else {
-            set_z_location(MultiplierFunction(get_z_location().clone(), scaleFactors[2]));
+            set_z_location(MultiplierFunction(get_z_location().clone(), aScaleFactors[2]));
         }
     }
 }

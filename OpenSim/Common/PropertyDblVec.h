@@ -52,7 +52,7 @@ template<int M> class PropertyDblVec_ : public Property_Deprecated
 private:
     // Store in an Array for serialization; we'll fake up the Vec<M> when
     // we need it using the Array's storage.
-    Array<double> _dblvec;
+    Array<osim_double_adouble> _dblvec;
 
 //=============================================================================
 // METHODS
@@ -74,7 +74,7 @@ public:
           setValue(aVec);
         }
     /** Construct from name and value as an Array<double> */
-    PropertyDblVec_(const std::string &aName, const Array<double> &anArray)
+    PropertyDblVec_(const std::string &aName, const Array<osim_double_adouble> &anArray)
     :   Property_Deprecated(DblVec, aName)
         { setAllowableListSize(M);
           _dblvec.setSize(M);    
@@ -115,11 +115,8 @@ public:
     void setValue(const SimTK::Vec<M> &aVec) { 
         SimTK::Vec<M>::updAs(&_dblvec[0])=aVec; 
     }
-    // This helps avoid the -Woverloaded-virtual warning with Clang (the method
-    // above otherwise hides the virtual setValue() methods in the base class).
-    using Property_Deprecated::setValue;
     /** set value of this property from an array of doubles of equal or greater length */
-    void setValue(const Array<double> &anArray) override {
+    void setValue(const Array<osim_double_adouble> &anArray) override {
         assert(anArray.getSize() >= M);
         for(int i=0;i<M; i++)
             _dblvec[i] = anArray[i];
@@ -129,23 +126,23 @@ public:
     /** get const (read-only) reference to the value */
     const SimTK::Vec<M>& getValueDblVec() const {return SimTK::Vec<M>::getAs(&_dblvec[0]); };
     /** set value from double array */ // to be used by the serialization code
-    void setValue(int aSize, const double aArray[]) override { 
+    void setValue(int aSize, const osim_double_adouble aArray[]) override {
         assert(aSize == M);
         setValue(SimTK::Vec<M>::getAs(aArray));
     };
 #ifndef SWIG
     /** get value as double array */
-    const Array<double>& getValueDblArray() const override {return _dblvec;}
+    const Array<osim_double_adouble>& getValueDblArray() const override {return _dblvec;}
 #endif
     /** Nonconst version of accessor for use by GUI. */
-    Array<double>& getValueDblArray() override {return _dblvec;}
+    Array<osim_double_adouble>& getValueDblArray() override {return _dblvec;}
 
     /** Get a constant String representing the value of this property. */
     std::string toString()  const override {
         std::string str = "(";
         char dbl[256];
             for(int i=0; i < M; i++){
-                snprintf(dbl, 256, "%g", _dblvec[i]);
+                sprintf(dbl, "%g", _dblvec[i]);
                 str += (i>0?" ":"") + std::string(dbl);
             }
         str += ")";

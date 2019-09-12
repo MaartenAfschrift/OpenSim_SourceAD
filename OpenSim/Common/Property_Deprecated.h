@@ -35,6 +35,8 @@
 
 #include <string>
 
+#include "osim_adouble.h"
+
 namespace OpenSim { 
 /**
  * A property consists of a type, name, and a value or an array of values.
@@ -143,14 +145,14 @@ public:
     // is left to concrete Property_Deprecated objects like PropertyInt.
     Property_Deprecated* clone() const override = 0;
 
-    virtual void readFromXMLElement
-       (SimTK::Xml::Element& propertyElement,
-        int                  versionNumber) override
-    {assert(!"Property_Deprecated::readFromXMLElement not implemented");}
+    //virtual void readFromXMLElement
+    //   (SimTK::Xml::Element& propertyElement,
+    //    int                  versionNumber) override
+    //{assert(!"Property_Deprecated::readFromXMLElement not implemented");}
 
-    virtual void writeToXMLElement
-       (SimTK::Xml::Element& propertyElement) const override
-    {assert(!"Property_Deprecated::writeToXMLElement not implemented");}
+    //virtual void writeToXMLElement
+    //   (SimTK::Xml::Element& propertyElement) const override
+    //{assert(!"Property_Deprecated::writeToXMLElement not implemented");}
 
     // Override for array types.
     int getNumValues() const override {return 1;}
@@ -213,11 +215,16 @@ public:
 #endif
     virtual const int& getValueInt() const { Property_PROPERTY_TYPE_MISMATCH(); }
     // Dbl
-    virtual void setValue(double aValue) { Property_PROPERTY_TYPE_MISMATCH(); }
+    virtual void setValue(osim_double_adouble aValue) { Property_PROPERTY_TYPE_MISMATCH(); }
+	//virtual void setValue(osim_double_adouble aValue) { Property_PROPERTY_TYPE_MISMATCH(); }
+
 #ifndef SWIG
-    virtual double& getValueDbl() { Property_PROPERTY_TYPE_MISMATCH(); }
+    virtual osim_double_adouble& getValueDbl() { Property_PROPERTY_TYPE_MISMATCH(); }
+	//virtual osim_double_adouble& getValueDbl() { Property_PROPERTY_TYPE_MISMATCH(); }
 #endif
-    virtual const double& getValueDbl() const { Property_PROPERTY_TYPE_MISMATCH(); }
+    virtual const osim_double_adouble& getValueDbl() const { Property_PROPERTY_TYPE_MISMATCH(); }
+	//virtual const osim_double_adouble& getValueDbl() const { Property_PROPERTY_TYPE_MISMATCH(); }
+
     // Str
     virtual void setValue(const std::string &aValue) { Property_PROPERTY_TYPE_MISMATCH(); }
 #ifndef SWIG
@@ -239,11 +246,19 @@ public:
     virtual const Array<int>& getValueIntArray() const { Property_PROPERTY_TYPE_MISMATCH(); }
 #endif
     // Dbl Array
-    virtual void setValue(int aSize,const double aArray[]) { Property_PROPERTY_TYPE_MISMATCH(); }
-    virtual void setValue(const Array<double> &aArray) { Property_PROPERTY_TYPE_MISMATCH(); }
-    virtual Array<double>& getValueDblArray() { Property_PROPERTY_TYPE_MISMATCH(); }
+    virtual void setValue(int aSize,const osim_double_adouble aArray[]) { Property_PROPERTY_TYPE_MISMATCH(); }
+	//virtual void setValue(int aSize, const osim_double_adouble aArray[]) { Property_PROPERTY_TYPE_MISMATCH(); }
+
+    virtual void setValue(const Array<osim_double_adouble> &aArray) { Property_PROPERTY_TYPE_MISMATCH(); }
+	//virtual void setValue(const Array<osim_double_adouble> &aArray) { Property_PROPERTY_TYPE_MISMATCH(); }
+
+    virtual Array<osim_double_adouble>& getValueDblArray() { Property_PROPERTY_TYPE_MISMATCH(); }
+	//virtual Array<osim_double_adouble>& getValueDblArray() { Property_PROPERTY_TYPE_MISMATCH(); }
+
 #ifndef SWIG
-    virtual const Array<double>& getValueDblArray() const { Property_PROPERTY_TYPE_MISMATCH(); }
+    virtual const Array<osim_double_adouble>& getValueDblArray() const { Property_PROPERTY_TYPE_MISMATCH(); }
+	//virtual const Array<osim_double_adouble>& getValueDblArray() const { Property_PROPERTY_TYPE_MISMATCH(); }
+
 #endif
     // Str Array
     virtual void setValue(int aSize,const std::string aArray[]) { Property_PROPERTY_TYPE_MISMATCH(); }
@@ -291,8 +306,12 @@ template<> inline bool& Property_Deprecated::getValue() { return getValueBool();
 template<> inline const bool& Property_Deprecated::getValue() const { return getValueBool(); }
 template<> inline int& Property_Deprecated::getValue() { return getValueInt(); }
 template<> inline const int& Property_Deprecated::getValue() const { return getValueInt(); }
-template<> inline double& Property_Deprecated::getValue() { return getValueDbl(); }
-template<> inline const double& Property_Deprecated::getValue() const { return getValueDbl(); }
+template<> inline osim_double_adouble& Property_Deprecated::getValue() { return getValueDbl(); }
+//template<> inline osim_double_adouble& Property_Deprecated::getValue() { return getValueDbl(); }
+
+template<> inline const osim_double_adouble& Property_Deprecated::getValue() const { return getValueDbl(); }
+//template<> inline const osim_double_adouble& Property_Deprecated::getValue() const { return getValueDbl(); }
+
 template<> inline std::string& Property_Deprecated::getValue() { return getValueStr(); }
 template<> inline const std::string& Property_Deprecated::getValue() const { return getValueStr(); }
 
@@ -300,8 +319,12 @@ template<> inline Array<bool>& Property_Deprecated::getValue() { return getValue
 template<> inline const Array<bool>& Property_Deprecated::getValue() const { return getValueBoolArray(); }
 template<> inline Array<int>& Property_Deprecated::getValue() { return getValueIntArray(); }
 template<> inline const Array<int>& Property_Deprecated::getValue() const { return getValueIntArray(); }
-template<> inline Array<double>& Property_Deprecated::getValue() { return getValueDblArray(); }
-template<> inline const Array<double>& Property_Deprecated::getValue() const { return getValueDblArray(); }
+template<> inline Array<osim_double_adouble>& Property_Deprecated::getValue() { return getValueDblArray(); }
+//template<> inline Array<osim_double_adouble>& Property_Deprecated::getValue() { return getValueDblArray(); }
+
+template<> inline const Array<osim_double_adouble>& Property_Deprecated::getValue() const { return getValueDblArray(); }
+//template<> inline const Array<osim_double_adouble>& Property_Deprecated::getValue() const { return getValueDblArray(); }
+
 template<> inline Array<std::string>& Property_Deprecated::getValue() { return getValueStrArray(); }
 template<> inline const Array<std::string>& Property_Deprecated::getValue() const { return getValueStrArray(); }
 
@@ -309,8 +332,12 @@ template<> inline Array<bool>& Property_Deprecated::getValueArray() { return get
 template<> inline const Array<bool>& Property_Deprecated::getValueArray() const { return getValueBoolArray(); }
 template<> inline Array<int>& Property_Deprecated::getValueArray() { return getValueIntArray(); }
 template<> inline const Array<int>& Property_Deprecated::getValueArray() const { return getValueIntArray(); }
-template<> inline Array<double>& Property_Deprecated::getValueArray() { return getValueDblArray(); }
-template<> inline const Array<double>& Property_Deprecated::getValueArray() const { return getValueDblArray(); }
+template<> inline Array<osim_double_adouble>& Property_Deprecated::getValueArray() { return getValueDblArray(); }
+//template<> inline Array<osim_double_adouble>& Property_Deprecated::getValueArray() { return getValueDblArray(); }
+
+template<> inline const Array<osim_double_adouble>& Property_Deprecated::getValueArray() const { return getValueDblArray(); }
+//template<> inline const Array<osim_double_adouble>& Property_Deprecated::getValueArray() const { return getValueDblArray(); }
+
 template<> inline Array<std::string>& Property_Deprecated::getValueArray() { return getValueStrArray(); }
 template<> inline const Array<std::string>& Property_Deprecated::getValueArray() const { return getValueStrArray(); }
 

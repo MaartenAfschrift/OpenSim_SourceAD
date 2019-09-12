@@ -105,6 +105,9 @@ void SpatialTransform::connectToJoint(CustomJoint& owningJoint)
     for(int i=0; i < NumTransformAxes; ++i) {
         TransformAxis& transform = updTransformAxis(i);
 
+        // Ask the transform axis to connect itself to the joint too.
+        transform.connectToJoint(*((Joint*)(&owningJoint)));
+
         // check if it has a function
         if(!transform.hasFunction()){
             // does it have a coordinate?
@@ -115,9 +118,6 @@ void SpatialTransform::connectToJoint(CustomJoint& owningJoint)
             else
                 transform.setFunction(new Constant());
         }
-
-        // Ask the transform axis to connect itself to the joint.
-        transform.connectToJoint(*((Joint*)(&owningJoint)));
     }
 }
 
@@ -187,13 +187,13 @@ void SpatialTransform::scale(const SimTK::Vec3 scaleFactors)
             // not scale it because this transform axis represents a degree of freedom.
             LinearFunction* lf = dynamic_cast<LinearFunction*>(&function);
             if (lf) {
-                const Array<double> coefficients = lf->getCoefficients();
+                const Array<osim_double_adouble> coefficients = lf->getCoefficients();
                 if (coefficients[0] == 1.0 && coefficients[1] == 0.0)
                     continue;
             }
             SimTK::Vec3 axis;
             transform.getAxis(axis);
-            double scaleFactor = ~axis * scaleFactors;
+            osim_double_adouble scaleFactor = ~axis * scaleFactors;
             // If the function is already a MultiplierFunction, just update its scale factor.
             // Otherwise, make a MultiplierFunction from it and make the transform axis use
             // the new MultiplierFunction.

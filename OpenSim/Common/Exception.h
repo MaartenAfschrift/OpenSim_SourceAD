@@ -279,23 +279,6 @@ public:
     using Exception::Exception;
 };
 
-class ComponentNotFound : public Exception {
-public:
-    using Exception::Exception;
-    ComponentNotFound(const std::string& file,
-        size_t line,
-        const std::string& func,
-        const std::string& toFindName,
-        const std::string& toFindClassName,
-        const std::string& thisName) :
-        Exception(file, line, func) {
-        std::string msg = "Component '" + thisName;
-        msg += "' could not find '" + toFindName;
-        msg += "' of type " + toFindClassName + ". ";
-        addMessage(msg);
-    }
-};
-
 }; //namespace
 //=============================================================================
 //=============================================================================

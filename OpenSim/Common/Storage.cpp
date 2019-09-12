@@ -36,66 +36,9 @@
 #include "SimTKcommon.h"
 #include "GCVSpline.h"
 #include "StateVector.h"
-#include "STOFileAdapter.h"
-#include "TimeSeriesTable.h"
 
 using namespace OpenSim;
 using namespace std;
-
-void convertTableToStorage(const AbstractDataTable* table, Storage& sto)
-{
-    sto.purge();
-    TimeSeriesTable out;
-
-    if (auto td = dynamic_cast<const TimeSeriesTable*>(table))
-        // Table is already flattened, so clone for further processing
-        out = TimeSeriesTable{ *td };
-    else if (auto tst = dynamic_cast<const TimeSeriesTable_<SimTK::Vec2>*>(table))
-        out = tst->flatten();
-    else if (auto tst = dynamic_cast<const TimeSeriesTable_<SimTK::Vec3>*>(table))
-        out = tst->flatten({ "_x", "_y", "_z" });
-    else if (auto tst = dynamic_cast<const TimeSeriesTable_<SimTK::Vec4>*>(table))
-        out = tst->flatten();
-    else if (auto tst = dynamic_cast<const TimeSeriesTable_<SimTK::Vec5>*>(table))
-        out = tst->flatten();
-    else if (auto tst = dynamic_cast<const TimeSeriesTable_<SimTK::Vec6>*>(table))
-        out = tst->flatten();
-    else if (auto tst = dynamic_cast<const TimeSeriesTable_<SimTK::Vec7>*>(table))
-        out = tst->flatten();
-    else if (auto tst = dynamic_cast<const TimeSeriesTable_<SimTK::Vec8>*>(table))
-        out = tst->flatten();
-    else if (auto tst = dynamic_cast<const TimeSeriesTable_<SimTK::Vec9>*>(table))
-        out = tst->flatten();
-    else if (auto tst = dynamic_cast<const TimeSeriesTable_<SimTK::Vec<10>>*>(table))
-        out = tst->flatten();
-    else if (auto tst = dynamic_cast<const TimeSeriesTable_<SimTK::Vec<11>>*>(table))
-        out = tst->flatten();
-    else if (auto tst = dynamic_cast<const TimeSeriesTable_<SimTK::Vec<12>>*>(table))
-        out = tst->flatten();
-    else if (auto tst = dynamic_cast<const TimeSeriesTable_<SimTK::UnitVec3>*>(table))
-        out = tst->flatten({ "_x", "_y", "_z" });
-    else if (auto tst = dynamic_cast<const TimeSeriesTable_<SimTK::Quaternion>*>(table))
-        out = tst->flatten();
-    else if (auto tst = dynamic_cast<const TimeSeriesTable_<SimTK::SpatialVec>*>(table))
-        out = tst->flatten({ "_rx", "_ry", "_rz", "_tx", "_ty", "_tz" });
-    else {
-        OPENSIM_THROW( STODataTypeNotSupported, typeid(table).name());
-    }
-
-    OpenSim::Array<std::string> labels("", (int)out.getNumColumns() + 1);
-    labels[0] = "time";
-    for (int i = 0; i < (int)out.getNumColumns(); ++i) {
-        labels[i + 1] = out.getColumnLabel(i);
-    }
-    sto.setColumnLabels(labels);
-
-    const auto& times = out.getIndependentColumn();
-    for (unsigned i_time = 0; i_time < out.getNumRows(); ++i_time) {
-        const SimTK::Vector rowVector =
-            out.getRowAtIndex(i_time).transpose().getAsVector();
-        sto.append(times[i_time], rowVector);
-    }
-}
 
 
 //============================================================================
@@ -163,81 +106,33 @@ Storage::Storage(int aCapacity,const string &aName) :
     setName(aName);
 }
 //_____________________________________________________________________________
-/*
+/**
  * Construct an Storage instance from file.
+ * This constructor is far from bullet proof.
  *
+ * @param aFileName Name of the file from which the Storage is to be
+ * constructed.
  */
-Storage::Storage(const string &fileName, bool readHeadersOnly) :
-    StorageInterface(fileName),
+Storage::Storage(const string &aFileName, bool readHeadersOnly) :
+    StorageInterface(aFileName),
     _storage(StateVector())
 {
     // SET NULL STATES
     setNull();
 
     // OPEN FILE
-    std::unique_ptr<ifstream> fp{IO::OpenInputFile(fileName)};
-    OPENSIM_THROW_IF(fp == nullptr, Exception,
-            "Storage: Failed to open file '" + fileName + 
-            "'. Verify that the file exists at the specified location." );
+    std::unique_ptr<ifstream> fp{IO::OpenInputFile(aFileName)};
+    if(fp==NULL) throw Exception("Storage: ERROR- failed to open file " + aFileName, __FILE__,__LINE__);
 
-    bool isMotFile = SimTK::String::toLower(fileName).rfind(".mot") != string::npos;
-    bool isStoFile = SimTK::String::toLower(fileName).rfind(".sto") != string::npos;
-    bool useFileAdpater = true;
-
-    int nr = 0, nc = 0;
-
-    if (isMotFile || isStoFile) {
-        parseHeaders(*fp, nr, nc);
-        if (_fileVersion <= 1) { // If an old .sto or .mot format
-            // Must have valid number of rows and columns
-            OPENSIM_THROW_IF(nr < 1 && nc < 1, Exception,
-                "Storage: Failed to parse headers of file "
-                + fileName);
-            // Checks out as a valid old format, so use legacy code to process
-            useFileAdpater = false;
-        } 
-    }
-
-    if (useFileAdpater) { // For new .sto files and others that are not .mot
-        try {
-            // Try using FileAdpater to read all file types
-            OPENSIM_THROW_IF(readHeadersOnly, Exception,
-                "Cannot read headers only if not a STO file or its "
-                "version is greater than 1.");
-            auto dataAdapter = FileAdapter::createAdapterFromExtension(fileName);
-            FileAdapter::OutputTables tables = dataAdapter->read(fileName);
-            if (tables.size() > 1) {
-                cout << "Storage: cannot read data files with multiple tables. "
-                    << "Only the first table '" << tables.begin()->first << "' will "
-                    << "be loaded as Storage." << endl;
-            }
-            convertTableToStorage(tables.begin()->second.get(), *this);
-            return;
-        }
-        catch (const std::exception& x) {
-            cout << "Storage: FileAdpater failed to read data file.\n"
-                << x.what() << endl;
-            if (isStoFile) 
-                cout << "Reverting to use conventional Storage reader." << endl;
-            else 
-                throw x;
-        }
-    }
-
-    // Process file as if it were a .mot file
-    if (getDebugLevel() >= 0) {
-        cout << "Storage: read data file =" << fileName
-            << " (nr=" << nr << " nc=" << nc << ")" << endl;
-    }
+    int nr=0,nc=0;
+    if (!parseHeaders(*fp, nr, nc)) throw Exception("Storage: ERROR- failed to parse headers of file " + aFileName, __FILE__,__LINE__);
+    cout << "Storage: file=" << aFileName << " (nr=" << nr << " nc=" << nc << ")" << endl;
     // Motion files from SIMM are in degrees
-    if (_fileVersion < 1 && isMotFile) {
-        _inDegrees = true;
-    }
-    if (_fileVersion < 1) {
-        cout << ".. assuming rotations in "
-            << (_inDegrees?"Degrees.":"Radians.") << endl;
-    }
-
+    if (_fileVersion < 1 && (0 == aFileName.compare (aFileName.length() - 4, 4, ".mot"))) _inDegrees = true;
+    if (_fileVersion < 1) cout << ".. assuming rotations in " << (_inDegrees?"Degrees.":"Radians.") << endl;
+    if(_fileVersion > 1)
+      throw Exception{"Error: File version (" + std::to_string(_fileVersion) +
+                      ") not supported. Use STOFileAdapter instead."};
     // IGNORE blank lines after header -- treat \r and \n as end of line chars
     while(fp->good()) {
         int c = fp->peek();
@@ -253,7 +148,7 @@ Storage::Storage(const string &fileName, bool readHeadersOnly) :
 
     if (_columnLabels.getSize()!= nc){
         std::cout << "Storage: Warning- inconsistent headers in file " << 
-            fileName << ". nColumns=" << nc << " but "
+            aFileName << ". nColumns=" << nc << " but "
             << _columnLabels.getSize() << " were found" << std::endl;
     }
     // CAPACITY
@@ -273,8 +168,8 @@ Storage::Storage(const string &fileName, bool readHeadersOnly) :
     // DATA 
     if(indexTime != -1 || indexRange != -1){ //MM edit
         int ny = nc-1;
-        double time;
-        double *y = new double[ny];
+        osim_double_adouble time;
+        osim_double_adouble *y = new osim_double_adouble[ny];
         for(int r=0;r<nr;r++) {
                 (*fp)>>time;
                 for(int i=0;i<ny;i++)
@@ -286,10 +181,10 @@ Storage::Storage(const string &fileName, bool readHeadersOnly) :
             //well behaved when it is given data that does not contain a 
             //time or a range column
         int ny = nc;
-        double time;
-        double *y = new double[ny];
+        osim_double_adouble time;
+        osim_double_adouble *y = new osim_double_adouble[ny];
         for(int r=0;r<nr;r++) {
-                time=(double)r;
+                time=(osim_double_adouble)r;
                 for(int i=0;i<ny;i++)
                     (*fp)>>y[i];
                 append(time,ny,y);
@@ -300,7 +195,8 @@ Storage::Storage(const string &fileName, bool readHeadersOnly) :
     // to account for different assumptions between SIMM.mot OpenSim.sto
 
     //MM if this is a SIMM Motion file, post process it as one. Else don't touch the data
-    if(indexTime == -1){
+    size_t found = aFileName.find(".mot");
+    if(indexTime == -1 && found!=string::npos){
         postProcessSIMMMotion();
     }
 }
@@ -366,7 +262,7 @@ Storage(const Storage &aStorage,int aStateIndex,int aN,
 
     // SET THE DATA
     int i,n;
-    double time,*data = new double[aN];
+    osim_double_adouble time,*data = new osim_double_adouble[aN];
     for(i=0;i<aStorage._storage.getSize();i++) {
         aStorage.getTime(i,time);
         n = aStorage.getData(i,aStateIndex,aN,data);
@@ -529,19 +425,6 @@ getStateIndex(const std::string &aColumnName, int startIndex) const
         thisColumnIndex = _columnLabels.findIndex(aColumnName);
         if (thisColumnIndex != -1) break;
 
-        // 4.0 and its beta versions differ slightly in the absolute path but
-        // the <joint>/<coordinate>/value (or speed) will be common to both.
-        // Likewise, for muscle states <muscle>/activation (or fiber_length)
-        // must be common to the state variable (path) name and column label.
-        std::string shortPath = aColumnName;
-        std::string::size_type front = shortPath.find("/");
-        while (thisColumnIndex < 0 && front < std::string::npos) {
-            shortPath = shortPath.substr(front + 1, aColumnName.length());
-            thisColumnIndex = _columnLabels.findIndex(shortPath);
-            front = shortPath.find("/");
-        }
-        if (thisColumnIndex != -1) break;
-
         // Assume column labels follow pre-v4.0 state variable labeling.
         // Redo search with what the pre-v4.0 label might have been.
 
@@ -549,7 +432,7 @@ getStateIndex(const std::string &aColumnName, int startIndex) const
         std::string::size_type back = aColumnName.rfind("/");
         std::string prefix = aColumnName.substr(0, back);
         std::string shortName = aColumnName.substr(back + 1,
-            aColumnName.length() - back);
+                                                   aColumnName.length() - back);
         thisColumnIndex = _columnLabels.findIndex(shortName);
         if (thisColumnIndex != -1) break;
 
@@ -566,7 +449,7 @@ getStateIndex(const std::string &aColumnName, int startIndex) const
             // replace "/speed" (the v4.0 labeling for speeds) with "_u"
             back = prefix.rfind("/");
             shortName =
-                prefix.substr(back + 1, prefix.length() - back) + "_u";
+                    prefix.substr(back + 1, prefix.length() - back) + "_u";
             thisColumnIndex = _columnLabels.findIndex(shortName);
         }
         else if (back < aColumnName.length()) {
@@ -575,7 +458,7 @@ getStateIndex(const std::string &aColumnName, int startIndex) const
             shortName.replace(back, 1, ".");
             back = shortName.rfind("/");
             shortName = shortName.substr(back + 1,
-                shortName.length() - back);
+                                         shortName.length() - back);
             thisColumnIndex = _columnLabels.findIndex(shortName);
         }
         if (thisColumnIndex != -1) break;
@@ -788,7 +671,7 @@ getStateVector(int aTimeIndex) const
  * @return Time of the first stored states.  If there is no stored state,
  * the constant SimTK::NaN (not a number) is returned.
  */
-double Storage::
+osim_double_adouble Storage::
 getFirstTime() const
 {
     if(_storage.getSize()<=0) {
@@ -803,7 +686,7 @@ getFirstTime() const
  * @return Time of the first stored states.  If there is no stored state,
  * the constant SimTK::NaN (not a number) is returned.
  */
-double Storage::
+osim_double_adouble Storage::
 getLastTime() const
 {
     if(_storage.getSize()<=0) {
@@ -817,14 +700,14 @@ getLastTime() const
  *
  * @return Smallest time step.  If there are less than 2 state vectors,  SimTK::Infinity  is returned.
  */
-double Storage::
+osim_double_adouble Storage::
 getMinTimeStep() const
 {
-    double *time=NULL;
+    osim_double_adouble *time=NULL;
     int n = getTimeColumn(time);
-    double dtmin =  SimTK::Infinity;
+    osim_double_adouble dtmin =  SimTK::Infinity;
     for(int i=1; i<n; i++) {
-        double dt = time[i] - time[i-1];
+        osim_double_adouble dt = time[i] - time[i-1];
         if(dt<dtmin) dtmin = dt;
     }
     delete[] time;
@@ -844,7 +727,7 @@ getMinTimeStep() const
  * @return true when the time was set, false when there was no valid state.
  */
 bool Storage::
-getTime(int aTimeIndex,double &rTime,int aStateIndex) const
+getTime(int aTimeIndex,osim_double_adouble &rTime,int aStateIndex) const
 {
     if(aTimeIndex<0) return false;
     if(aTimeIndex>_storage.getSize()) return false;
@@ -874,13 +757,13 @@ getTime(int aTimeIndex,double &rTime,int aStateIndex) const
  * a state does not exist for all or a subset of the stored statevectors.
  */
 int Storage::
-getTimeColumn(double *&rTimes,int aStateIndex) const
+getTimeColumn(osim_double_adouble *&rTimes,int aStateIndex) const
 {
     if(_storage.getSize()<=0) return(0);
 
     // ALLOCATE MEMORY
     if(rTimes==NULL) {
-        rTimes = new double[_storage.getSize()];
+        rTimes = new osim_double_adouble[_storage.getSize()];
     }
 
     // LOOP THROUGH STATEVECTORS
@@ -897,7 +780,7 @@ getTimeColumn(double *&rTimes,int aStateIndex) const
     return(nTimes);
 }
 int Storage::
-getTimeColumn(Array<double> &rTimes,int aStateIndex) const
+getTimeColumn(Array<osim_double_adouble> &rTimes,int aStateIndex) const
 {
     if(_storage.getSize()<=0) return(0);
 
@@ -922,13 +805,13 @@ getTimeColumn(Array<double> &rTimes,int aStateIndex) const
  * rTimes is preallocated by the caller.
  */
 void Storage::
-getTimeColumnWithStartTime(Array<double>& rTimes,double aStartTime) const
+getTimeColumnWithStartTime(Array<osim_double_adouble>& rTimes,osim_double_adouble aStartTime) const
 {
     if(_storage.getSize()<=0) return;
 
     int startIndex = findIndex(aStartTime);
 
-    double *timesVec=0;
+    osim_double_adouble *timesVec=0;
     int size = getTimeColumn(timesVec);
 
     for(int i=startIndex; i<size; i++)
@@ -949,7 +832,7 @@ getTimeColumnWithStartTime(Array<double>& rTimes,double aStartTime) const
  * @return 1 on success, 0 on failure.
  */
 int Storage::
-getData(int aTimeIndex,int aStateIndex,double &rValue) const
+getData(int aTimeIndex,int aStateIndex,osim_double_adouble &rValue) const
 {
     if(aTimeIndex<0) return(0);
     if(aTimeIndex>=_storage.getSize()) return(0);
@@ -964,7 +847,7 @@ getData(int aTimeIndex,int aStateIndex,double &rValue) const
  * Helper function for getData
  */
 int Storage::
-getData(int aTimeIndex,int aStateIndex,int aN,double **rData) const
+getData(int aTimeIndex,int aStateIndex,int aN,osim_double_adouble **rData) const
 {
     if(aN<=0) return(0);
     if(aStateIndex<0) return(0);
@@ -984,12 +867,12 @@ getData(int aTimeIndex,int aStateIndex,int aN,double **rData) const
     int N = n - aStateIndex;
 
     // ALLOCATE MEMORY
-    if(*rData==NULL) *rData = new double[N];
+    if(*rData==NULL) *rData = new osim_double_adouble[N];
 
     // ASSIGN DATA
     int i,j;
-    Array<double> &data = vec->getData();
-    double *pData = *rData;
+    Array<osim_double_adouble> &data = vec->getData();
+    osim_double_adouble *pData = *rData;
     for(i=0,j=aStateIndex;j<n;i++,j++) pData[i] = data[j];
 
     return(N);
@@ -1009,7 +892,7 @@ getData(int aTimeIndex,int aStateIndex,int aN,double **rData) const
  * @return Number of states that were gotten.
  */
 int Storage::
-getData(int aTimeIndex,int aStateIndex,int aN,double *rData) const
+getData(int aTimeIndex,int aStateIndex,int aN,osim_double_adouble *rData) const
 {
     if(rData==NULL) return(0);
     else return getData(aTimeIndex,aStateIndex,aN,&rData);
@@ -1030,7 +913,7 @@ getData(int aTimeIndex,int aStateIndex,int aN,double *rData) const
  * @return Number of states.
  */
 int Storage::
-getData(int aTimeIndex,int aN,double **rData) const
+getData(int aTimeIndex,int aN,osim_double_adouble **rData) const
 {
     return getData(aTimeIndex,0,aN,rData);
 }
@@ -1045,7 +928,7 @@ getData(int aTimeIndex,int aN,double **rData) const
  * @return Number of states that were set.
  */
 int Storage::
-getData(int aTimeIndex,int aN,double *rData) const
+getData(int aTimeIndex,int aN,osim_double_adouble *rData) const
 {
     if(rData==NULL) return(0);
     else return getData(aTimeIndex,0,aN,&rData);
@@ -1061,7 +944,7 @@ getData(int aTimeIndex,int aN,double *rData) const
  * @return Number of states that were set.
  */
 int Storage::
-getData(int aTimeIndex,int aN,Array<double> &rData) const
+getData(int aTimeIndex,int aN,Array<osim_double_adouble> &rData) const
 {
     if(0 == rData.size()) return(0);
     else return getData(aTimeIndex,0,aN,&rData[0]);
@@ -1079,7 +962,7 @@ getData(int aTimeIndex,int aN,Array<double> &rData) const
 int Storage::
 getData(int aTimeIndex,int aN,SimTK::Vector& v) const
 {
-    Array<double> rData;
+    Array<osim_double_adouble> rData;
     rData.setSize(aN);
     int r = getData(aTimeIndex,0,aN,&rData[0]);
     for (int i=0; i<aN; ++i)
@@ -1099,7 +982,7 @@ getData(int aTimeIndex,int aN,SimTK::Vector& v) const
  * @return Number of states that were set.
  */
 int Storage::
-getDataAtTime(double aT,int aN,double **rData) const
+getDataAtTime(osim_double_adouble aT,int aN,osim_double_adouble **rData) const
 {
 
     // FIND THE CORRECT INTERVAL FOR aT
@@ -1119,30 +1002,30 @@ getDataAtTime(double aT,int aN,double **rData) const
 
     // STATES AT FIRST INDEX
     int n1 = getStateVector(i1)->getSize();
-    double t1 = getStateVector(i1)->getTime();
-    Array<double> &y1 = getStateVector(i1)->getData();
+    osim_double_adouble t1 = getStateVector(i1)->getTime();
+    Array<osim_double_adouble> &y1 = getStateVector(i1)->getData();
 
     // STATES AT NEXT INDEX
     int n2 = getStateVector(i2)->getSize();
-    double t2 = getStateVector(i2)->getTime();
-    Array<double> &y2 = getStateVector(i2)->getData();
+    osim_double_adouble t2 = getStateVector(i2)->getTime();
+    Array<osim_double_adouble> &y2 = getStateVector(i2)->getData();
 
     // GET THE SMALLEST N TO PREVENT MEMORY OVER-RUNS
     int ns = (n1<n2) ? n1 : n2;
 
     // ALLOCATE MEMORY?
-    double *y;
+    osim_double_adouble *y;
     if(*rData==NULL) {
-        y = new double[ns];
+        y = new osim_double_adouble[ns];
     } else {
         y = *rData;
         if(aN<ns)  ns = aN;
     }
 
     // ASSIGN VALUES
-    double pct;
-    double num = aT-t1;
-    double den = t2-t1;
+    osim_double_adouble pct;
+    osim_double_adouble num = aT-t1;
+    osim_double_adouble den = t2-t1;
     if(den<SimTK::Eps) {
         pct = 0.0;
     } else {
@@ -1175,21 +1058,21 @@ getDataAtTime(double aT,int aN,double **rData) const
  * @return Number of states that were set.
  */
 int Storage::
-getDataAtTime(double aT,int aN,double *rData) const
+getDataAtTime(osim_double_adouble aT,int aN,osim_double_adouble *rData) const
 {
     if(rData==NULL) return(0);
     else return getDataAtTime(aT,aN,&rData);
 }
 int Storage::
-getDataAtTime(double aT,int aN,Array<double> &rData) const
+getDataAtTime(osim_double_adouble aT,int aN,Array<osim_double_adouble> &rData) const
 {
-    double *data=&rData[0];
+    osim_double_adouble *data=&rData[0];
     return getDataAtTime(aT,aN,&data);
 }
 int Storage::
-getDataAtTime(double aT,int aN,SimTK::Vector& v) const
+getDataAtTime(osim_double_adouble aT,int aN,SimTK::Vector& v) const
 {
-    Array<double> rData;
+    Array<osim_double_adouble> rData;
     rData.setSize(aN);
     int r = getDataAtTime(aT,aN,rData);
     for (int i=0; i<aN; ++i)
@@ -1211,14 +1094,14 @@ getDataAtTime(double aT,int aN,SimTK::Vector& v) const
  * required to have the same number of states.
  */
 int Storage::
-getDataColumn(int aStateIndex,double *&rData) const
+getDataColumn(int aStateIndex,osim_double_adouble *&rData) const
 {
     int n = _storage.getSize();
     if(n<=0) return(0);
 
     // ALLOCATION
     if(rData==NULL) {
-        rData = new double[n];
+        rData = new osim_double_adouble[n];
     }
 
     // ASSIGNMENT
@@ -1232,7 +1115,7 @@ getDataColumn(int aStateIndex,double *&rData) const
     return(nData);
 }
 int Storage::
-getDataColumn(int aStateIndex,Array<double> &rData) const
+getDataColumn(int aStateIndex,Array<osim_double_adouble> &rData) const
 {
     int n = _storage.getSize();
     if(n<=0) return(0);
@@ -1257,13 +1140,13 @@ getDataColumn(int aStateIndex,Array<double> &rData) const
  * rData is preallocated by the caller.
  */
 void Storage::
-getDataColumn(const std::string& columnName, Array<double>& rData, double aStartTime)
+getDataColumn(const std::string& columnName, Array<osim_double_adouble>& rData, osim_double_adouble aStartTime)
 {
     if(_storage.getSize()<=0) return;
 
     int startIndex = findIndex(aStartTime);
     int colIndex = getStateIndex(columnName);
-    double *dataVec=0;
+    osim_double_adouble *dataVec=0;
     getDataColumn(colIndex, dataVec);
     for(int i=startIndex; i<_storage.getSize(); i++)
         rData.append(dataVec[i]);
@@ -1282,7 +1165,7 @@ getDataColumn(const std::string& columnName, Array<double>& rData, double aStart
  * required to have the same number of states.
  */
 void Storage::
-setDataColumn(int aStateIndex,const Array<double> &aData)
+setDataColumn(int aStateIndex,const Array<osim_double_adouble> &aData)
 {
     int n = _storage.getSize();
     if(n!=aData.getSize()) {
@@ -1300,7 +1183,7 @@ setDataColumn(int aStateIndex,const Array<double> &aData)
 /**
  * set values in the column specified by columnName to newValue
  */
-void Storage::setDataColumnToFixedValue(const std::string& columnName, double newValue) {
+void Storage::setDataColumnToFixedValue(const std::string& columnName, osim_double_adouble newValue) {
     int n = _storage.getSize();
     int aStateIndex = getStateIndex(columnName);
     if(aStateIndex==-1) {
@@ -1332,7 +1215,7 @@ void Storage::setDataColumnToFixedValue(const std::string& columnName, double ne
  * required to have the same number of states.
  */
 int Storage::
-getDataColumn(const std::string& aColumnName,double *&rData) const
+getDataColumn(const std::string& aColumnName,osim_double_adouble *&rData) const
 {
     if (aColumnName.c_str()[0]=='#'){
         int columnNumber=-1;
@@ -1347,7 +1230,7 @@ getDataColumn(const std::string& aColumnName,double *&rData) const
     to all components (such as prefix in the column label).
      @param identifier  string identifying a single block of data 
      @param rData       Array<Array<double>> of data belonging to the identifier */
-void Storage::getDataForIdentifier(const std::string& identifier, Array<Array<double> >& rData, double startTime) const
+void Storage::getDataForIdentifier(const std::string& identifier, Array<Array<osim_double_adouble> >& rData, osim_double_adouble startTime) const
 {
 
     Array<int> found = getColumnIndicesForIdentifier(identifier);
@@ -1363,7 +1246,7 @@ void Storage::getDataForIdentifier(const std::string& identifier, Array<Array<do
 
 
     for(int i=0; i<found.getSize(); ++i){
-        Array<double> data{};
+        Array<osim_double_adouble> data{};
         getDataColumn(found[i]-off, data);
         rData.append(data);
     }
@@ -1385,10 +1268,11 @@ Storage::getColumnIndicesForIdentifier(const std::string& identifier) const
     return found;
 }
 
-TimeSeriesTable Storage::exportToTable() const {
+TimeSeriesTable Storage::getAsTimeSeriesTable() const {
     TimeSeriesTable table{};
 
     table.addTableMetaData("header", getName());
+    table.addTableMetaData("version", std::to_string(LatestVersion));
     table.addTableMetaData("inDegrees", std::string{_inDegrees ? "yes" : "no"});
     table.addTableMetaData("nRows", std::to_string(_storage.getSize()));
     table.addTableMetaData("nColumns", std::to_string(_columnLabels.getSize()));
@@ -1450,7 +1334,7 @@ reset(int aIndex)
  * @return Index at which the next appended statevector will be stored.
  */
 int Storage::
-reset(double aTime)
+reset(osim_double_adouble aTime)
 {
     // 1 is added so that the states at or just prior to aT are kept.
     int index = findIndex(aTime) + 1;
@@ -1464,7 +1348,7 @@ reset(double aTime)
  * Crop the storage object to the specified start and final time
  */
 void Storage::
-crop(const double newStartTime, const double newFinalTime)
+crop(const osim_double_adouble newStartTime, const osim_double_adouble newFinalTime)
 {
     int startindex = findIndex(newStartTime); 
     int finalindex = findIndex(newFinalTime); 
@@ -1534,13 +1418,13 @@ append(const Array<StateVector> &aStorage)
  * @return Index of the first empty storage element.
  */
 int Storage::
-append(double aT,int aN,const double *aY,bool aCheckForDuplicateTime)
+append(osim_double_adouble aT,int aN,const osim_double_adouble *aY,bool aCheckForDuplicateTime)
 {
     if(aY==NULL) return(_storage.getSize());
     if(aN<0) return(_storage.getSize());
 
     // APPEND
-    StateVector vec(aT, SimTK::Vector_<double>(aN, aY));
+    StateVector vec(aT, SimTK::Vector_<osim_double_adouble>(aN, aY));
     append(vec,aCheckForDuplicateTime);
     // TODO: use some tolerance when checking for duplicate time?
     /*
@@ -1560,7 +1444,7 @@ append(double aT,int aN,const double *aY,bool aCheckForDuplicateTime)
  * @return Index of the first empty storage element.
  */
 int Storage::
-append(double aT,const SimTK::Vector& aY,bool aCheckForDuplicateTime)
+append(osim_double_adouble aT,const SimTK::Vector& aY,bool aCheckForDuplicateTime)
 {
     // APPEND
     return( append ( aT, aY.size(), &aY[0], aCheckForDuplicateTime ));
@@ -1574,7 +1458,7 @@ append(double aT,const SimTK::Vector& aY,bool aCheckForDuplicateTime)
  * @return Index of the first empty storage element.
  */
 int Storage::
-append(double aT,const Array<double>& aY,bool aCheckForDuplicateTime)
+append(osim_double_adouble aT,const Array<osim_double_adouble>& aY,bool aCheckForDuplicateTime)
 {
     // APPEND
     return( append ( aT, aY.getSize(), &aY[0], aCheckForDuplicateTime ));
@@ -1593,7 +1477,7 @@ append(double aT,const Array<double>& aY,bool aCheckForDuplicateTime)
  * The first empty storage location is returned.
  */
 int Storage::
-store(int aStep,double aT,int aN,const double *aY)
+store(int aStep,osim_double_adouble aT,int aN,const osim_double_adouble *aY)
 {
     if(_stepInterval==0) return(_storage.getSize());
     if((aStep%_stepInterval) == 0) {
@@ -1617,7 +1501,7 @@ store(int aStep,double aT,int aN,const double *aY)
  * @param aValue Value by which to shift the times.
  */
 void Storage::
-shiftTime(double aValue)
+shiftTime(osim_double_adouble aValue)
 {
     for(int i=0;i<_storage.getSize();i++) {
         _storage[i].shiftTime(aValue);
@@ -1630,7 +1514,7 @@ shiftTime(double aValue)
  * @param aValue Value by which to scale the times.
  */
 void Storage::
-scaleTime(double aValue)
+scaleTime(osim_double_adouble aValue)
 {
     for(int i=0;i<_storage.getSize();i++) {
         _storage[i].scaleTime(aValue);
@@ -1648,7 +1532,7 @@ scaleTime(double aValue)
  * @see StateVector::add(double)
  */
 void Storage::
-add(double aValue)
+add(osim_double_adouble aValue)
 {
     for(int i=0;i<_storage.getSize();i++) {
         _storage[i].add(aValue);
@@ -1663,7 +1547,7 @@ add(double aValue)
  * @see StateVector::add(int,double)
  */
 void Storage::
-add(int aN, double aValue)
+add(int aN, osim_double_adouble aValue)
 {
     for(int i=0;i<_storage.getSize();i++) {
         _storage[i].add(aN,aValue);
@@ -1678,7 +1562,7 @@ add(int aN, double aValue)
  * @param values Array of values to add to the state vectors.
  * @see StateVector::add(int,double[])
  */
-void Storage::add(const SimTK::Vector_<double>& values) {
+void Storage::add(const SimTK::Vector_<osim_double_adouble>& values) {
     for(int i = 0; i < _storage.getSize(); ++i) {
         _storage[i].add(values);
     }
@@ -1713,7 +1597,7 @@ add(Storage *aStorage)
     if(aStorage==NULL) return;
 
     int n,N=0,nN;
-    double t,*Y=NULL;
+    osim_double_adouble t,*Y=NULL;
     for(int i=0;i<_storage.getSize();i++) {
 
         // GET INFO ON THIS STORAGE INSTANCE
@@ -1727,7 +1611,7 @@ add(Storage *aStorage)
         nN = (n<N) ? n : N;
 
         // ADD
-        _storage[i].add(SimTK::Vector_<double>(nN, Y));
+        _storage[i].add(SimTK::Vector_<osim_double_adouble>(nN, Y));
     }
 
     // CLEANUP
@@ -1745,7 +1629,7 @@ add(Storage *aStorage)
  * @see StateVector::subtract(double)
  */
 void Storage::
-subtract(double aValue)
+subtract(osim_double_adouble aValue)
 {
     for(int i=0;i<_storage.getSize();i++) {
         _storage[i].subtract(aValue);
@@ -1760,7 +1644,7 @@ subtract(double aValue)
  * @param values Array of values to subtract from the state vectors.
  * @see StateVector::subtract(int,double[])
  */
-void Storage::subtract(const SimTK::Vector_<double>& values) {
+void Storage::subtract(const SimTK::Vector_<osim_double_adouble>& values) {
     for(int i = 0; i < _storage.getSize(); ++i) {
         _storage[i].subtract(values);
     }
@@ -1795,7 +1679,7 @@ subtract(Storage *aStorage)
     if(aStorage==NULL) return;
 
     int n,N=0,nN;
-    double t,*Y=NULL;
+    osim_double_adouble t,*Y=NULL;
     for(int i=0;i<_storage.getSize();i++) {
 
         // GET INFO ON THIS STORAGE INSTANCE
@@ -1809,7 +1693,7 @@ subtract(Storage *aStorage)
         nN = (n<N) ? n : N;
 
         // SUBTRACT
-        _storage[i].subtract(SimTK::Vector_<double>(nN, Y));
+        _storage[i].subtract(SimTK::Vector_<osim_double_adouble>(nN, Y));
     }
 
     // CLEANUP
@@ -1827,7 +1711,7 @@ subtract(Storage *aStorage)
  * @see StateVector::multiply(double)
  */
 void Storage::
-multiply(double aValue)
+multiply(osim_double_adouble aValue)
 {
     for(int i=0;i<_storage.getSize();i++) {
         _storage[i].multiply(aValue);
@@ -1842,7 +1726,7 @@ multiply(double aValue)
  * @param values Array of values the states are to be multiplied by.
  * @see StateVector::multiply(int,double[])
  */
-void Storage::multiply(const SimTK::Vector_<double>& values) {
+void Storage::multiply(const SimTK::Vector_<osim_double_adouble>& values) {
     for(int i = 0; i < _storage.getSize(); ++i) {
         _storage[i].multiply(values);
     }
@@ -1878,7 +1762,7 @@ multiply(Storage *aStorage)
     if(aStorage==NULL) return;
 
     int n,N=0,nN;
-    double t,*Y=NULL;
+    osim_double_adouble t,*Y=NULL;
     for(int i=0;i<_storage.getSize();i++) {
 
         // GET INFO ON THIS STORAGE INSTANCE
@@ -1892,7 +1776,7 @@ multiply(Storage *aStorage)
         nN = (n<N) ? n : N;
 
         // MULTIPLY
-        _storage[i].multiply(SimTK::Vector_<double>(nN, Y));
+        _storage[i].multiply(SimTK::Vector_<osim_double_adouble>(nN, Y));
     }
 
     // CLEANUP
@@ -1906,9 +1790,9 @@ multiply(Storage *aStorage)
  * @param aValue Value by which to multiply the column.
  */
 void Storage::
-multiplyColumn(int aIndex, double aValue)
+multiplyColumn(int aIndex, osim_double_adouble aValue)
 {
-    double newValue;
+    osim_double_adouble newValue;
     for(int i=0;i<_storage.getSize();i++) {
         _storage[i].getDataValue(aIndex, newValue);
         newValue *= aValue;
@@ -1926,7 +1810,7 @@ multiplyColumn(int aIndex, double aValue)
  * @param aValue Value by which to divide the state vectors.
  */
 void Storage::
-divide(double aValue)
+divide(osim_double_adouble aValue)
 {
     for(int i=0;i<_storage.getSize();i++) {
         _storage[i].divide(aValue);
@@ -1940,7 +1824,7 @@ divide(double aValue)
  *
  * @param values Array of values the states are to be divided by.
  */
-void Storage::divide(const SimTK::Vector_<double>& values) {
+void Storage::divide(const SimTK::Vector_<osim_double_adouble>& values) {
     for(int i = 0; i < _storage.getSize(); ++i) {
         _storage[i].divide(values);
     }
@@ -1975,7 +1859,7 @@ divide(Storage *aStorage)
 
     int i;
     int n,N=0,nN;
-    double t,*Y=NULL;
+    osim_double_adouble t,*Y=NULL;
     for(i=0;i<_storage.getSize();i++) {
 
         // GET INFO ON THIS STORAGE INSTANCE
@@ -1989,7 +1873,7 @@ divide(Storage *aStorage)
         nN = (n<N) ? n : N;
 
         // DIVIDE
-        _storage[i].divide(SimTK::Vector_<double>(nN, Y));
+        _storage[i].divide(SimTK::Vector_<osim_double_adouble>(nN, Y));
     }
 
     // CLEANUP
@@ -2013,20 +1897,20 @@ divide(Storage *aStorage)
  * The number of valid states in aAve is returned.
  */
 int Storage::
-computeAverage(int aN,double *aAve) const
+computeAverage(int aN,osim_double_adouble *aAve) const
 {
     int n = computeArea(aN,aAve);
     if(n==0) return(0);
 
     // DIVIDE BY THE TIME RANGE
-    double ti = getFirstTime();
-    double tf = getLastTime();
+    osim_double_adouble ti = getFirstTime();
+    osim_double_adouble tf = getLastTime();
     if(tf<=ti) {
         cout << "Storage.computeAverage: ERROR- time interval invalid." << endl
               << "\tfirstTime=" << ti << "  lastTime=" << tf << endl;
         return(0);
     }
-    double dt_recip = 1.0 / (tf-ti);
+    osim_double_adouble dt_recip = 1.0 / (tf-ti);
     for(int i=0;i<n;i++) {
         aAve[i] *= dt_recip;
     }
@@ -2051,13 +1935,13 @@ computeAverage(int aN,double *aAve) const
  * an estimate of the state at aTI or at aTF.
  */
 int Storage::
-computeAverage(double aTI,double aTF,int aN,double *aAve) const
+computeAverage(osim_double_adouble aTI,osim_double_adouble aTF,int aN,osim_double_adouble *aAve) const
 {
     int n = computeArea(aTI,aTF,aN,aAve);
     if(n==0) return(0);
 
     // DIVIDE BY THE TIME RANGE
-    double dt_recip = 1.0 / (aTF-aTI);
+    osim_double_adouble dt_recip = 1.0 / (aTF-aTI);
     for(int i=0;i<n;i++) {
         aAve[i] *= dt_recip;
     }
@@ -2070,7 +1954,7 @@ computeAverage(double aTI,double aTF,int aN,double *aAve) const
  * Helper function for integrate/computeArea
  */
 int Storage::
-integrate(int aI1,int aI2,int aN,double *rArea,Storage *rStorage) const
+integrate(int aI1,int aI2,int aN,osim_double_adouble *rArea,Storage *rStorage) const
 {
     // CHECK THAT THERE ARE STATES STORED
     if(_storage.getSize()<=0) {
@@ -2097,12 +1981,12 @@ integrate(int aI1,int aI2,int aN,double *rArea,Storage *rStorage) const
     if(aI2<0) aI2 = _storage.getSize()-1;
 
     // WORKING MEMORY
-    double ti,tf;
-    double *yi=NULL,*yf=NULL;
+    osim_double_adouble ti,tf;
+    osim_double_adouble *yi=NULL,*yf=NULL;
 
     bool functionAllocatedArea = false;
     if(!rArea) {
-        rArea = new double [n];
+        rArea = new osim_double_adouble [n];
         functionAllocatedArea = true;
     }
 
@@ -2145,7 +2029,7 @@ integrate(int aI1,int aI2,int aN,double *rArea,Storage *rStorage) const
  * Helper function for integrate/computeArea
  */
 int Storage::
-integrate(double aTI,double aTF,int aN,double *rArea,Storage *rStorage) const
+integrate(osim_double_adouble aTI,osim_double_adouble aTF,int aN,osim_double_adouble *rArea,Storage *rStorage) const
 {
     // CHECK THAT THERE ARE STATES STORED
     if(_storage.getSize()<=0) {
@@ -2161,8 +2045,8 @@ integrate(double aTI,double aTF,int aN,double *rArea,Storage *rStorage) const
     }
 
     // CHECK TIME RANGE
-    double fstT = getFirstTime();
-    double lstT = getLastTime();
+    osim_double_adouble fstT = getFirstTime();
+    osim_double_adouble lstT = getLastTime();
     if((aTI<fstT)||(aTI>lstT)||(aTF<fstT)||(aTF>lstT)) {
         cout << "Storage.integrate: ERROR- bad time range." << endl
               << "\tThe specified range (" << aTI << " to " << aTF << ") is not covered by" << endl
@@ -2182,13 +2066,13 @@ integrate(double aTI,double aTF,int aN,double *rArea,Storage *rStorage) const
     }
 
     // WORKING MEMORY
-    double ti,tf;
-    double *yI = new double[n];
-    double *yF = new double[n];
+    osim_double_adouble ti,tf;
+    osim_double_adouble *yI = new osim_double_adouble[n];
+    osim_double_adouble *yF = new osim_double_adouble[n];
 
     bool functionAllocatedArea = false;
     if(!rArea) {
-        rArea = new double [n];
+        rArea = new osim_double_adouble [n];
         functionAllocatedArea = true;
     }
 
@@ -2213,7 +2097,7 @@ integrate(double aTI,double aTF,int aN,double *rArea,Storage *rStorage) const
 
     // SPANS MULTIPLE INTERVALS
     } else {
-        double *yi=NULL,*yf=NULL;
+        osim_double_adouble *yi=NULL,*yf=NULL;
 
         // FIRST SLICE
         getDataAtTime(aTI,n,&yI);
@@ -2264,7 +2148,7 @@ integrate(double aTI,double aTF,int aN,double *rArea,Storage *rStorage) const
  * The number of valid states in aArea is returned.
  */
 int Storage::
-computeArea(int aN,double *aArea) const
+computeArea(int aN,osim_double_adouble *aArea) const
 {
     // CHECK FOR VALID OUTPUT ARRAYS
     if(aN<=0) return(0);
@@ -2286,7 +2170,7 @@ computeArea(int aN,double *aArea) const
  * an estimate of the state at aTI or at aTF.
  */
 int Storage::
-computeArea(double aTI,double aTF,int aN,double *aArea) const
+computeArea(osim_double_adouble aTI,osim_double_adouble aTF,int aN,osim_double_adouble *aArea) const
 {
     // CHECK FOR VALID OUTPUT ARRAYS
     if(aN<=0) return(0);
@@ -2349,7 +2233,7 @@ integrate(int aI1,int aI2) const
  * error is encountered.
  */
 Storage* Storage::
-integrate(double aTI,double aTF) const
+integrate(osim_double_adouble aTI,osim_double_adouble aTF) const
 {
     // CREATE COPY
     Storage *integStore = new Storage(*this,false);
@@ -2375,14 +2259,14 @@ pad(int aPadSize)
 {
     if (aPadSize==0) return; //Nothing to do
     // PAD THE TIME COLUMN
-    Array<double> paddedTime;
+    Array<osim_double_adouble> paddedTime;
     int size = getTimeColumn(paddedTime);
     Signal::Pad(aPadSize,paddedTime);
     int newSize = paddedTime.getSize();
 
     // PAD EACH COLUMN
     int nc = getSmallestNumberOfStates();
-    Array<double> paddedSignal(0.0,size);
+    Array<osim_double_adouble> paddedSignal(0.0,size);
     StateVector *vecs = new StateVector[newSize];
     for(int j=0;j<newSize;j++) {
         vecs[j].getData().setSize(nc);
@@ -2404,11 +2288,11 @@ pad(int aPadSize)
 }
 
 void Storage::
-smoothSpline(int aOrder,double aCutoffFrequency)
+smoothSpline(int aOrder,osim_double_adouble aCutoffFrequency)
 {
     int size = getSize();
-    double dtmin = getMinTimeStep();
-    double avgDt = (_storage[size-1].getTime() - _storage[0].getTime()) / (size-1);
+    osim_double_adouble dtmin = getMinTimeStep();
+    osim_double_adouble avgDt = (_storage[size-1].getTime() - _storage[0].getTime()) / (size-1);
 
     if(dtmin<SimTK::Eps) {
         cout<<"Storage.SmoothSpline: storage cannot be resampled."<<endl;
@@ -2416,10 +2300,10 @@ smoothSpline(int aOrder,double aCutoffFrequency)
     }
 
     // RESAMPLE if the sampling interval is not uniform
-    if ((avgDt - dtmin) > SimTK::Eps) {
-        dtmin = resample(dtmin, aOrder);
-        size = getSize();
-    }
+    //if ((avgDt - dtmin) > SimTK::Eps) {
+    //    dtmin = resample(dtmin, aOrder);
+    //    size = getSize();
+    //}
 
     if(size<(2*aOrder)) {
         cout<<"Storage.SmoothSpline: too few data points to filter."<<endl;
@@ -2427,10 +2311,10 @@ smoothSpline(int aOrder,double aCutoffFrequency)
     }
 
     // LOOP OVER COLUMNS
-    double *times=NULL;
+    osim_double_adouble *times=NULL;
     int nc = getSmallestNumberOfStates();
-    double *signal=NULL;
-    Array<double> filt(0.0,size);
+    osim_double_adouble *signal=NULL;
+    Array<osim_double_adouble> filt(0.0,size);
     getTimeColumn(times,0);
     for(int i=0;i<nc;i++) {
         getDataColumn(i,signal);
@@ -2444,11 +2328,11 @@ smoothSpline(int aOrder,double aCutoffFrequency)
 }
 
 void Storage::
-lowpassIIR(double aCutoffFrequency)
+lowpassIIR(osim_double_adouble aCutoffFrequency)
 {
     int size = getSize();
-    double dtmin = getMinTimeStep();
-    double avgDt = (_storage[size-1].getTime() - _storage[0].getTime()) / (size-1);
+    osim_double_adouble dtmin = getMinTimeStep();
+    osim_double_adouble avgDt = (_storage[size-1].getTime() - _storage[0].getTime()) / (size-1);
 
     if(dtmin<SimTK::Eps) {
         cout<<"Storage.lowpassIIR: storage cannot be resampled."<<endl;
@@ -2456,10 +2340,10 @@ lowpassIIR(double aCutoffFrequency)
     }
 
     // RESAMPLE if the sampling interval is not uniform
-    if ((avgDt - dtmin) > SimTK::Eps) {
-        dtmin = resample(dtmin, 5);
-        size = getSize();
-    }
+    //if ((avgDt - dtmin) > SimTK::Eps) {
+    //    dtmin = resample(dtmin, 5);
+    //    size = getSize();
+    //}
 
     if(size<(4)) {
         cout<<"Storage.lowpassIIR: too few data points to filter."<<endl;
@@ -2468,8 +2352,8 @@ lowpassIIR(double aCutoffFrequency)
 
     // LOOP OVER COLUMNS
     int nc = getSmallestNumberOfStates();
-    double *signal=NULL;
-    Array<double> filt(0.0,size);
+    osim_double_adouble *signal=NULL;
+    Array<osim_double_adouble> filt(0.0,size);
     for(int i=0;i<nc;i++) {
         getDataColumn(i,signal);
         Signal::LowpassIIR(dtmin,aCutoffFrequency,size,signal,&filt[0]);
@@ -2481,11 +2365,11 @@ lowpassIIR(double aCutoffFrequency)
 }
 
 void Storage::
-lowpassFIR(int aOrder,double aCutoffFrequency)
+lowpassFIR(int aOrder,osim_double_adouble aCutoffFrequency)
 {
     int size = getSize();
-    double dtmin = getMinTimeStep();
-    double avgDt = (_storage[size-1].getTime() - _storage[0].getTime()) / (size-1);
+    osim_double_adouble dtmin = getMinTimeStep();
+    osim_double_adouble avgDt = (_storage[size-1].getTime() - _storage[0].getTime()) / (size-1);
 
     if (dtmin<SimTK::Eps) {
         cout<<"Storage.lowpassFIR: storage cannot be resampled."<<endl;
@@ -2493,10 +2377,10 @@ lowpassFIR(int aOrder,double aCutoffFrequency)
     }
 
     // RESAMPLE if the sampling interval is not uniform
-    if ((avgDt - dtmin) > SimTK::Eps) {
-        dtmin = resample(dtmin, 5);
-        size = getSize();
-    }
+    //if ((avgDt - dtmin) > SimTK::Eps) {
+    //    dtmin = resample(dtmin, 5);
+    //    size = getSize();
+    //}
 
     if(size<(2*aOrder)) {
         cout<<"Storage.lowpassFIR: too few data points to filter."<<endl;
@@ -2505,8 +2389,8 @@ lowpassFIR(int aOrder,double aCutoffFrequency)
 
     // LOOP OVER COLUMNS
     int nc = getSmallestNumberOfStates();
-    double *signal=NULL;
-    Array<double> filt(0.0,size);
+    osim_double_adouble *signal=NULL;
+    Array<osim_double_adouble> filt(0.0,size);
     for(int i=0;i<nc;i++) {
         getDataColumn(i,signal);
         Signal::LowpassFIR(aOrder,dtmin,aCutoffFrequency,size,signal,&filt[0]);
@@ -2537,7 +2421,7 @@ lowpassFIR(int aOrder,double aCutoffFrequency)
  * time, 0 is returned.
  */
 int Storage::
-findIndex(int aI,double aT) const
+findIndex(int aI,osim_double_adouble aT) const
 {
     // MAKE SURE aI IS VALID
     if(_storage.getSize()<=0) return(-1);
@@ -2567,7 +2451,7 @@ findIndex(int aI,double aT) const
  * time, 0 is returned.
  */
 int Storage::
-findIndex(double aT) const
+findIndex(osim_double_adouble aT) const
 {
     if(_storage.getSize()<=0) return(-1);
     int i;
@@ -2583,7 +2467,7 @@ findIndex(double aT) const
  * Find the range of frames that is between start time and end time
  * (inclusive). Return the indices of the bounding frames.
  */
-void Storage::findFrameRange(double aStartTime, double aEndTime, int& oStartFrame, int& oEndFrame) const
+void Storage::findFrameRange(osim_double_adouble aStartTime, osim_double_adouble aEndTime, int& oStartFrame, int& oEndFrame) const
 {
     SimTK_ASSERT_ALWAYS(aStartTime <= aEndTime, "Start time must be <= end time");
 
@@ -2598,8 +2482,8 @@ void Storage::findFrameRange(double aStartTime, double aEndTime, int& oStartFram
  * @param aDT Time interval between adjacent statevectors.
  * @return Actual sampling time step (may be clamped)
  */
-double Storage::
-resample(double aDT, int aDegree)
+osim_double_adouble Storage::
+resample(osim_double_adouble aDT, int aDegree)
 {
     int numDataRows = _storage.getSize();
 
@@ -2608,7 +2492,7 @@ resample(double aDT, int aDegree)
     // Limit aDT based on expected number of samples
     int maxSamples = MAX_RESAMPLE_SIZE;
     if((getLastTime()-getFirstTime())/aDT > maxSamples) {
-        double newDT = (getLastTime()-getFirstTime())/maxSamples;
+        osim_double_adouble newDT = (getLastTime()-getFirstTime())/maxSamples;
         cout<<"Storage.resample: WARNING: resampling at time step "<<newDT<<" (but minimum time step is "<<aDT<<")"<<endl;
         aDT = newDT;
     }
@@ -2634,8 +2518,8 @@ resample(double aDT, int aDegree)
 /**
  * Resample using linear interpolation
  */
-double Storage::
-resampleLinear(double aDT)
+osim_double_adouble Storage::
+resampleLinear(osim_double_adouble aDT)
 {
     int numDataRows = _storage.getSize();
 
@@ -2644,7 +2528,7 @@ resampleLinear(double aDT)
     // Limit aDT based on expected number of samples
     int maxSamples = MAX_RESAMPLE_SIZE;
     if((getLastTime()-getFirstTime())/aDT > maxSamples) {
-        double newDT = (getLastTime()-getFirstTime())/maxSamples;
+        osim_double_adouble newDT = (getLastTime()-getFirstTime())/maxSamples;
         cout<<"Storage.resampleLinear: WARNING: resampling at time step "<<newDT<<" (but minimum time step is "<<aDT<<")"<<endl;
         aDT = newDT;
     }
@@ -2652,18 +2536,18 @@ resampleLinear(double aDT)
     Array<std::string> saveLabels = getColumnLabels();
 
     // HOW MANY TIME STEPS?
-    double ti = getFirstTime();
-    double tf = getLastTime();
+    osim_double_adouble ti = getFirstTime();
+    osim_double_adouble tf = getLastTime();
     int nr = IO::ComputeNumberOfSteps(ti,tf,aDT);
 
     Storage *newStorage = new Storage(nr);
 
     // LOOP THROUGH THE DATA
     int ny=0;
-    double *y=NULL;
+    osim_double_adouble *y=NULL;
     StateVector vec;
     for(int i=0; i<nr; i++) {
-        double t = ti+aDT*(double)i;
+        osim_double_adouble t = ti+aDT*(osim_double_adouble)i;
         // INTERPOLATE THE STATES
         ny = getDataAtTime(t,ny,&y);
         newStorage->append(t,ny,y);
@@ -2682,14 +2566,14 @@ resampleLinear(double aDT)
  * interpolateAt passed in list of time values. Tries to check if there is a data
  * row at the specified times to avoid introducing duplicates.
  */
-void Storage::interpolateAt(const Array<double> &targetTimes)
+void Storage::interpolateAt(const Array<osim_double_adouble> &targetTimes)
 {
     for(int i=0; i<targetTimes.getSize();i++){
-        double t = targetTimes[i];
+        osim_double_adouble t = targetTimes[i];
         // get index for t
         int tIndex = findIndex(t);
         // If within small number from t then pass
-        double actualTime=0.0;
+        osim_double_adouble actualTime=0.0;
         if (tIndex < getSize()-1){
             getTime(tIndex+1, actualTime);
             if (fabs(actualTime - t)<1e-6) 
@@ -2700,12 +2584,12 @@ void Storage::interpolateAt(const Array<double> &targetTimes)
         if (fabs(actualTime - t)<1e-6) 
                 continue;
         // create a StateVector and add it
-        double *y=NULL;
+        osim_double_adouble *y=NULL;
         int ny=0;
         StateVector vec;
         // INTERPOLATE THE STATES
         ny = getDataAtTime(t,ny,&y);
-        vec.setStates(t, SimTK::Vector_<double>(ny, y));
+        vec.setStates(t, SimTK::Vector_<osim_double_adouble>(ny, y));
 
         _storage.insert(tIndex+1, vec);
     }
@@ -2826,7 +2710,7 @@ print(const string &aFileName,const string &aMode, const string& aComment) const
  * a negative number is returned.
  */
 int Storage::
-print(const string &aFileName,double aDT,const string &aMode) const
+print(const string &aFileName,osim_double_adouble aDT,const string &aMode) const
 {
     // CHECK FOR VALID DT
     if(aDT<=0) return(0);
@@ -2837,8 +2721,8 @@ print(const string &aFileName,double aDT,const string &aMode) const
     if(fp==NULL) return(-1);
 
     // HOW MANY TIME STEPS?
-    double ti = getFirstTime();
-    double tf = getLastTime();
+    osim_double_adouble ti = getFirstTime();
+    osim_double_adouble tf = getLastTime();
     int nr = IO::ComputeNumberOfSteps(ti,tf,aDT);
 //printf("Storage.cpp:print ti=%f tf=%f dt=%f nr=%d ", ti,tf,aDT,nr );
 //std::cout << aFileName << endl;
@@ -2880,13 +2764,13 @@ print(const string &aFileName,double aDT,const string &aMode) const
 
     // LOOP THROUGH THE DATA
     int i,ny=0;
-    double t,*y=NULL;
+    osim_double_adouble t,*y=NULL;
     StateVector vec;
-    for(t=ti,i=0;i<nr;i++,t=ti+aDT*(double)i) {
+    for(t=ti,i=0;i<nr;i++,t=ti+aDT*(osim_double_adouble)i) {
 
         // INTERPOLATE THE STATES
         ny = getDataAtTime(t,ny,&y);
-        vec.setStates(t, SimTK::Vector_<double>(ny, y));
+        vec.setStates(t, SimTK::Vector_<osim_double_adouble>(ny, y));
 
         // PRINT
         n = vec.print(fp);
@@ -2906,7 +2790,7 @@ print(const string &aFileName,double aDT,const string &aMode) const
 
 void Storage::
 printResult(const Storage *aStorage,const std::string &aName,
-                const std::string &aDir,double aDT,const std::string &aExtension)
+                const std::string &aDir,osim_double_adouble aDT,const std::string &aExtension)
 {
     if(!aStorage) return;
     std::string path = (aDir=="") ? "." : aDir;
@@ -2920,7 +2804,7 @@ printResult(const Storage *aStorage,const std::string &aName,
  * Write the header.
  */
 int Storage::
-writeHeader(FILE *rFP,double aDT) const
+writeHeader(FILE *rFP,osim_double_adouble aDT) const
 {
     if(rFP==NULL) return(-1);
 
@@ -2929,8 +2813,8 @@ writeHeader(FILE *rFP,double aDT) const
     if(aDT<=0) {
         nr = _storage.getSize();
     } else {
-        double ti = getFirstTime();
-        double tf = getLastTime();
+        osim_double_adouble ti = getFirstTime();
+        osim_double_adouble tf = getLastTime();
         nr = IO::ComputeNumberOfSteps(ti,tf,aDT);
     }
     nc = getSmallestNumberOfStates()+1;
@@ -2951,7 +2835,7 @@ writeHeader(FILE *rFP,double aDT) const
  * @return SIMM header.
  */
 int Storage::
-writeSIMMHeader(FILE *rFP,double aDT, const char *aComment) const
+writeSIMMHeader(FILE *rFP,osim_double_adouble aDT, const char *aComment) const
 {
     if(rFP==NULL) return(-1);
 
@@ -3040,10 +2924,10 @@ writeColumnLabels(FILE *rFP) const
 
     return(0);
 }
-void Storage::addToRdStorage(Storage& rStorage, double aStartTime, double aEndTime)
+void Storage::addToRdStorage(Storage& rStorage, osim_double_adouble aStartTime, osim_double_adouble aEndTime)
 {
     bool addedData = false;
-    double time, stateTime;
+    osim_double_adouble time, stateTime;
 
     /* Loop through the rows in rStorage from aStartTime to aEndTime,
      * looking for a match (by time) in the rows of Storage.
@@ -3066,19 +2950,20 @@ void Storage::addToRdStorage(Storage& rStorage, double aStartTime, double aEndTi
             // steps were within the tolerance. This method should only be
             // used to concatenate data columns from the same simulation
             // or analysis results.
-            if (EQUAL_WITHIN_TOLERANCE(time, stateTime, SimTK::SignificantReal)) {
-                Array<double>& states = rStorage.getStateVector(i)->getData();
-                // Start at 1 to avoid duplicate time column
-                for (int k = 1; k < numColumns; k++)
-                {
-                    if (_columnLabels[k] != "Unassigned")
-                    {
-                        states.append(getStateVector(j)->getData().get(k-1));
-                        addedData = true;
-                    }
-                }
-                break;
-            }
+			/// ATTENTION
+            //if (EQUAL_WITHIN_TOLERANCE(time, stateTime, SimTK::SignificantReal)) {
+            //    Array<osim_double_adouble>& states = rStorage.getStateVector(i)->getData();
+            //    // Start at 1 to avoid duplicate time column
+            //    for (int k = 1; k < numColumns; k++)
+            //    {
+            //        if (_columnLabels[k] != "Unassigned")
+            //        {
+            //            states.append(getStateVector(j)->getData().get(k-1));
+            //            addedData = true;
+            //        }
+            //    }
+            //    break;
+            //}
         }
         if (j == getSize()) {
             stringstream errorMessage;
@@ -3226,15 +3111,15 @@ bool Storage::parseHeaders(std::ifstream& aStream, int& rNumRows, int& rNumColum
         }
         firstLine=false;
     }
-
-    if (_fileVersion < 1) {
-        cout << "Old version storage/motion file encountered" << endl;
-    }
-
     if(rNumColumns==0 || rNumRows==0) {
+        cout << "Storage: ERROR- failed to parse header of storage file." << endl;
         return false;
     }
-
+    if (_fileVersion < LatestVersion) {
+        if (_fileVersion < 1){
+            cout << "Old version storage/motion file encountered" << endl;
+        }
+    }
     return true;
 }
 //_____________________________________________________________________________
@@ -3248,8 +3133,8 @@ exchangeTimeColumnWith(int aColumnIndex)
     StateVector* vec;
     for(int i=0; i< _storage.getSize(); i++){
         vec = getStateVector(i);
-        double swap = vec->getData().get(aColumnIndex);
-        double time=vec->getTime();
+        osim_double_adouble swap = vec->getData().get(aColumnIndex);
+        osim_double_adouble time=vec->getTime();
         vec->setDataValue(aColumnIndex, time);
         vec->setTime(swap);
     }
@@ -3283,7 +3168,7 @@ void Storage::postProcessSIMMMotion()
             iter = _keyValueMap.find("range");  // Should we check "Range", "RANGE" too?
             if (iter !=_keyValueMap.end()){
                 string rangeValue = iter->second;
-                double start, end;
+                osim_double_adouble start, end;
                 sscanf(rangeValue.c_str(), "%lf %lf", &start, &end);
                 if (_storage.getSize()<2){  // Something wrong throw exception unless start==end
                     if (start !=end){
@@ -3302,10 +3187,10 @@ void Storage::postProcessSIMMMotion()
                         throw (Exception("File has no data"));
                 }
                 else {  // time  column from range, size
-                    double timeStep = (end - start)/(_storage.getSize()-1);
+                    osim_double_adouble timeStep = (end - start)/(_storage.getSize()-1);
                     _columnLabels.append("time");
                     for(int i=0; i<_storage.getSize(); i++){
-                        Array<double>& data=_storage.updElt(i).getData();
+                        Array<osim_double_adouble>& data=_storage.updElt(i).getData();
                         data.append(i*timeStep);
                     }
                     int timeColumnIndex=_columnLabels.findIndex("time");
@@ -3325,20 +3210,20 @@ void Storage::postProcessSIMMMotion()
  *
  * NOTE: This assumes same time sampling between both Storages.
  */
-double Storage::compareColumn(Storage& aOtherStorage, const std::string& aColumnName, double startTime, double endTime)
+osim_double_adouble Storage::compareColumn(Storage& aOtherStorage, const std::string& aColumnName, osim_double_adouble startTime, osim_double_adouble endTime)
 {
     //Subtract one since, the data does not include the time column anymore.
     int thisColumnIndex=_columnLabels.findIndex(aColumnName)-1;
     int otherColumnIndex = aOtherStorage._columnLabels.findIndex(aColumnName)-1;
 
-    double theDiff = SimTK::NaN;
+    osim_double_adouble theDiff = SimTK::NaN;
 
     if ((thisColumnIndex==-2)||(otherColumnIndex==-2))// not found is now -2 since we subtracted 1 already
         return theDiff;
 
     // Now we have two columnNumbers. get the data and compare
-    Array<double> thisData, otherData;
-    Array<double> thisTime, otherTime;
+    Array<osim_double_adouble> thisData, otherData;
+    Array<osim_double_adouble> thisTime, otherTime;
     getDataColumn(thisColumnIndex, thisData);
     getTimeColumn(thisTime);
 
@@ -3356,9 +3241,9 @@ double Storage::compareColumn(Storage& aOtherStorage, const std::string& aColumn
     if ((endIndex -startIndex)!= (endIndexOther -startIndexOther)) return (theDiff);
 
     for(int i=startIndex; i< endIndex; i++){
-        if (abs(thisTime[i]-otherTime[startIndexOther+i-startIndex]) > 1E-3) 
+        if (fabs(thisTime[i]-otherTime[startIndexOther+i-startIndex]) > 1E-3) 
             return SimTK::Infinity;
-        theDiff = std::max(theDiff, fabs(thisData[i]-otherData[startIndexOther+i-startIndex]));
+        theDiff = fmax(theDiff, fabs(thisData[i]-otherData[startIndexOther+i-startIndex]));
     }
     return theDiff;
 }
@@ -3367,7 +3252,7 @@ double Storage::compareColumn(Storage& aOtherStorage, const std::string& aColumn
  * If endTime is not specified the comparison goes to the end of the file
  * @returns the root mean square, using a spline to calculate values where the times do not match up.
  */
-double Storage::compareColumnRMS(const Storage& aOtherStorage, const std::string& aColumnName, double startTime, double endTime) const
+osim_double_adouble Storage::compareColumnRMS(const Storage& aOtherStorage, const std::string& aColumnName, osim_double_adouble startTime, osim_double_adouble endTime) const
 {
     int thisColumnIndex = getStateIndex(aColumnName);
     int otherColumnIndex = aOtherStorage.getStateIndex(aColumnName);
@@ -3376,8 +3261,8 @@ double Storage::compareColumnRMS(const Storage& aOtherStorage, const std::string
         return SimTK::NaN;
 
     // Now we have two columnNumbers. get the data and compare
-    Array<double> thisData, otherData;
-    Array<double> thisTime, otherTime;
+    Array<osim_double_adouble> thisData, otherData;
+    Array<osim_double_adouble> thisTime, otherTime;
     getDataColumn(thisColumnIndex, thisData);
     getTimeColumn(thisTime);
     aOtherStorage.getDataColumn(otherColumnIndex, otherData);
@@ -3396,11 +3281,11 @@ double Storage::compareColumnRMS(const Storage& aOtherStorage, const std::string
     // create spline in case time values do not match up
     GCVSpline spline(3, otherTime.getSize(), &otherTime[0], &otherData[0]);
 
-    double rms = 0.;
+    osim_double_adouble rms = 0.;
 
     for(int i = startIndex; i <= endIndex; i++) {
         SimTK::Vector inputTime(1, thisTime[i]);
-        double diff = thisData[i] - spline.calcValue(inputTime);
+        osim_double_adouble diff = thisData[i] - spline.calcValue(inputTime);
         rms += diff * diff;
     }
 
@@ -3413,12 +3298,12 @@ double Storage::compareColumnRMS(const Storage& aOtherStorage, const std::string
  * errors for columns occurring in both storage objects, and record the
  * values and column names in the comparisons and columnsUsed Arrays.
  */
-void Storage::compareWithStandard(const Storage& standard, std::vector<string>& columnsUsed, std::vector<double>& comparisons) const
+void Storage::compareWithStandard(const Storage& standard, std::vector<string>& columnsUsed, std::vector<osim_double_adouble>& comparisons) const
 {
     int maxColumns = _columnLabels.getSize();
 
     for (int i = 1; i < maxColumns; ++i) {
-        double comparison = compareColumnRMS(standard, _columnLabels[i]);
+        osim_double_adouble comparison = compareColumnRMS(standard, _columnLabels[i]);
         if (!SimTK::isNaN(comparison)) {
             comparisons.push_back(comparison);
             columnsUsed.push_back(_columnLabels[i]);

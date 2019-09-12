@@ -58,7 +58,7 @@ protected:
 
     /** Scale factor */
     PropertyDbl _scaleProp;
-    double &_scale;
+    osim_double_adouble &_scale;
 
 //=============================================================================
 // METHODS
@@ -69,7 +69,7 @@ public:
     //--------------------------------------------------------------------------
     MultiplierFunction();
     MultiplierFunction(Function* aFunction);
-    MultiplierFunction(Function* aFunction, double aScaleFactor);
+    MultiplierFunction(Function* aFunction, osim_double_adouble aScaleFactor);
     MultiplierFunction(const MultiplierFunction &aFunction);
     virtual ~MultiplierFunction();
 
@@ -93,15 +93,15 @@ public:
     // SET AND GET
     //--------------------------------------------------------------------------
     void setFunction(Function* aFunction);
-    void setScale(double aScaleFactor);
+    void setScale(osim_double_adouble aScaleFactor);
     Function* getFunction() const { return _osFunction; }
-    double getScale() const { return _scale; }
+	osim_double_adouble getScale() const { return _scale; }
 
     //--------------------------------------------------------------------------
     // EVALUATION
     //--------------------------------------------------------------------------
-    double calcValue(const SimTK::Vector& x) const override;
-    double calcDerivative(const std::vector<int>& derivComponents, const SimTK::Vector& x) const override;
+	osim_double_adouble calcValue(const SimTK::Vector& x) const override;
+	osim_double_adouble calcDerivative(const std::vector<int>& derivComponents, const SimTK::Vector& x) const override;
     int getArgumentSize() const override;
     int getMaxDerivativeOrder() const override;
     SimTK::Function* createSimTKFunction() const override;

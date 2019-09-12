@@ -51,7 +51,7 @@ OpenSim_DECLARE_CONCRETE_OBJECT(LinearFunction, Function);
 //=============================================================================
 protected:
     PropertyDblArray _coefficientsProp;
-    Array<double> &_coefficients;
+    Array<osim_double_adouble> &_coefficients;
 
 //=============================================================================
 // METHODS
@@ -61,8 +61,8 @@ public:
     // CONSTRUCTION
     //--------------------------------------------------------------------------
     LinearFunction();
-    LinearFunction(Array<double> coefficients);
-    LinearFunction(double slope, double intercept);
+    LinearFunction(Array<osim_double_adouble> coefficients);
+    LinearFunction(osim_double_adouble slope, osim_double_adouble intercept);
     LinearFunction(const LinearFunction &aSpline);
     
     virtual ~LinearFunction();
@@ -85,17 +85,17 @@ public:
     //--------------------------------------------------------------------------
 public:
     /** %Set Coefficients for slope and intercept */
-    void setCoefficients(Array<double> coefficients);
+    void setCoefficients(Array<osim_double_adouble> coefficients);
     /** %Set slope */
-    void setSlope(double slope) {_coefficients[0] = slope; }
+    void setSlope(osim_double_adouble slope) {_coefficients[0] = slope; }
     /** %Set intercept */
-    void setIntercept(double intercept) {_coefficients[1] = intercept; }
+    void setIntercept(osim_double_adouble intercept) {_coefficients[1] = intercept; }
     /** Get Coefficients */
-    const Array<double> getCoefficients() const { return _coefficients; }
+    const Array<osim_double_adouble> getCoefficients() const { return _coefficients; }
     /** Get Slope */
-    double getSlope() const { return _coefficients[0]; }
+	osim_double_adouble getSlope() const { return _coefficients[0]; }
     /** Get Intercept */ 
-    double getIntercept() const { return _coefficients[1]; }
+	osim_double_adouble getIntercept() const { return _coefficients[1]; }
     
 
     //--------------------------------------------------------------------------

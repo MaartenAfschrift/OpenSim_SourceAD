@@ -78,7 +78,7 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 
     return TRUE;
 }
-#else
+#elif defined(__linux__)
 static void __attribute__((constructor)) Shared_Object_Constructor()
 {
    Plugin_Attach();

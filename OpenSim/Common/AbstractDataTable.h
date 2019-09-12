@@ -46,12 +46,6 @@ public:
     using Exception::Exception;
 };
 
-class InvalidColumnLabel : public Exception {
-public:
-    using Exception::Exception;
-};
-
-
 class IncorrectNumColumns : public InvalidRow {
 public:
     IncorrectNumColumns(const std::string& file,
@@ -133,6 +127,17 @@ public:
         msg += " expected = " + std::to_string(expected);
         msg += " received = " + std::to_string(received);
 
+        addMessage(msg);
+    }
+};
+
+class MetaDataLengthZero : public Exception {
+public:
+    MetaDataLengthZero(const std::string& file,
+                       size_t line,
+                       const std::string& func,
+                       const std::string& msg) :
+        Exception(file, line, func) {
         addMessage(msg);
     }
 };
@@ -377,35 +382,23 @@ public:
     \param last InputIterator representing the sentinel or one past the end of
                 sequence of labels.                                          
 
+    \throws MetaDataLengthZero If length of input sequence of labels is zero.
     \throws IncorrectMetaDataLength If length of the input sequence of labels is
                                     incorrect -- does not match the number of
                                     columns in the table.                     */
     template<typename InputIt>
     void setColumnLabels(InputIt first, InputIt last) {
-        std::unique_ptr<AbstractValueArray> oldLabels;
-        if (_dependentsMetaData.hasKey("labels")) {
-            oldLabels.reset(
-                _dependentsMetaData.getValueArrayForKey("labels").clone());
-        }
+        OPENSIM_THROW_IF(first == last, 
+                         MetaDataLengthZero,
+                         "Length of provided sequence of column labels is 0.");
 
         ValueArray<std::string> labels{};
         for(auto it = first; it != last; ++it)
             labels.upd().push_back(SimTK::Value<std::string>(*it));
-
         _dependentsMetaData.removeValueArrayForKey("labels");
         _dependentsMetaData.setValueArrayForKey("labels", labels);
-        try {
-            validateDependentsMetaData();
-        }
-        catch (const InvalidColumnLabel&) {
-            // undo any partial column label changes
-            // and restore to previous column labels if there were any
-            if (oldLabels) {
-                _dependentsMetaData.removeValueArrayForKey("labels");
-                _dependentsMetaData.setValueArrayForKey("labels", *oldLabels);
-            }
-            throw;
-        }
+
+        validateDependentsMetaData();
     }
 
     /** %Set column labels using a sequence container.
@@ -420,6 +413,7 @@ public:
                       own) that supports begin() and end(). Type of the values
                       produced by iterator should be std::string.
 
+    \throws MetaDataLengthZero If input sequence of labels is zero.
     \throws IncorrectMetaDataLength If length of the input sequence of labels is
                                     incorrect -- does not match the number of
                                     columns in the table.                     */
@@ -435,6 +429,7 @@ public:
     setColumnLabels({"col1", "col2", "col3"});
     \endcode                                                                  
 
+    \throws MetaDataLengthZero If input sequence of labels is zero.
     \throws IncorrectMetaDataLength If length of the input sequence of labels is
                                     incorrect -- does not match the number of
                                     columns in the table.                     */
@@ -475,7 +470,7 @@ protected:
     /** Get number of columns. Implemented by derived classes.                */
     virtual size_t implementGetNumColumns() const    = 0;
     
-    /** Check if metadata for independent column is valid. Implemented by 
+    /** Check if metadata for independent column is valid . Implemented by 
     derived classes.                                                          */
     virtual void validateIndependentMetaData() const = 0;
 

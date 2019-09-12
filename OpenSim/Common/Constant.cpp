@@ -57,7 +57,7 @@ Constant::Constant() :
 //_____________________________________________________________________________
 /**
  */
-Constant::Constant(double value) :
+Constant::Constant(osim_double_adouble value) :
     _value(_valueProp.getValueDbl())
 {
     setNull();
@@ -122,7 +122,7 @@ void Constant::copyData(const Constant &aConstant)
 }
 
 
-void Constant::setValue(double aValue)
+void Constant::setValue(osim_double_adouble aValue)
 {
     _value = aValue;
     resetFunction();

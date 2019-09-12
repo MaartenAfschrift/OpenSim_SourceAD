@@ -45,9 +45,9 @@ class TestReporter {
 
         assert table.getColumnLabels().size()          == 2;
         assert table.getColumnLabel(0).
-                                      equals("/table_source|column:col1");
+                                      equals("/model/table_source|column:col1");
         assert table.getColumnLabel(1).
-                                      equals("/table_source|column:col2");
+                                      equals("/model/table_source|column:col2");
         assert table.getNumRows()                      == 3;
         assert table.getNumColumns()                   == 2;
         assert table.getRowAtIndex(0).get(0)           == 1;
@@ -66,17 +66,17 @@ class TestReporter {
             assert table.getNumColumns()               == 0;
             assert table.getColumnLabels().size()      == 2;
             assert table.getColumnLabel(0).
-                                      equals("/table_source|column:col1");
+                                      equals("/model/table_source|column:col1");
             assert table.getColumnLabel(1).
-                                      equals("/table_source|column:col2");
+                                      equals("/model/table_source|column:col2");
             // Make sure the table reference is still valid.
             assert table.getNumRows()                  == 0;
             assert table.getNumColumns()               == 0;
             assert table.getColumnLabels().size()      == 2;
             assert table.getColumnLabel(0).
-                                      equals("/table_source|column:col1");
+                                      equals("/model/table_source|column:col1");
             assert table.getColumnLabel(1).
-                                      equals("/table_source|column:col2");
+                                      equals("/model/table_source|column:col2");
         
             state = model.initSystem();
             state.setTime(0.1);
@@ -88,9 +88,9 @@ class TestReporter {
 
             assert table.getColumnLabels().size()      == 2;
             assert table.getColumnLabel(0).
-                                      equals("/table_source|column:col1");
+                                      equals("/model/table_source|column:col1");
             assert table.getColumnLabel(1).
-                                      equals("/table_source|column:col2");
+                                      equals("/model/table_source|column:col2");
             assert table.getNumRows()                  == 3;
             assert table.getNumColumns()               == 2;
             assert table.getRowAtIndex(0).get(0)       == 1;
@@ -143,9 +143,9 @@ class TestReporter {
             
             State state = model.initSystem();
             Manager manager = new Manager(model);
-            state.setTime(0);
-            manager.initialize(state);
-            state = manager.integrate(n);
+            manager.setInitialTime(0);
+            manager.setFinalTime(n);
+            manager.integrate(state);
 
             TimeSeriesTable table = tableReporter.getTable();
             stoAdapter.write(table, "pendulum_coordinates.sto");

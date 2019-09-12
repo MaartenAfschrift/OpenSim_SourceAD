@@ -371,7 +371,6 @@ loadStatesFromFile(SimTK::State& s)
         cout<<"\nLoading states from file "<<_statesFileName<<"."<<endl;
         Storage temp(_statesFileName);
         _statesStore = new Storage();
-        _statesStore->setName("states"); // Name appears in GUI
         _model->formStateStorage(temp, *_statesStore, true);
     } else {
         if(!_coordinatesFileNameProp.isValidFileName()) 
@@ -391,15 +390,16 @@ loadStatesFromFile(SimTK::State& s)
 
         Storage *qStore=NULL, *uStore=NULL;
 
-        // qStore and uStore returned are in radians
-        _model->getSimbodyEngine().formCompleteStorages( s, coordinatesStore,
-            qStore, uStore);
+        _model->getSimbodyEngine().formCompleteStorages( s, coordinatesStore,qStore,uStore);
 
         if(_speedsFileName!="") {
             delete uStore;
             cout<<"\nLoading speeds from file "<<_speedsFileName<<"."<<endl;
             uStore = new Storage(_speedsFileName);
         }
+
+        _model->getSimbodyEngine().convertDegreesToRadians(*qStore);
+        _model->getSimbodyEngine().convertDegreesToRadians(*uStore);
 
         // used to use createStatesStorageFromCoordinatesAndSpeeds(*_model, *qStore, *uStore);
         double ti = qStore->getFirstTime();
@@ -437,8 +437,10 @@ setStatesFromMotion(const SimTK::State& s, const Storage &aMotion, bool aInDegre
     }
 
     Storage *qStore=NULL, *uStore=NULL;
-    // qStore and uStore returned are in radians
     _model->getSimbodyEngine().formCompleteStorages(s,motionCopy,qStore,uStore);
+
+    _model->getSimbodyEngine().convertDegreesToRadians(*qStore);
+    _model->getSimbodyEngine().convertDegreesToRadians(*uStore);
 
     double ti = qStore->getFirstTime();
     double tf = qStore->getLastTime();
@@ -525,11 +527,6 @@ bool AnalyzeTool::run(bool plotting)
         throw(Exception(msg,__FILE__,__LINE__));
     }
 
-    // Do the maneuver to change then restore working directory 
-    // so that the parsing code behaves properly if called from a different directory.
-    string saveWorkingDirectory = IO::getCwd();
-    if (getDocument())  // When the tool is created live from GUI it has no file/document association
-        IO::chDir(IO::getParentDirectory(getDocumentFileName()));
     // Use the Dynamics Tool API to handle external loads instead of outdated AbstractTool
     /*bool externalLoads = */createExternalLoads(_externalLoadsFileName, *_model);
 
@@ -544,6 +541,12 @@ bool AnalyzeTool::run(bool plotting)
         loadStatesFromFile(s);
     }
 
+
+    // Do the maneuver to change then restore working directory 
+    // so that the parsing code behaves properly if called from a different directory.
+    string saveWorkingDirectory = IO::getCwd();
+    if (getDocument())  // When the tool is created live from GUI it has no file/document association
+        IO::chDir(IO::getParentDirectory(getDocumentFileName()));
 
     bool completed = true;
 
@@ -594,8 +597,6 @@ bool AnalyzeTool::run(bool plotting)
         printResults(getName(),getResultsDir()); // this will create results directory if necessary
 
     IO::chDir(saveWorkingDirectory);
-
-    removeExternalLoadsFromModel();
 
     return completed;
 }

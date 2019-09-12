@@ -78,6 +78,17 @@ void Actuator::extendAddToSystem(SimTK::MultibodySystem& system) const
     _model->updDefaultControls()(_controlIndex, numControls()) = Vector(numControls(), 0.0);
 }
 
+
+//_____________________________________________________________________________
+/**
+ * Update the geometric representation of the Actuator if any.
+ * The resulting geometry is maintained at the VisibleObject layer
+ * 
+ */
+void Actuator::updateGeometry()
+{
+}
+
 // CONTROLS
 //_____________________________________________________________________________
 /**
@@ -86,28 +97,28 @@ void Actuator::extendAddToSystem(SimTK::MultibodySystem& system) const
  * @param the current state
  * @return The value of the controls.
  */
-const VectorView_<Real> Actuator::getControls( const SimTK::State& s ) const
-{
-    const Vector &controlsCache = _model->getControls(s);
-    return  controlsCache(_controlIndex, numControls());
-}
+//const VectorView_<Real> Actuator::getControls( const SimTK::State& s ) const
+//{
+//    const Vector &controlsCache = _model->getControls(s);
+//    return  controlsCache(_controlIndex, numControls());
+//}
 
-void Actuator::getControls(const Vector& modelControls, Vector& actuatorControls) const
-{
-    SimTK_ASSERT(modelControls.size() == _model->getNumControls(), 
-        "Actuator::getControls, input modelControls size does not match model.getNumControls().\n");
-    SimTK_ASSERT(actuatorControls.size() == numControls(), 
-        "Actuator::getControls, output actuatorControls incompatible with actuator's numControls().\n");
-    actuatorControls = modelControls(_controlIndex, numControls());
-}
+//void Actuator::getControls(const Vector& modelControls, Vector& actuatorControls) const
+//{
+//    SimTK_ASSERT(modelControls.size() == _model->getNumControls(), 
+//        "Actuator::getControls, input modelControls size does not match model.getNumControls().\n");
+//    SimTK_ASSERT(actuatorControls.size() == numControls(), 
+//        "Actuator::getControls, output actuatorControls incompatible with actuator's numControls().\n");
+//    actuatorControls = modelControls(_controlIndex, numControls());
+//}
 
 void Actuator::setControls(const Vector& actuatorControls, Vector& modelControls) const
 {
     SimTK_ASSERT(actuatorControls.size() == numControls(), 
         "Actuator::setControls, input actuatorControls incompatible with actuator's numControls().\n");
 
-    SimTK_ASSERT(modelControls.size() == _model->getNumControls(), 
-    "Actuator::setControls, output modelControls size does not match model.getNumControls()\n");
+    //SimTK_ASSERT(modelControls.size() == _model->getNumControls(), 
+    //"Actuator::setControls, output modelControls size does not match model.getNumControls()\n");
 
     modelControls(_controlIndex, numControls()) = actuatorControls;
 }
@@ -117,8 +128,8 @@ void Actuator::addInControls(const Vector& actuatorControls, Vector& modelContro
     SimTK_ASSERT(actuatorControls.size() == numControls(), 
         "Actuator::addInControls, input actuatorControls incompatible with actuator's numControls()\n");
 
-    SimTK_ASSERT(modelControls.size() == _model->getNumControls(), 
-    "Actuator::addInControls, output modelControls size does not match model.getNumControls().\n");
+    //SimTK_ASSERT(modelControls.size() == _model->getNumControls(), 
+    //"Actuator::addInControls, output modelControls size does not match model.getNumControls().\n");
 
     modelControls(_controlIndex, numControls()) += actuatorControls;
 }
@@ -147,22 +158,22 @@ void ScalarActuator::constructProperties()
     constructProperty_max_control( Infinity);
 }
 
-void ScalarActuator::setMinControl(const double& aMinControl)
+void ScalarActuator::setMinControl(const osim_double_adouble& aMinControl)
 {
     set_min_control(aMinControl);
 }
 
-double ScalarActuator::getMinControl() const
+osim_double_adouble ScalarActuator::getMinControl() const
 {
     return get_min_control();
 }
 
-void ScalarActuator::setMaxControl(const double& aMaxControl)
+void ScalarActuator::setMaxControl(const osim_double_adouble& aMaxControl)
 {
     set_max_control(aMaxControl);
 }
 
-double ScalarActuator::getMaxControl() const
+osim_double_adouble ScalarActuator::getMaxControl() const
 {
     return get_max_control();
 }
@@ -177,49 +188,49 @@ void ScalarActuator::extendAddToSystem(SimTK::MultibodySystem& system) const
     addModelingOption("override_actuation", 1);
 
     // Cache the computed actuation and speed of the scalar valued actuator
-    addCacheVariable<double>("actuation", 0.0, Stage::Velocity);
-    addCacheVariable<double>("speed", 0.0, Stage::Velocity);
+    addCacheVariable<osim_double_adouble>("actuation", 0.0, Stage::Velocity);
+    addCacheVariable<osim_double_adouble>("speed", 0.0, Stage::Velocity);
 
     // Discrete state variable is the override actuation value if in override mode
     addDiscreteVariable("override_actuation", Stage::Time);
 }
 
-double ScalarActuator::getControl(const SimTK::State& s) const
-{
-    return getControls(s)[0];
-}
+//osim_double_adouble ScalarActuator::getControl(const SimTK::State& s) const
+//{
+//    return getControls(s)[0];
+//}
 
-double ScalarActuator::getStress(const SimTK::State& s) const
-{
-    OPENSIM_ERROR_IF_NOT_OVERRIDDEN();
-}
-
-double ScalarActuator::getOptimalForce() const
+osim_double_adouble ScalarActuator::getStress(const SimTK::State& s) const
 {
     OPENSIM_ERROR_IF_NOT_OVERRIDDEN();
 }
 
-double ScalarActuator::getActuation(const State &s) const
+osim_double_adouble ScalarActuator::getOptimalForce() const
+{
+    OPENSIM_ERROR_IF_NOT_OVERRIDDEN();
+}
+
+osim_double_adouble ScalarActuator::getActuation(const State &s) const
 {
     if (appliesForce(s))
-        return getCacheVariableValue<double>(s, "actuation");
+        return getCacheVariableValue<osim_double_adouble>(s, "actuation");
     else
         return 0.0;
 }
 
-void ScalarActuator::setActuation(const State& s, double aActuation) const
+void ScalarActuator::setActuation(const State& s, osim_double_adouble aActuation) const
 {
-    setCacheVariableValue<double>(s, "actuation", aActuation);
+    setCacheVariableValue<osim_double_adouble>(s, "actuation", aActuation);
 }
 
-double ScalarActuator::getSpeed(const State& s) const
+osim_double_adouble ScalarActuator::getSpeed(const State& s) const
 {
-    return getCacheVariableValue<double>(s, "speed");
+    return getCacheVariableValue<osim_double_adouble>(s, "speed");
 }
 
-void ScalarActuator::setSpeed(const State &s, double speed) const
+void ScalarActuator::setSpeed(const State &s, osim_double_adouble speed) const
 {
-    setCacheVariableValue<double>(s, "speed", speed);
+    setCacheVariableValue<osim_double_adouble>(s, "speed", speed);
 }
 
 void ScalarActuator::overrideActuation(SimTK::State& s, bool flag) const
@@ -232,18 +243,18 @@ bool ScalarActuator::isActuationOverridden(const SimTK::State& s) const
     return (getModelingOption(s, "override_actuation") > 0);
 }
        
-void ScalarActuator::setOverrideActuation(SimTK::State& s, double actuation) const
+void ScalarActuator::setOverrideActuation(SimTK::State& s, osim_double_adouble actuation) const
 {
     setDiscreteVariableValue(s, "override_actuation", actuation);;
 }
 
-double ScalarActuator::getOverrideActuation(const SimTK::State& s) const
+osim_double_adouble ScalarActuator::getOverrideActuation(const SimTK::State& s) const
 {
     return getDiscreteVariableValue(s, "override_actuation");
 }
-double ScalarActuator::computeOverrideActuation(const SimTK::State& s) const
+osim_double_adouble ScalarActuator::computeOverrideActuation(const SimTK::State& s) const
 {
-    double appliedActuation = getOverrideActuation(s);
+    osim_double_adouble appliedActuation = getOverrideActuation(s);
     setActuation(s, appliedActuation);
     return appliedActuation;
 }

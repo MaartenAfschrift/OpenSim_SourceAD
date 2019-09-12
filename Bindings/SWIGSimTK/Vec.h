@@ -727,7 +727,6 @@ public:
     template <class EE> Vec& operator-=(const EE& e) {return scalarMinusEq(e);}
     template <class EE> Vec& operator*=(const EE& e) {return scalarTimesEq(e);}
     template <class EE> Vec& operator/=(const EE& e) {return scalarDivideEq(e);}
-#endif
     // Generalized element assignment & computed assignment methods. These will work
     // for any assignment-compatible element, not just scalars.
     template <class EE> Vec& scalarEq(const EE& ee)
@@ -746,6 +745,7 @@ public:
       { for(int i=0;i<M;++i) d[i*STRIDE] /= ee; return *this; }
     template <class EE> Vec& scalarDivideEqFromLeft(const EE& ee)
       { for(int i=0;i<M;++i) d[i*STRIDE] = ee / d[i*STRIDE]; return *this; }
+#endif
 
     /** Set every scalar in this %Vec to NaN; this is the default initial
     value in Debug builds, but not in Release. **/

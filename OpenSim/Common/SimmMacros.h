@@ -23,16 +23,20 @@
  * limitations under the License.                                             *
  * -------------------------------------------------------------------------- */
 
+#include "osim_adouble.h"
+
+
 namespace OpenSim {
 
 #define TINY_NUMBER 0.0000001
 #define ROUNDOFF_ERROR 0.0000000000002
 #define MAX(a,b) ((a)>=(b)?(a):(b))
 #define MIN(a,b) ((a)<=(b)?(a):(b))
-#define DABS(a) ((a)>(double)0.0?(a):(-(a)))
+#define DABS(a) ((a)>(osim_double_adouble)0.0?(a):(-(a)))
 #define DSIGN(a) ((a)>=0.0?(1):(-1))
 #define SQR(x)  ((x) * (x))
-#define EQUAL_WITHIN_ERROR(a,b) (DABS(((a)-(b))) <= ROUNDOFF_ERROR)
+//#define EQUAL_WITHIN_ERROR(a,b) (DABS(((a)-(b))) <= ROUNDOFF_ERROR)
+#define EQUAL_WITHIN_ERROR(a,b) (fabs(((a)-(b))) <= ROUNDOFF_ERROR)
 #define NOT_EQUAL_WITHIN_ERROR(a,b) (DABS(((a)-(b))) > ROUNDOFF_ERROR)
 #define EQUAL_WITHIN_TOLERANCE(a,b,c) (DABS(((a)-(b))) <= (c))
 #define MAKE_3DVECTOR(pt1,pt2,pt3) {pt3[0]=(pt2[0]-pt1[0]);pt3[1]=(pt2[1]-pt1[1]);pt3[2]=(pt2[2]-pt1[2]);}

@@ -250,8 +250,11 @@ public:
     bool isConsistent() const;
 
     /** Weak check for if the trajectory can be used with the given model.
-     * Returns true if the trajectory isConsistent() and if the number of speeds
-     * in the model matches the number of U's in state.
+     * Returns true if the trajectory isConsistent() and if the following
+     * quantities are the same:
+     * - number of model state variables and number of Y's in the state 
+     * - number of coordinates in the model and number of Q's in state
+     * - number of speeds in the model and number of U's in state
      *
      * Returns false otherwise. This method **cannot** guarantee that the
      * trajectory will work with the given model, and makes no attempt to
@@ -298,7 +301,7 @@ public:
     class InconsistentState : public OpenSim::Exception {
     public:
         InconsistentState(const std::string& file, size_t line,
-                const std::string& func, const double& stateTime) :
+                const std::string& func, const osim_double_adouble& stateTime) :
                 OpenSim::Exception(file, line, func) {
             std::ostringstream msg;
             msg << "Cannot append the provided state (at time = " <<
@@ -408,9 +411,8 @@ public:
      * variable values, but not discrete state variable values, modeling
      * option values, etc. Also, keep in mind that states Storage files usually
      * do not contain the state values to full precision, and thus cannot
-     * exactly reproduce results from the initial state trajectory. Lastly,
-     * this function optionally modifies each state to obey any constraints in
-     * the model (by calling Model::assemble()).
+     * exactly reproduce results from the initial state trajectory; constraints
+     * may not be satisfied, etc.
      *
      * The states in the resulting trajectory will be realized to
      * SimTK::Stage::Instance. You should not use the resulting trajectory with
@@ -435,28 +437,23 @@ public:
      *      columns in the Storage that do not correspond to continuous state
      *      variables in the Model. If true, such columns of the Storage are
      *      ignored.
-     * @param assemble Modify state variable values to satisfy
-     *      kinematic constraints (by calling Model::assemble()).
-     *      Use this option if the provided states are incomplete (for example,
-     *      the values for dependent coordinates are unspecified).
-     *      Caution: enforcing constraints can drastically alter the
-     *      provided states if they do not already obey the constraints.
-     *      Do not use this option with results from a forward simulation: the
-     *      states trajectory from a forward simulation may not meet the
-     *      model's assembly accuracy, and therefore assembling could
-     *      alter the trajectory and cause inconsistency between coordinate
-     *      values and speeds.
      *
      * #### Usage
+     * You must have called Model::initSystem() on your model before calling
+     * this function.
      * Here is how you might use this function in python:
      * @code{.py}
      * import opensim
      * model = opensim.Model("subject01.osim")
+     * model.initSystem()
      * sto = opensim.Storage("subject01_states.sto")
      * states = opensim.StatesTrajectory.createFromStatesStorage(model, sto)
      * print(states[0].getTime())
      * print(model.getStateVariableValue(states[0], "knee/flexion/value"))
      * @endcode
+     * 
+     * @throws ModelHasNoSystem Thrown if you have not yet called initSystem()
+     *      on the model.
      * 
      * @throws MissingColumnsInStatesStorage See the description of the
      *      `allowMissingColumns` argument.
@@ -486,8 +483,7 @@ public:
     static StatesTrajectory createFromStatesStorage(const Model& model,
             const Storage& sto,
             bool allowMissingColumns = false,
-            bool allowExtraColumns = false,
-            bool assemble = false);
+            bool allowExtraColumns = false);
 
     /** Convenience form of createFromStatesStorage() that takes the path to a
      * Storage file instead of a Storage object. This convenience form uses the

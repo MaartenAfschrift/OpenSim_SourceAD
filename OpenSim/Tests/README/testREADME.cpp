@@ -42,7 +42,6 @@
 
 //#define VISUALIZE
 
-/// [README]
 #include <OpenSim/OpenSim.h>
 using namespace SimTK;
 using namespace OpenSim;
@@ -101,11 +100,11 @@ int main() {
     bodyGeometry.setColor(Gray);
     // Attach an ellipsoid to a frame located at the center of each body.
     PhysicalOffsetFrame* humerusCenter = new PhysicalOffsetFrame(
-        "humerusCenter", *humerus, Transform(Vec3(0, 0.5, 0)));
+        "humerusCenter", "humerus", Transform(Vec3(0, 0.5, 0)));
     humerus->addComponent(humerusCenter);
     humerusCenter->attachGeometry(bodyGeometry.clone());
     PhysicalOffsetFrame* radiusCenter = new PhysicalOffsetFrame(
-        "radiusCenter", *radius, Transform(Vec3(0, 0.5, 0)));
+        "radiusCenter", "radius", Transform(Vec3(0, 0.5, 0)));
     radius->addComponent(radiusCenter);
     radiusCenter->attachGeometry(bodyGeometry.clone());
 
@@ -129,4 +128,3 @@ int main() {
 
     return 0;
 };
-/// [README]

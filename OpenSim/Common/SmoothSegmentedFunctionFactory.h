@@ -224,9 +224,9 @@ class OSIMCOMMON_API SmoothSegmentedFunctionFactory
 
         */
         static SmoothSegmentedFunction* createFiberActiveForceLengthCurve(
-            double lce0, double lce1, double lce2, double lce3, 
-            double minActiveForceLengthValue, double plateauSlope, 
-            double curviness, bool computeIntegral, 
+            osim_double_adouble lce0, osim_double_adouble lce1, osim_double_adouble lce2, osim_double_adouble lce3, 
+            osim_double_adouble minActiveForceLengthValue, osim_double_adouble plateauSlope, 
+            osim_double_adouble curviness, bool computeIntegral, 
             const std::string& curveName);   
 
         /**
@@ -354,11 +354,11 @@ class OSIMCOMMON_API SmoothSegmentedFunctionFactory
         @endcode             
         */
         static SmoothSegmentedFunction* createFiberForceVelocityCurve(
-            double fmaxE, 
-            double dydxC, double dydxNearC, 
-            double dydxIso, 
-            double dydxE, double dydxNearE,
-            double concCurviness, double eccCurviness,
+            osim_double_adouble fmaxE, 
+            osim_double_adouble dydxC, osim_double_adouble dydxNearC, 
+            osim_double_adouble dydxIso, 
+            osim_double_adouble dydxE, osim_double_adouble dydxNearE,
+            osim_double_adouble concCurviness, osim_double_adouble eccCurviness,
             bool computeIntegral, const std::string& curveName);
 
         /**
@@ -379,11 +379,11 @@ class OSIMCOMMON_API SmoothSegmentedFunctionFactory
 
         */
         static SmoothSegmentedFunction* createFiberForceVelocityInverseCurve(
-            double fmaxE, 
-            double dydxC, double dydxNearC, 
-            double dydxIso, 
-            double dydxE, double dydxNearE,
-            double concCurviness, double eccCurviness, 
+            osim_double_adouble fmaxE, 
+            osim_double_adouble dydxC, osim_double_adouble dydxNearC, 
+            osim_double_adouble dydxIso, 
+            osim_double_adouble dydxE, osim_double_adouble dydxNearE,
+            osim_double_adouble concCurviness, osim_double_adouble eccCurviness, 
             bool computeIntegral, const std::string& muscleName);
 
         /**
@@ -457,7 +457,7 @@ class OSIMCOMMON_API SmoothSegmentedFunctionFactory
         */
         static SmoothSegmentedFunction* 
             createFiberCompressiveForcePennationCurve(
-                double phi0, double kiso, double curviness, 
+                osim_double_adouble phi0, osim_double_adouble kiso, osim_double_adouble curviness, 
                 bool computeIntegral, const std::string& curveName);
 
         /**
@@ -534,7 +534,7 @@ class OSIMCOMMON_API SmoothSegmentedFunctionFactory
         */
         static SmoothSegmentedFunction* 
             createFiberCompressiveForceCosPennationCurve(
-                double cosPhi0, double kiso, double curviness, 
+                osim_double_adouble cosPhi0, osim_double_adouble kiso, osim_double_adouble curviness, 
                 bool computeIntegral, const std::string& curveName);
 
 
@@ -606,8 +606,8 @@ class OSIMCOMMON_API SmoothSegmentedFunctionFactory
 
         */
         static SmoothSegmentedFunction* 
-            createFiberCompressiveForceLengthCurve(double l0, double kiso, 
-            double curviness,bool computeIntegral,const std::string& curveName);
+            createFiberCompressiveForceLengthCurve(osim_double_adouble l0, osim_double_adouble kiso, 
+            osim_double_adouble curviness,bool computeIntegral,const std::string& curveName);
 
          /**
         This function will generate a C2-continuous curve that fits a fiber's 
@@ -687,8 +687,8 @@ class OSIMCOMMON_API SmoothSegmentedFunctionFactory
 
         */
         static SmoothSegmentedFunction* createFiberForceLengthCurve(
-                       double eZero, double eIso,
-                       double kLow, double kIso,double curviness,
+                       osim_double_adouble eZero, osim_double_adouble eIso,
+                       osim_double_adouble kLow, osim_double_adouble kIso,osim_double_adouble curviness,
                        bool computeIntegral, const std::string& curveName);
 
         /**
@@ -763,8 +763,8 @@ class OSIMCOMMON_API SmoothSegmentedFunctionFactory
         
         */
         static SmoothSegmentedFunction* 
-           createTendonForceLengthCurve(double eIso, double kIso,
-                                        double fToe, double curviness,
+           createTendonForceLengthCurve(osim_double_adouble eIso, osim_double_adouble kIso,
+                                        osim_double_adouble fToe, osim_double_adouble curviness,
                                         bool computeIntegral, 
                                         const std::string& curveName);
 
@@ -781,7 +781,7 @@ class OSIMCOMMON_API SmoothSegmentedFunctionFactory
         @retval a scaled version of curviness
 
         */
-        static double scaleCurviness(double curviness);
+        static osim_double_adouble scaleCurviness(osim_double_adouble curviness);
 
         
         

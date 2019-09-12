@@ -58,7 +58,7 @@ LinearFunction::LinearFunction() :
 /**
  * Construct by defining the slope and intercept
  */
-LinearFunction::LinearFunction(double slope, double intercept) :
+LinearFunction::LinearFunction(osim_double_adouble slope, osim_double_adouble intercept) :
     _coefficients(_coefficientsProp.getValueDblArray())
 {   
     setNull();
@@ -69,7 +69,7 @@ LinearFunction::LinearFunction(double slope, double intercept) :
 //_____________________________________________________________________________
 /**
  */
-LinearFunction::LinearFunction(Array<double> coefficients) :
+LinearFunction::LinearFunction(Array<osim_double_adouble> coefficients) :
     _coefficients(_coefficientsProp.getValueDblArray())
 {
     setNull();
@@ -114,7 +114,7 @@ void LinearFunction::setNull()
  */
 void LinearFunction::setupProperties()
 {
-    Array<double> intitCoeffs(0,2);
+    Array<osim_double_adouble> intitCoeffs(0,2);
     intitCoeffs[0]=1;
 
     _coefficientsProp.setName("coefficients");
@@ -137,7 +137,7 @@ void LinearFunction::copyData(const LinearFunction &aLinearFunction)
     resetFunction();
 }
 
-void LinearFunction::setCoefficients(Array<double> coefficients)
+void LinearFunction::setCoefficients(Array<osim_double_adouble> coefficients)
 {
     _coefficients = coefficients;
     resetFunction();

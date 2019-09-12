@@ -67,31 +67,31 @@ public:
     virtual StateVector* getStateVector(int aTimeIndex) const =0;
     virtual StateVector* getLastStateVector() const =0;
     // TIME
-    virtual double getFirstTime() const =0;
-    virtual double getLastTime() const =0;
-    virtual int getTimeColumn(Array<double>& rTimes,int aStateIndex=-1) const =0;
-    virtual void getTimeColumnWithStartTime(Array<double>& rTimes,double startTime=0.0) const =0;
+    virtual osim_double_adouble getFirstTime() const =0;
+    virtual osim_double_adouble getLastTime() const =0;
+    virtual int getTimeColumn(Array<osim_double_adouble>& rTimes,int aStateIndex=-1) const =0;
+    virtual void getTimeColumnWithStartTime(Array<osim_double_adouble>& rTimes,osim_double_adouble startTime=0.0) const =0;
     // DATA
-    virtual int getDataAtTime(double aTime,int aN,Array<double> &rData) const =0;
-    virtual void getDataColumn(const std::string& columnName, Array<double>& data, double startTime=0.0) =0;
+    virtual int getDataAtTime(osim_double_adouble aTime,int aN,Array<osim_double_adouble> &rData) const =0;
+    virtual void getDataColumn(const std::string& columnName, Array<osim_double_adouble>& data, osim_double_adouble startTime=0.0) =0;
 
     //--------------------------------------------------------------------------
     // STORAGE
     //--------------------------------------------------------------------------
     virtual int append(const StateVector &aVec, bool aCheckForDuplicateTime=true) =0;
     virtual int append(const Array<StateVector> &aArray) =0;
-    virtual int append(double aT,int aN,const double *aY, bool aCheckForDuplicateTime=true) =0;
-    virtual int append(double aT,const SimTK::Vector& aY, bool aCheckForDuplicateTime=true) =0;
-    virtual int append(double aT, const SimTK::Vec3& aY,bool aCheckForDuplicateTime=true){
+    virtual int append(osim_double_adouble aT,int aN,const osim_double_adouble *aY, bool aCheckForDuplicateTime=true) =0;
+    virtual int append(osim_double_adouble aT,const SimTK::Vector& aY, bool aCheckForDuplicateTime=true) =0;
+    virtual int append(osim_double_adouble aT, const SimTK::Vec3& aY,bool aCheckForDuplicateTime=true){
         return append(aT, 3, &aY[0], aCheckForDuplicateTime);
     }
-    virtual int store(int aStep,double aT,int aN,const double *aY) =0;
+    virtual int store(int aStep,osim_double_adouble aT,int aN,const osim_double_adouble *aY) =0;
 
     //--------------------------------------------------------------------------
     // UTILITY
     //--------------------------------------------------------------------------
-    virtual int findIndex(double aT) const =0;
-    virtual int findIndex(int aI,double aT) const =0;
+    virtual int findIndex(osim_double_adouble aT) const =0;
+    virtual int findIndex(int aI,osim_double_adouble aT) const =0;
     //--------------------------------------------------------------------------
     // IO
     //--------------------------------------------------------------------------

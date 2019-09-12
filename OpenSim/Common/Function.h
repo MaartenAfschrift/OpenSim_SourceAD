@@ -32,6 +32,8 @@
 #include "Object.h"
 #include "SimTKmath.h"
 
+#include "osim_adouble.h"
+
 
 //=============================================================================
 //=============================================================================
@@ -101,7 +103,7 @@ public:
      * @param x the Vector of input arguments.
      *          its size must equal the value returned by getArgumentSize().
      */
-    virtual double calcValue(const SimTK::Vector& x) const;
+    virtual osim_double_adouble calcValue(const SimTK::Vector& x) const;
     /**
      * Calculate a partial derivative of this function at a particular point.  Which derivative to take is specified
      * by listing the input components with which to take it.  For example, if derivComponents=={0}, that indicates
@@ -113,7 +115,7 @@ public:
      *                         less than or equal to the value returned by getMaxDerivativeOrder().
      * @param x                the Vector of input arguments.  Its size must equal the value returned by getArgumentSize().
      */
-    virtual double calcDerivative(const std::vector<int>& derivComponents, const SimTK::Vector& x) const;
+    virtual osim_double_adouble calcDerivative(const std::vector<int>& derivComponents, const SimTK::Vector& x) const;
     /**
      * Get the number of components expected in the input vector.
      */

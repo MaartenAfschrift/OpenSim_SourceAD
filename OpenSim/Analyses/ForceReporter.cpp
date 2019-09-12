@@ -303,7 +303,8 @@ int ForceReporter::record(const SimTK::State& s)
  *
  * @return -1 on error, 0 otherwise.
  */
-int ForceReporter::begin(const SimTK::State& s)
+int ForceReporter::
+begin(SimTK::State& s)
 {
     if(!proceed()) return(0);
 
@@ -337,7 +338,8 @@ int ForceReporter::begin(const SimTK::State& s)
  *
  * @return -1 on error, 0 otherwise.
  */
-int ForceReporter::step(const SimTK::State& s, int stepNumber )
+int ForceReporter::
+step(const SimTK::State& s, int stepNumber )
 {
     if(!proceed( stepNumber )) return(0);
 
@@ -359,7 +361,8 @@ int ForceReporter::step(const SimTK::State& s, int stepNumber )
  *
  * @return -1 on error, 0 otherwise.
  */
-int ForceReporter::end(const SimTK::State& s )
+int ForceReporter::
+end(SimTK::State& s )
 {
     if (!proceed()) return 0;
 

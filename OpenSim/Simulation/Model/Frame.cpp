@@ -25,7 +25,6 @@
 // INCLUDES
 //=============================================================================
 #include "Frame.h"
-#include <OpenSim/Common/ScaleSet.h>
 
 //=============================================================================
 // STATICS
@@ -44,11 +43,11 @@ Frame::Frame() : ModelComponent()
 {
     setAuthors("Matt DeMers, Ajay Seth");
 
-    FrameGeometry default_frame_geometry;
-    default_frame_geometry.setName("frame_geometry");
-    constructProperty_frame_geometry(default_frame_geometry);
+    //FrameGeometry default_frame_geometry;
+    //default_frame_geometry.setName("frame_geometry");
+    //constructProperty_frame_geometry(default_frame_geometry);
 
-    constructProperty_attached_geometry();
+    //constructProperty_attached_geometry();
 }
 
 void Frame::extendConnectToModel(Model& model)
@@ -56,11 +55,11 @@ void Frame::extendConnectToModel(Model& model)
     Super::extendConnectToModel(model);
     // All the Geometry attached to this Frame should have
     // their frame connections automatically set to this Frame.
-    upd_frame_geometry().setFrame(*this);
-    int nag = getProperty_attached_geometry().size();
-    for (int i = 0; i < nag; ++i) {
-        upd_attached_geometry(i).setFrame(*this);
-    }
+    //upd_frame_geometry().setFrame(*this);
+    //int nag = getProperty_attached_geometry().size();
+    //for (int i = 0; i < nag; ++i) {
+    //    upd_attached_geometry(i).setFrame(*this);
+    //}
 }
 
 void Frame::extendAddToSystem(SimTK::MultibodySystem& system) const
@@ -150,63 +149,37 @@ const SimTK::Vec3& Frame::getLinearAccelerationInGround(const State& s) const
     return getAccelerationInGround(s)[1];
 }
 
-void Frame::attachGeometry(OpenSim::Geometry* geom)
-{
-    // Check that name exists and is unique as it's used to form PathName
-    if (geom->getName().empty()) {
-        bool nameFound = false;
-        int index = 1;
-        while (!nameFound) {
-            std::stringstream ss;
-            // generate candidate name
-            ss << getName() << "_geom_" << index;
-            std::string candidate = ss.str();
-            bool exists = false;
-            for (int idx = 0; 
-                idx < getProperty_attached_geometry().size() && !exists; idx++) {
-                if (get_attached_geometry(idx).getName() == candidate) {
-                    exists = true;
-                    break;
-                }
-            }
-            if (!exists) {
-                nameFound = true;
-                geom->setName(candidate);
-            }
-            else
-                index++;
-        }
-    }
-
-    geom->setFrame(*this);
-    updProperty_attached_geometry().adoptAndAppendValue(geom);
-    finalizeFromProperties();
-    prependComponentPathToConnecteePath(*geom);
-}
-
-void Frame::scaleAttachedGeometry(const SimTK::Vec3& scaleFactors)
-{
-    for (int i = 0; i < getProperty_attached_geometry().size(); ++i) {
-        Geometry& geo = upd_attached_geometry(i);
-        geo.upd_scale_factors() = geo.get_scale_factors()
-                                  .elementwiseMultiply(scaleFactors);
-    }
-}
-
-void Frame::extendScale(const SimTK::State& s, const ScaleSet& scaleSet)
-{
-    Super::extendScale(s, scaleSet);
-
-    if (getProperty_attached_geometry().size() == 0)
-        return;
-
-    // Get scale factors (if an entry for the base Body exists).
-    const Vec3& scaleFactors = getScaleFactors(scaleSet, *this);
-    if (scaleFactors == ModelComponent::InvalidScaleFactors)
-        return;
-
-    scaleAttachedGeometry(scaleFactors);
-}
+//void Frame::attachGeometry(OpenSim::Geometry* geom)
+//{
+//    // Check that name exists and is unique as it's used to form PathName
+//    if (geom->getName().empty()) {
+//        bool nameFound = false;
+//        int index = 1;
+//        while (!nameFound) {
+//            std::stringstream ss;
+//            // generate candidate name
+//            ss << getName() << "_geom_" << index;
+//            std::string candidate = ss.str();
+//            bool exists = false;
+//            for (int idx = 0; 
+//                idx < getProperty_attached_geometry().size() && !exists; idx++) {
+//                if (get_attached_geometry(idx).getName() == candidate) {
+//                    exists = true;
+//                    break;
+//                }
+//            }
+//            if (!exists) {
+//                nameFound = true;
+//                geom->setName(candidate);
+//            }
+//            else
+//                index++;
+//        }
+//    }
+//
+//    geom->setFrame(*this);
+//    updProperty_attached_geometry().adoptAndAppendValue(geom);
+//}
 
 //=============================================================================
 // FRAME COMPUTATIONS

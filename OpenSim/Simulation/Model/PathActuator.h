@@ -50,11 +50,11 @@ public:
 //=============================================================================
     OpenSim_DECLARE_UNNAMED_PROPERTY(GeometryPath,
         "The set of points defining the path of the actuator.");
-    OpenSim_DECLARE_PROPERTY(optimal_force, double,
+    OpenSim_DECLARE_PROPERTY(optimal_force, osim_double_adouble,
         "The maximum force this actuator can produce.");
 
-    OpenSim_DECLARE_OUTPUT(tension, double, computeActuation,
-                           SimTK::Stage::Acceleration);
+    //OpenSim_DECLARE_OUTPUT(tension, osim_double_adouble, computeActuation,
+    //                       SimTK::Stage::Acceleration);
 
 //=============================================================================
 // PUBLIC METHODS
@@ -73,41 +73,47 @@ public:
     bool hasGeometryPath() const override { return true;};
 
     // OPTIMAL FORCE
-    void setOptimalForce(double aOptimalForce);
-    double getOptimalForce() const override;
+    void setOptimalForce(osim_double_adouble aOptimalForce);
+    osim_double_adouble getOptimalForce() const override;
 
     // Length and Speed of actuator
-    virtual double getLength(const SimTK::State& s) const;
-    virtual double getLengtheningSpeed(const SimTK::State& s) const;
+    virtual osim_double_adouble getLength(const SimTK::State& s) const;
+    virtual osim_double_adouble getLengtheningSpeed(const SimTK::State& s) const;
 
     // Power: Since lengthening is positive and tension always shortens, positive power
     // is when muscle is shortening under tension.
-    double getPower(const SimTK::State& s) const override 
+    osim_double_adouble getPower(const SimTK::State& s) const override 
     {   return -getActuation(s)*getSpeed(s); }
 
 
     // STRESS
-    double getStress( const SimTK::State& s ) const override;
+    osim_double_adouble getStress( const SimTK::State& s ) const override;
 
     // Convenience method to add PathPoints
      /** Note that this function does not maintain the State and so should be used only
         before a valid State is created */
-    void addNewPathPoint(const std::string& proposedName,
-                         const PhysicalFrame& aBody,
-                         const SimTK::Vec3& aPositionOnBody);
+    void addNewPathPoint(const std::string& proposedName, PhysicalFrame& aBody,
+                           const SimTK::Vec3& aPositionOnBody);
 
     //--------------------------------------------------------------------------
     // APPLICATION
     //--------------------------------------------------------------------------
-    virtual void computeForce( const SimTK::State& state, 
-                               SimTK::Vector_<SimTK::SpatialVec>& bodyForces, 
-                               SimTK::Vector& mobilityForces) const override;
+    //virtual void computeForce( const SimTK::State& state, 
+    //                           SimTK::Vector_<SimTK::SpatialVec>& bodyForces, 
+    //                           SimTK::Vector& mobilityForces) const override;
 
     //--------------------------------------------------------------------------
     // COMPUTATIONS
     //--------------------------------------------------------------------------
-    double computeActuation( const SimTK::State& s) const override;
-    virtual double computeMomentArm( const SimTK::State& s, Coordinate& aCoord) const;
+    //osim_double_adouble computeActuation( const SimTK::State& s) const override;
+    virtual osim_double_adouble computeMomentArm( const SimTK::State& s, Coordinate& aCoord) const;
+
+    //--------------------------------------------------------------------------
+    // SCALING
+    //--------------------------------------------------------------------------
+    virtual void preScale(const SimTK::State& s, const ScaleSet& aScaleSet);
+    virtual void scale(const SimTK::State& s, const ScaleSet& aScaleSet);
+    virtual void postScale(const SimTK::State& s, const ScaleSet& aScaleSet);
 
 protected:
     /** Override this method if you would like to calculate a color for use when
@@ -127,8 +133,10 @@ protected:
         The desired color for the path as an RGB vector with each
         component ranging from 0 to 1, or NaN to indicate that the color
         should not be changed. **/
-    virtual SimTK::Vec3 computePathColor(const SimTK::State& state) const;
+    //virtual SimTK::Vec3 computePathColor(const SimTK::State& state) const;
 
+    /** Extension of parent class method; derived classes may extend further. **/
+    void extendFinalizeFromProperties() override;
     /** Extension of parent class method; derived classes may extend further. **/
     void extendRealizeDynamics(const SimTK::State& state) const override;
 

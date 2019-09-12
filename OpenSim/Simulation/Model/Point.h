@@ -96,7 +96,7 @@ public:
     @param state      The current State of the model.
     @param other      The other Point to which we want to get the distance between.
     @return distance  The distance (positive scalar). */
-    double calcDistanceBetween(const SimTK::State& state, const Point& other) const;
+    osim_double_adouble calcDistanceBetween(const SimTK::State& state, const Point& other) const;
 
     /** Calculate the distance between this Point and some other described as a
     location in some other frame.
@@ -104,7 +104,7 @@ public:
     @param frame      The other frame in which the location is defined.
     @param location   The location in the other frame.
     @return distance  The distance (positive scalar). */
-    double calcDistanceBetween(const SimTK::State& state, const Frame& frame,
+    osim_double_adouble calcDistanceBetween(const SimTK::State& state, const Frame& frame,
         const SimTK::Vec3& location) const;
 
     /** Calculate the relative speed between this Point and some other Point.
@@ -113,7 +113,7 @@ public:
     @param state      The current State of the model.
     @param other      The other Point to which we want to get the speed between.
     @return speed     The speed (distance time derivative) which is a scalar. */
-    double calcSpeedBetween(const SimTK::State& state, const Point& other) const;
+    osim_double_adouble calcSpeedBetween(const SimTK::State& state, const Point& other) const;
 
 protected:
     /** @name Point Extension methods.

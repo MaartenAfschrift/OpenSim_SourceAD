@@ -66,7 +66,7 @@ Path::Path(const std::string path,
         start = path.find_first_not_of(separator, end + 1);
     }
 
-    trimDotAndDotDotElements();
+    cleanPath();
 }
 
 Path::Path(const std::vector<std::string> pathVec,
@@ -77,10 +77,7 @@ Path::Path(const std::vector<std::string> pathVec,
     _isAbsolute(isAbsolute)
 {
     if (_path.empty()) return;
-    trimDotAndDotDotElements();
-    if (!isLegalPathVec(_path)) {
-        OPENSIM_THROW(Exception, "Invalid character used in the path");
-    }
+    cleanPath();
 }
 
 std::string Path::toString() const
@@ -175,20 +172,15 @@ std::vector<std::string> Path::formRelativePathVec(const Path& otherPath) const
     for (size_t i = 0; i < numDotDot; ++i) {
         pathVec.push_back("..");
     }
-    if (thisPathLength == 0) {
-        // This path points to the root, which we treat as having an empty name.
-        pathVec.push_back("");
-    } else {
-        for (; ind < thisPathLength; ++ind) {
-            pathVec.push_back(_path[ind]);
-        }
+    for (; ind < thisPathLength; ++ind) {
+        pathVec.push_back(_path[ind]);
     }
 
     return pathVec;
 }
 
 
-void Path::trimDotAndDotDotElements() 
+void Path::cleanPath() 
 {
     size_t numPathElements = getNumPathLevels();
     size_t i = 0;
@@ -232,19 +224,10 @@ bool Path::isLegalPathElement(const std::string& pathElement) const
     return true;
 }
 
-bool Path::isLegalPathVec(const std::vector<std::string>& pathVec) const
-{
-    for (const std::string& pathElement : pathVec) {
-        if (!isLegalPathElement(pathElement)) return false;
-    }
-    return true;
-}
-
 void Path::appendPathElement(const std::string& pathElement) 
 {
     if (!isLegalPathElement(pathElement)) {
-        OPENSIM_THROW(Exception, 
-            "Invalid character used in pathElement '" + pathElement + "'.");
+        OPENSIM_THROW(Exception, "Invalid character used in pathElement");
     }
 
     if (pathElement.empty()) {

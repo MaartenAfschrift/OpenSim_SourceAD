@@ -14,30 +14,13 @@ OpenSimAddLibrary(
     KIT Common
     AUTHORS "Clay_Anderson-Ayman_Habib-Peter_Loan"
     # Clients of osimCommon need not link to BTK.
-    LINKLIBS PUBLIC ${Simbody_LIBRARIES} PRIVATE ${BTK_LIBRARIES}
+    LINKLIBS PUBLIC ${Simbody_LIBRARIES_TO_USE} PRIVATE ${BTK_LIBRARIES}
     INCLUDES ${INCLUDES}
     SOURCES ${SOURCES}
     TESTDIRS "Test"
     )
 
-option(OPENSIM_LOG_TO_FILE
-    "Redirect output to both the terminal and an output file."
-    ON)
-
-# Whether cerr & cout shold be redirected to err.log and out.log respectively
-if(OPENSIM_LOG_TO_FILE)
-    target_compile_definitions(osimCommon PRIVATE OPENSIM_LOG_TO_FILE)
-endif()
-
 if(WIN32)
-    # On Windows only, debug libraries cannot be mixed with release
-    # libraries, and we must copy the DLLs from the dependencies
-    # into OpenSim's build directory (so that the DLLs are found
-    # when running the tests).
-    add_dependencies(osimCommon
-        Simbody_CONFIG_check Copy_Simbody_DLLs)
-    if(WITH_BTK)
-        add_dependencies(osimCommon Copy_BTK_DLLs)
-    endif()
+    add_dependencies(osimCommon Simbody_CONFIG_check)
 endif()
   

@@ -290,11 +290,6 @@ public:
         normalized fiber length.
     */
     double calcDerivative(double normFiberLength, int order) const;
-    
-
-    /// If possible, use the simpler overload above.
-    double calcDerivative(const std::vector<int>& derivComponents,
-                          const SimTK::Vector& x) const override;
 
     /** Calculates the normalized area under the curve. Since it is expensive to
     construct, the curve is built only when necessary.

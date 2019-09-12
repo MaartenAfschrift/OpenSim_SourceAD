@@ -94,18 +94,18 @@ protected:
     /** Reference to the value of the HalfOrder property. */
     int &_halfOrder;
     /** Reference to the value of the ErrorVariance property. */
-    double &_errorVariance;
+    osim_double_adouble &_errorVariance;
     /** Reference to the value of the X property. */
-    Array<double> &_x;
+    Array<osim_double_adouble> &_x;
     /** Reference to the value of the Weights property. */
-    Array<double> &_weights;
+    Array<osim_double_adouble> &_weights;
     /** Reference to the value of the Coefficients property. */
-    Array<double> &_coefficients;
+    Array<osim_double_adouble> &_coefficients;
 
     /** Y (dependent) values of the function. These are called aF in the
     constructor and are stored here so that the function can be scaled
     later on. */
-    Array<double> &_y;
+    Array<osim_double_adouble> &_y;
     /** A workspace used when calculating derivatives of the spline. */
     mutable std::vector<int> _workDeriv;
 
@@ -134,12 +134,12 @@ public:
      * the error variance, the more the smoothing.  The smoothing parameter, p,
      * in Woltring (1986) is computed based on the error variance.
      */
-    GCVSpline(int aDegree,int aN,const double *aX,const double *aF,
-        const std::string &aName="",double aErrorVariance=0.0);
+    GCVSpline(int aDegree,int aN,const osim_double_adouble *aX,const osim_double_adouble *aF,
+        const std::string &aName="",osim_double_adouble aErrorVariance=0.0);
     GCVSpline(const GCVSpline &aSpline);
     virtual ~GCVSpline();
 
-    void updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber=-1) override;
+    //void updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber=-1) override;
 private:
     void setNull();
     void setupProperties();
@@ -183,51 +183,51 @@ public:
      * @return Number of data points (or number of coefficients).
      */
     int getSize() const;
-    const Array<double>& getX() const;
+    const Array<osim_double_adouble>& getX() const;
     /**
      * Get the array of independent variables used to construct the spline.
      *
      * @return Pointer to the independent variable data points.
      */
-    virtual const double* getXValues() const;
+    virtual const osim_double_adouble* getXValues() const;
     /**
      * Get the array of dependent variables used to construct the spline.
      *
      * @return Pointer to the dependent variable data points.
      */
-    virtual const double* getYValues() const;
+    virtual const osim_double_adouble* getYValues() const;
     /**
      * Get the array of coefficients for the spline.
      *
      * @return Pointer to the coefficients.
      */
-    const Array<double>& getCoefficients() const;
+    const Array<osim_double_adouble>& getCoefficients() const;
     virtual int getNumberOfPoints() const { return _x.getSize(); }
     /**
      * Get the array of independent variables used to construct the spline.
      *
      * @return Reference to the independent variable data points.
      */
-    virtual double getX(int aIndex) const;
-    virtual double getY(int aIndex) const;
-    virtual double getZ(int aIndex) const { return 0.0; }
-    virtual void setX(int aIndex, double aValue);
-    virtual void setY(int aIndex, double aValue);
+    virtual osim_double_adouble getX(int aIndex) const;
+    virtual osim_double_adouble getY(int aIndex) const;
+    virtual osim_double_adouble getZ(int aIndex) const { return 0.0; }
+    virtual void setX(int aIndex, osim_double_adouble aValue);
+    virtual void setY(int aIndex, osim_double_adouble aValue);
     /**
      * Get the minimum value of the independent variable.
      *
      * @return Minimum value of the independent variable.
      */
-    virtual double getMinX() const;
+    virtual osim_double_adouble getMinX() const;
     /**
      * Get the maximum value of the independent variable.
      *
      * @return Maximum value of the independent variable.
      */
-    virtual double getMaxX() const;
+    virtual osim_double_adouble getMaxX() const;
     virtual bool deletePoint(int aIndex);
     virtual bool deletePoints(const Array<int>& indices);
-    virtual int addPoint(double aX, double aY);
+    virtual int addPoint(osim_double_adouble aX, osim_double_adouble aY);
     SimTK::Function* createSimTKFunction() const override;
 
     //--------------------------------------------------------------------------

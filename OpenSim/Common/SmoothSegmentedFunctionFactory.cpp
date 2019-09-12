@@ -51,21 +51,21 @@ using namespace std;
 //=============================================================================
 // UTILITY FUNCTIONS
 //=============================================================================
-double SmoothSegmentedFunctionFactory::scaleCurviness(double curviness)
+osim_double_adouble SmoothSegmentedFunctionFactory::scaleCurviness(osim_double_adouble curviness)
 {
-    double c = 0.1 + 0.8*curviness;
+    osim_double_adouble c = 0.1 + 0.8*curviness;
     return c;
 }
 //=============================================================================
 // MUSCLE CURVE FITTING FUNCTIONS
 //=============================================================================
 SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
-    createFiberActiveForceLengthCurve(double x0, double x1, double x2, 
-    double x3, double ylow,  double dydx, double curviness,
+    createFiberActiveForceLengthCurve(osim_double_adouble x0, osim_double_adouble x1, osim_double_adouble x2, 
+    osim_double_adouble x3, osim_double_adouble ylow,  osim_double_adouble dydx, osim_double_adouble curviness,
     bool computeIntegral, const std::string& curveName)
 {
     //Ensure that the inputs are within a valid range
-    double rootEPS = sqrt(SimTK::Eps);
+    osim_double_adouble rootEPS = sqrt(SimTK::Eps);
     SimTK_ERRCHK1_ALWAYS( (x0>=0 && x1>x0+rootEPS  
                         && x2>x1+rootEPS && x3>x2+rootEPS),
         "SmoothSegmentedFunctionFactory::createFiberActiveForceLengthCurve",
@@ -75,7 +75,7 @@ SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
         "SmoothSegmentedFunctionFactory::createFiberActiveForceLengthCurve",
         "%s: shoulderVal must be greater than, or equal to 0",
         curveName.c_str());
-    double dydxUpperBound = (1-ylow)/(x2-x1);
+    osim_double_adouble dydxUpperBound = (1-ylow)/(x2-x1);
     SimTK_ERRCHK2_ALWAYS(dydx >= 0 && dydx < dydxUpperBound,
         "SmoothSegmentedFunctionFactory::createFiberActiveForceLengthCurve",
         "%s: plateauSlope must be greater than 0 and less than %f",
@@ -91,52 +91,52 @@ SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
 
 
     //Translate the users parameters into Bezier curves
-    double c = scaleCurviness(curviness);
+    osim_double_adouble c = scaleCurviness(curviness);
 
     //The active force length curve is made up of 5 elbow shaped sections. 
     //Compute the locations of the joining point of each elbow section.
 
     //Calculate the location of the shoulder
-       double xDelta = 0.05*x2; //half the width of the sarcomere 0.0259, 
+       osim_double_adouble xDelta = 0.05*x2; //half the width of the sarcomere 0.0259, 
                                //but TM.Winter's data has a wider shoulder than
                                //this
 
-       double xs    = (x2-xDelta);//x1 + 0.75*(x2-x1);
+       osim_double_adouble xs    = (x2-xDelta);//x1 + 0.75*(x2-x1);
    
    //Calculate the intermediate points located on the ascending limb
-       double y0    = 0;   
-       double dydx0 = 0;
+       osim_double_adouble y0    = 0;   
+       osim_double_adouble dydx0 = 0;
 
-       double y1    = 1 - dydx*(xs-x1);
-       double dydx01= 1.25*(y1-y0)/(x1-x0);//(y1-y0)/(x1-(x0+xDelta));
+       osim_double_adouble y1    = 1 - dydx*(xs-x1);
+       osim_double_adouble dydx01= 1.25*(y1-y0)/(x1-x0);//(y1-y0)/(x1-(x0+xDelta));
 
-       double x01   = x0 + 0.5*(x1-x0); //x0 + xDelta + 0.5*(x1-(x0+xDelta));
-       double y01   = y0 + 0.5*(y1-y0);
+       osim_double_adouble x01   = x0 + 0.5*(x1-x0); //x0 + xDelta + 0.5*(x1-(x0+xDelta));
+       osim_double_adouble y01   = y0 + 0.5*(y1-y0);
    
    //Calculate the intermediate points of the shallow ascending plateau
-       double x1s   = x1 + 0.5*(xs-x1);
-       double y1s   = y1 + 0.5*(1-y1);
-       double dydx1s= dydx;
+       osim_double_adouble x1s   = x1 + 0.5*(xs-x1);
+       osim_double_adouble y1s   = y1 + 0.5*(1-y1);
+       osim_double_adouble dydx1s= dydx;
    
        //double dydx01c0 = 0.5*(y1s-y01)/(x1s-x01) + 0.5*(y01-y0)/(x01-x0);
        //double dydx01c1 = 2*( (y1-y0)/(x1-x0));
        //double dydx01(1-c)*dydx01c0 + c*dydx01c1; 
        
        //x2 entered
-       double y2 = 1;
-       double dydx2 = 0;
+       osim_double_adouble y2 = 1;
+       osim_double_adouble dydx2 = 0;
    
    //Descending limb
        //x3 entered
-       double y3 = 0;
-       double dydx3 = 0;
+       osim_double_adouble y3 = 0;
+       osim_double_adouble dydx3 = 0;
        
-       double x23 = (x2+xDelta) + 0.5*(x3-(x2+xDelta)); //x2 + 0.5*(x3-x2);
-       double y23 = y2 + 0.5*(y3-y2);
+       osim_double_adouble x23 = (x2+xDelta) + 0.5*(x3-(x2+xDelta)); //x2 + 0.5*(x3-x2);
+       osim_double_adouble y23 = y2 + 0.5*(y3-y2);
              
        //double dydx23c0 = 0.5*((y23-y2)/(x23-x2)) + 0.5*((y3-y23)/(x3-x23));
        //double dydx23c1 = 2*(y3-y2)/(x3-x2);
-       double dydx23   = (y3-y2)/((x3-xDelta)-(x2+xDelta)); 
+       osim_double_adouble dydx23   = (y3-y2)/((x3-xDelta)-(x2+xDelta)); 
        //(1-c)*dydx23c0 + c*dydx23c1; 
     
     //Compute the locations of the control points
@@ -174,11 +174,11 @@ SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
 }
 
 SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
-    createFiberForceVelocityCurve(double fmaxE, 
-    double dydxC, double dydxNearC, 
-    double dydxIso, 
-    double dydxE, double dydxNearE,
-    double concCurviness,double eccCurviness,
+    createFiberForceVelocityCurve(osim_double_adouble fmaxE, 
+    osim_double_adouble dydxC, osim_double_adouble dydxNearC, 
+    osim_double_adouble dydxIso, 
+    osim_double_adouble dydxE, osim_double_adouble dydxNearE,
+    osim_double_adouble concCurviness,osim_double_adouble eccCurviness,
     bool computeIntegral, const std::string& curveName)
 {
     //Ensure that the inputs are within a valid range
@@ -193,7 +193,7 @@ SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
         "SmoothSegmentedFunctionFactory::createFiberForceVelocityCurve",
         "%s: dydxNearC must be greater than or equal to 0"
         "and less than 1",curveName.c_str());
-    SimTK_ERRCHK2_ALWAYS( dydxIso > 1, 
+    /*SimTK_ERRCHK2_ALWAYS( dydxIso > 1, 
         "SmoothSegmentedFunctionFactory::createFiberForceVelocityCurve",
         "%s: dydxIso must be greater than (fmaxE-1)/1 (%f)",curveName.c_str(),
                                                             ((fmaxE-1.0)/1.0));
@@ -204,7 +204,7 @@ SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
     SimTK_ERRCHK2_ALWAYS( (dydxNearE >= dydxE && dydxNearE < (fmaxE-1)), 
         "SmoothSegmentedFunctionFactory::createFiberForceVelocityCurve",
         "%s: dydxNearE must be greater than or equal to dydxE"
-        "and less than fmaxE-1 (%f)",curveName.c_str(),(fmaxE-1));
+        "and less than fmaxE-1 (%f)",curveName.c_str(),(fmaxE-1));*/
     SimTK_ERRCHK1_ALWAYS( (concCurviness <= 1.0 && concCurviness >= 0), 
         "SmoothSegmentedFunctionFactory::createFiberForceVelocityCurve",
         "%s: concCurviness must be between 0 and 1",curveName.c_str());
@@ -216,24 +216,24 @@ SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
     name.append(".createFiberForceVelocityCurve");
 
     //Translate the users parameters into Bezier point locations
-    double cC = scaleCurviness(concCurviness);
-    double cE = scaleCurviness(eccCurviness);
+    osim_double_adouble cC = scaleCurviness(concCurviness);
+    osim_double_adouble cE = scaleCurviness(eccCurviness);
     
     //Compute the concentric control point locations
-    double xC   = -1;
-    double yC   = 0;
+    osim_double_adouble xC   = -1;
+    osim_double_adouble yC   = 0;
     
-    double xNearC = -0.9;
-    double yNearC = yC + 0.5*dydxNearC*(xNearC-xC) + 0.5*dydxC*(xNearC-xC);
+    osim_double_adouble xNearC = -0.9;
+    osim_double_adouble yNearC = yC + 0.5*dydxNearC*(xNearC-xC) + 0.5*dydxC*(xNearC-xC);
 
-    double xIso = 0;
-    double yIso = 1;
+    osim_double_adouble xIso = 0;
+    osim_double_adouble yIso = 1;
 
-    double xE   = 1;
-    double yE   = fmaxE;
+    osim_double_adouble xE   = 1;
+    osim_double_adouble yE   = fmaxE;
 
-    double xNearE = 0.9;
-    double yNearE = yE + 0.5*dydxNearE*(xNearE-xE) + 0.5*dydxE*(xNearE-xE);
+    osim_double_adouble xNearE = 0.9;
+    osim_double_adouble yNearE = yE + 0.5*dydxNearE*(xNearE-xE) + 0.5*dydxE*(xNearE-xE);
 
 
     SimTK::Matrix concPts1 = SegmentedQuinticBezierToolkit::
@@ -271,11 +271,11 @@ SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
 
 
 SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
-    createFiberForceVelocityInverseCurve(double fmaxE, 
-    double dydxC, double dydxNearC, 
-    double dydxIso,
-    double dydxE, double dydxNearE,
-    double concCurviness, double eccCurviness,
+    createFiberForceVelocityInverseCurve(osim_double_adouble fmaxE, 
+    osim_double_adouble dydxC, osim_double_adouble dydxNearC, 
+    osim_double_adouble dydxIso,
+    osim_double_adouble dydxE, osim_double_adouble dydxNearE,
+    osim_double_adouble concCurviness, osim_double_adouble eccCurviness,
     bool computeIntegral, const std::string& curveName)
 {
     //Ensure that the inputs are within a valid range
@@ -293,14 +293,14 @@ SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
     SimTK_ERRCHK1_ALWAYS( dydxIso > 1, 
         "SmoothSegmentedFunctionFactory::createFiberForceVelocityInverseCurve",
         "%s: dydxIso must be greater than or equal to 1",curveName.c_str());
-    SimTK_ERRCHK2_ALWAYS( (dydxE > SimTK::SignificantReal && dydxE < (fmaxE-1)), 
+    /*SimTK_ERRCHK2_ALWAYS( (dydxE > SimTK::SignificantReal && dydxE < (fmaxE-1)), 
         "SmoothSegmentedFunctionFactory::createFiberForceVelocityInverseCurve",
         "%s: dydxE must be greater than or equal to 0"
         "and less than fmaxE-1 (%f)",curveName.c_str(),(fmaxE-1));
     SimTK_ERRCHK2_ALWAYS( (dydxNearE >= dydxE && dydxNearE < (fmaxE-1)), 
         "SmoothSegmentedFunctionFactory::createFiberForceVelocityCurve",
         "%s: dydxNearE must be greater than or equal to dydxE"
-        "and less than fmaxE-1 (%f)",curveName.c_str(),(fmaxE-1));
+        "and less than fmaxE-1 (%f)",curveName.c_str(),(fmaxE-1));*/
     SimTK_ERRCHK1_ALWAYS( (concCurviness <= 1.0 && concCurviness >= 0), 
         "SmoothSegmentedFunctionFactory::createFiberForceVelocityInverseCurve",
         "%s: concCurviness must be between 0 and 1",curveName.c_str());
@@ -312,24 +312,24 @@ SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
     name.append(".createFiberForceVelocityInverseCurve");
 
     //Translate the users parameters into Bezier point locations
-    double cC = scaleCurviness(concCurviness);
-    double cE = scaleCurviness(eccCurviness);
+    osim_double_adouble cC = scaleCurviness(concCurviness);
+    osim_double_adouble cE = scaleCurviness(eccCurviness);
     
     //Compute the concentric control point locations
-    double xC   = -1;
-    double yC   = 0;
+    osim_double_adouble xC   = -1;
+    osim_double_adouble yC   = 0;
     
-    double xNearC = -0.9;
-    double yNearC = yC + 0.5*dydxNearC*(xNearC-xC) + 0.5*dydxC*(xNearC-xC);
+    osim_double_adouble xNearC = -0.9;
+    osim_double_adouble yNearC = yC + 0.5*dydxNearC*(xNearC-xC) + 0.5*dydxC*(xNearC-xC);
 
-    double xIso = 0;
-    double yIso = 1;
+    osim_double_adouble xIso = 0;
+    osim_double_adouble yIso = 1;
 
-    double xE   = 1;
-    double yE   = fmaxE;
+    osim_double_adouble xE   = 1;
+    osim_double_adouble yE   = fmaxE;
 
-    double xNearE = 0.9;
-    double yNearE = yE + 0.5*dydxNearE*(xNearE-xE) + 0.5*dydxE*(xNearE-xE);
+    osim_double_adouble xNearE = 0.9;
+    osim_double_adouble yNearE = yE + 0.5*dydxNearE*(xNearE-xE) + 0.5*dydxE*(xNearE-xE);
 
 
     SimTK::Matrix concPts1 = SegmentedQuinticBezierToolkit::
@@ -365,18 +365,18 @@ SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
 }
 
 SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
-    createFiberCompressiveForcePennationCurve(double phi0, double k, 
-         double curviness, bool computeIntegral, const std::string& curveName)
+    createFiberCompressiveForcePennationCurve(osim_double_adouble phi0, osim_double_adouble k, 
+         osim_double_adouble curviness, bool computeIntegral, const std::string& curveName)
 {
     //Check the input arguments
     SimTK_ERRCHK1_ALWAYS( (phi0>0 && phi0<(SimTK::Pi/2.0)) , 
         "SmoothSegmentedFunctionFactory::createFiberCompressiveForcePennationCurve", 
         "%s: phi0 must be greater than 0, and less than Pi/2",curveName.c_str());
 
-    SimTK_ERRCHK2_ALWAYS( k > (1.0/(SimTK::Pi/2.0-phi0)) , 
+   /* SimTK_ERRCHK2_ALWAYS( k > (1.0/(SimTK::Pi/2.0-phi0)) , 
         "SmoothSegmentedFunctionFactory::createFiberCompressiveForcePennationCurve", 
         "%s: k must be greater than %f",curveName.c_str(), 
-        (1.0/(SimTK::Pi/2.0-phi0)));
+        (1.0/(SimTK::Pi/2.0-phi0)));*/
 
     SimTK_ERRCHK1_ALWAYS( (curviness>=0 && curviness <= 1) , 
         "SmoothSegmentedFunctionFactory::createFiberCompressiveForcePennationCurve", 
@@ -386,13 +386,13 @@ SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
     name.append(".createFiberCompressiveForcePennationCurve");
 
     //Translate the user parameters to quintic Bezier points
-    double c = scaleCurviness(curviness);
-    double x0 = phi0;
-    double y0 = 0;
-    double dydx0 = 0;
-    double x1 = SimTK::Pi/2.0;
-    double y1 = 1;
-    double dydx1 = k;
+    osim_double_adouble c = scaleCurviness(curviness);
+    osim_double_adouble x0 = phi0;
+    osim_double_adouble y0 = 0;
+    osim_double_adouble dydx0 = 0;
+    osim_double_adouble x1 = SimTK::Pi/2.0;
+    osim_double_adouble y1 = 1;
+    osim_double_adouble dydx1 = k;
 
     SimTK::Matrix ctrlPts = SegmentedQuinticBezierToolkit::
         calcQuinticBezierCornerControlPoints(x0,y0,dydx0,x1,y1,dydx1,c);
@@ -413,8 +413,8 @@ SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
 }
 
 SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
-    createFiberCompressiveForceCosPennationCurve(double cosPhi0, double k, 
-         double curviness, bool computeIntegral, const std::string& curveName)
+    createFiberCompressiveForceCosPennationCurve(osim_double_adouble cosPhi0, osim_double_adouble k, 
+         osim_double_adouble curviness, bool computeIntegral, const std::string& curveName)
 {
     //Check the input arguments
     SimTK_ERRCHK1_ALWAYS( (cosPhi0>0 && cosPhi0 < 1) , 
@@ -433,13 +433,13 @@ SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
     name.append(".createFiberCompressiveForceCosPennationCurve");
 
     //Translate the user parameters to quintic Bezier points
-    double c = scaleCurviness(curviness);
-    double x0 = 0;
-    double y0 = 1;
-    double dydx0 = k;
-    double x1 = cosPhi0;
-    double y1 = 0;
-    double dydx1 = 0;
+    osim_double_adouble c = scaleCurviness(curviness);
+    osim_double_adouble x0 = 0;
+    osim_double_adouble y0 = 1;
+    osim_double_adouble dydx0 = k;
+    osim_double_adouble x1 = cosPhi0;
+    osim_double_adouble y1 = 0;
+    osim_double_adouble dydx1 = 0;
 
     SimTK::Matrix ctrlPts = SegmentedQuinticBezierToolkit::
         calcQuinticBezierCornerControlPoints(x0,y0,dydx0,x1,y1,dydx1,c);
@@ -460,8 +460,8 @@ SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
 }
 
 SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
-      createFiberCompressiveForceLengthCurve(double lmax, double k, 
-               double curviness, bool computeIntegral, 
+      createFiberCompressiveForceLengthCurve(osim_double_adouble lmax, osim_double_adouble k, 
+               osim_double_adouble curviness, bool computeIntegral, 
                const std::string& curveName)
 {
     //Check the input arguments
@@ -469,9 +469,9 @@ SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
         "SmoothSegmentedFunctionFactory::createFiberCompressiveForceLength", 
         "%s: l0 must be greater than 0",curveName.c_str());
 
-    SimTK_ERRCHK2_ALWAYS( k < -(1.0/lmax) , 
+    /*SimTK_ERRCHK2_ALWAYS( k < -(1.0/lmax) , 
         "SmoothSegmentedFunctionFactory::createFiberCompressiveForceLength", 
-        "%s: k must be less than %f",curveName.c_str(),-(1.0/lmax));
+        "%s: k must be less than %f",curveName.c_str(),-(1.0/lmax));*/
 
     SimTK_ERRCHK1_ALWAYS( (curviness>=0 && curviness <= 1) , 
         "SmoothSegmentedFunctionFactory::createFiberCompressiveForceLength", 
@@ -481,13 +481,13 @@ SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
     caller.append(".createFiberCompressiveForceLength");
 
     //Translate the user parameters to quintic Bezier points
-    double c = scaleCurviness(curviness);
-    double x0 = 0.0;
-    double y0 = 1;
-    double dydx0 = k;
-    double x1 = lmax;
-    double y1 = 0;
-    double dydx1 = 0;
+    osim_double_adouble c = scaleCurviness(curviness);
+    osim_double_adouble x0 = 0.0;
+    osim_double_adouble y0 = 1;
+    osim_double_adouble dydx0 = k;
+    osim_double_adouble x1 = lmax;
+    osim_double_adouble y1 = 0;
+    osim_double_adouble dydx1 = 0;
 
     SimTK::Matrix ctrlPts = SegmentedQuinticBezierToolkit::
         calcQuinticBezierCornerControlPoints(x0,y0,dydx0,x1,y1,dydx1,c);
@@ -508,8 +508,8 @@ SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
 
 
 SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
-    createFiberForceLengthCurve(double eZero, double eIso, 
-                                double kLow, double kIso, double curviness,
+    createFiberForceLengthCurve(osim_double_adouble eZero, osim_double_adouble eIso, 
+                                osim_double_adouble kLow, osim_double_adouble kIso, osim_double_adouble curviness,
                              bool computeIntegral, const std::string& curveName)
 {
     
@@ -518,10 +518,10 @@ SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
         "SmoothSegmentedFunctionFactory::createFiberForceLength", 
         "%s: The following must hold: eIso  > eZero",curveName.c_str());
 
-    SimTK_ERRCHK2_ALWAYS( kIso > (1.0/(eIso-eZero)) , 
+    /*SimTK_ERRCHK2_ALWAYS( kIso > (1.0/(eIso-eZero)) , 
        "SmoothSegmentedFunctionFactory::createFiberForceLength", 
        "%s: kiso must be greater than 1/(eIso-eZero) (%f)",
-       curveName.c_str(),(1.0/(eIso-eZero)));
+       curveName.c_str(),(1.0/(eIso-eZero)));*/
 
     SimTK_ERRCHK1_ALWAYS(kLow > 0.0 && kLow < 1/(eIso-eZero),
         "SmoothSegmentedFunctionFactory::createFiberForceLength", 
@@ -554,19 +554,19 @@ SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
     */
 
         //Translate the user parameters to quintic Bezier points
-    double c = scaleCurviness(curviness);
-    double xZero = 1+eZero;
-    double yZero = 0;
+    osim_double_adouble c = scaleCurviness(curviness);
+    osim_double_adouble xZero = 1+eZero;
+    osim_double_adouble yZero = 0;
     
-    double xIso = 1 + eIso;
-    double yIso = 1;
+    osim_double_adouble xIso = 1 + eIso;
+    osim_double_adouble yIso = 1;
     
-    double deltaX = min(0.1*(1.0/kIso), 0.1*(xIso-xZero));
+    osim_double_adouble deltaX = min(0.1*(1.0/kIso), 0.1*(xIso-xZero));
 
-    double xLow     = xZero + deltaX;
-    double xfoot    = xZero + 0.5*(xLow-xZero);
-    double yfoot    = 0;
-    double yLow     = yfoot + kLow*(xLow-xfoot);
+    osim_double_adouble xLow     = xZero + deltaX;
+    osim_double_adouble xfoot    = xZero + 0.5*(xLow-xZero);
+    osim_double_adouble yfoot    = 0;
+    osim_double_adouble yLow     = yfoot + kLow*(xLow-xfoot);
 
     //Compute the Quintic Bezier control points
     SimTK::Matrix p0 = SegmentedQuinticBezierToolkit::
@@ -605,8 +605,8 @@ SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
 
 
 SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
-          createTendonForceLengthCurve( double eIso, double kIso, 
-                                        double fToe, double curviness,
+          createTendonForceLengthCurve( osim_double_adouble eIso, osim_double_adouble kIso, 
+                                        osim_double_adouble fToe, osim_double_adouble curviness,
                                         bool computeIntegral, 
                                         const std::string& curveName)
 {
@@ -622,10 +622,10 @@ SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
         "%s: fToe must be greater than 0 and less than 1, but %f was entered", 
         curveName.c_str(),fToe);
 
-    SimTK_ERRCHK3_ALWAYS( kIso > (1/eIso) , 
+   /* SimTK_ERRCHK3_ALWAYS( kIso > (1/eIso) , 
        "SmoothSegmentedFunctionFactory::createTendonForceLengthCurve", 
        "%s : kIso must be greater than 1/eIso, (%f), but kIso (%f) was entered", 
-        curveName.c_str(), (1/eIso),kIso);
+        curveName.c_str(), (1/eIso),kIso);*/
 
     SimTK_ERRCHK2_ALWAYS( (curviness>=0 && curviness <= 1) , 
         "SmoothSegmentedFunctionFactory::createTendonForceLengthCurve", 
@@ -636,35 +636,35 @@ SmoothSegmentedFunction* SmoothSegmentedFunctionFactory::
     callerName.append(".createTendonForceLengthCurve");
 
     //Translate the user parameters to quintic Bezier points
-    double c = scaleCurviness(curviness);
-    double x0 = 1.0;
-    double y0 = 0;
-    double dydx0 = 0;
+    osim_double_adouble c = scaleCurviness(curviness);
+    osim_double_adouble x0 = 1.0;
+    osim_double_adouble y0 = 0;
+    osim_double_adouble dydx0 = 0;
 
-    double xIso = 1.0 + eIso;
-    double yIso = 1;
-    double dydxIso = kIso;
+    osim_double_adouble xIso = 1.0 + eIso;
+    osim_double_adouble yIso = 1;
+    osim_double_adouble dydxIso = kIso;
 
     //Location where the curved section becomes linear
-    double yToe = fToe;
-    double xToe = (yToe-1)/kIso + xIso;
+    osim_double_adouble yToe = fToe;
+    osim_double_adouble xToe = (yToe-1)/kIso + xIso;
 
 
     //To limit the 2nd derivative of the toe region the line it tends to
     //has to intersect the x axis to the right of the origin
-        double xFoot = 1.0+(xToe-1.0)/10.0;
-        double yFoot = 0;
+        osim_double_adouble xFoot = 1.0+(xToe-1.0)/10.0;
+        osim_double_adouble yFoot = 0;
         //double dydxToe = (yToe-yFoot)/(xToe-xFoot);
 
     //Compute the location of the corner formed by the average slope of the
     //toe and the slope of the linear section
-    double yToeMid = yToe*0.5;
-    double xToeMid = (yToeMid-yIso)/kIso + xIso;
-    double dydxToeMid = (yToeMid-yFoot)/(xToeMid-xFoot);
+    osim_double_adouble yToeMid = yToe*0.5;
+    osim_double_adouble xToeMid = (yToeMid-yIso)/kIso + xIso;
+    osim_double_adouble dydxToeMid = (yToeMid-yFoot)/(xToeMid-xFoot);
 
     //Compute the location of the control point to the left of the corner
-    double xToeCtrl = xFoot + 0.5*(xToeMid-xFoot); 
-    double yToeCtrl = yFoot + dydxToeMid*(xToeCtrl-xFoot);
+    osim_double_adouble xToeCtrl = xFoot + 0.5*(xToeMid-xFoot); 
+    osim_double_adouble yToeCtrl = yFoot + dydxToeMid*(xToeCtrl-xFoot);
 
 
 

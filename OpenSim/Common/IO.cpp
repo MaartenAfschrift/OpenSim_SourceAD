@@ -50,6 +50,8 @@
     #include <unistd.h>
 #endif
 
+#include "osim_adouble.h"
+
 // CONSTANTS
 
 
@@ -385,12 +387,12 @@ ReadLine(istream &aIS)
  * @param aDT Step size.  Should be greater than 0.0.
  */
 int IO::
-ComputeNumberOfSteps(double aTI,double aTF,double aDT)
+ComputeNumberOfSteps(osim_double_adouble aTI,osim_double_adouble aTF,osim_double_adouble aDT)
 {
     if(aDT<=0) return(0);
 
-    double duration = aTF-aTI;
-    int ns = (int)floor(duration/aDT);
+    osim_double_adouble duration = aTF-aTI;
+    int ns = (int)floor(duration/aDT).value();
     if((ns*aDT)<(duration-1.0e-2*aDT)) {
         ns += 2;
     } else {
@@ -416,10 +418,6 @@ ReadCharacters(istream &aIS,int aNChar)
     string str = buffer;
     delete[] buffer;
     return str;
-}
-
-bool IO::FileExists(const std::string& filePath) {
-    return std::ifstream(filePath).good();
 }
 
 //_____________________________________________________________________________
@@ -648,15 +646,4 @@ Uppercase(const std::string &aStr)
     std::string result = aStr;
     for(unsigned int i=0; i<aStr.size(); i++) result[i] = toupper(result[i]);
     return result;
-}
-
-void IO::eraseEmptyElements(std::vector<std::string>& list)
-{
-    std::vector<std::string>::iterator it = list.begin();
-    while (it != list.end()) {
-        if (it->empty())
-            it = list.erase(it);
-        else
-            ++it;
-    }
 }

@@ -45,11 +45,11 @@ class OSIMCOMMON_API SignalGenerator : public Component {
 public:
     OpenSim_DECLARE_PROPERTY(function, Function,
         "Function used to generate the signal (a function of time)");
-    OpenSim_DECLARE_OUTPUT(signal, double, getSignal, SimTK::Stage::Time);
+    OpenSim_DECLARE_OUTPUT(signal, osim_double_adouble, getSignal, SimTK::Stage::Time);
 
     SignalGenerator();
 
-    double getSignal(const SimTK::State& s) const;
+    osim_double_adouble getSignal(const SimTK::State& s) const;
 
 private:
     void constructProperties();

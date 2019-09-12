@@ -82,15 +82,15 @@ public:
 //=============================================================================
 // PROPERTIES
 //=============================================================================
-    OpenSim_DECLARE_PROPERTY(max_isometric_force, double,
+    OpenSim_DECLARE_PROPERTY(max_isometric_force, osim_double_adouble,
         "Maximum isometric force that the fibers can generate");
-    OpenSim_DECLARE_PROPERTY(optimal_fiber_length, double,
+    OpenSim_DECLARE_PROPERTY(optimal_fiber_length, osim_double_adouble,
         "Optimal length of the muscle fibers");
-    OpenSim_DECLARE_PROPERTY(tendon_slack_length, double,
+    OpenSim_DECLARE_PROPERTY(tendon_slack_length, osim_double_adouble,
         "Resting length of the tendon");
-    OpenSim_DECLARE_PROPERTY(pennation_angle_at_optimal, double,
+    OpenSim_DECLARE_PROPERTY(pennation_angle_at_optimal, osim_double_adouble,
         "Angle between tendon and fibers at optimal fiber length expressed in radians");
-    OpenSim_DECLARE_PROPERTY(max_contraction_velocity, double,
+    OpenSim_DECLARE_PROPERTY(max_contraction_velocity, osim_double_adouble,
         "Maximum contraction velocity of the fibers, in optimal fiberlengths/second");
     OpenSim_DECLARE_PROPERTY(ignore_tendon_compliance, bool,
         "Compute muscle dynamics ignoring tendon compliance. Tendon is assumed to be rigid.");
@@ -100,69 +100,69 @@ public:
 //=============================================================================
 // OUTPUTS
 //=============================================================================
-    OpenSim_DECLARE_OUTPUT(excitation, double, getExcitation,
+    //OpenSim_DECLARE_OUTPUT(excitation, osim_double_adouble, getExcitation,
+    //        SimTK::Stage::Dynamics);
+    OpenSim_DECLARE_OUTPUT(activation, osim_double_adouble, getActivation,
             SimTK::Stage::Dynamics);
-    OpenSim_DECLARE_OUTPUT(activation, double, getActivation,
-            SimTK::Stage::Dynamics);
-    OpenSim_DECLARE_OUTPUT(fiber_length, double, getFiberLength,
+    OpenSim_DECLARE_OUTPUT(fiber_length, osim_double_adouble, getFiberLength,
             SimTK::Stage::Position);
-    OpenSim_DECLARE_OUTPUT(pennation_angle, double, getPennationAngle,
+    OpenSim_DECLARE_OUTPUT(pennation_angle, osim_double_adouble, getPennationAngle,
             SimTK::Stage::Position);
-    OpenSim_DECLARE_OUTPUT(cos_pennation_angle, double, getCosPennationAngle,
+    OpenSim_DECLARE_OUTPUT(cos_pennation_angle, osim_double_adouble, getCosPennationAngle,
             SimTK::Stage::Position);
-    OpenSim_DECLARE_OUTPUT(tendon_length, double, getTendonLength,
+    OpenSim_DECLARE_OUTPUT(tendon_length, osim_double_adouble, getTendonLength,
             SimTK::Stage::Position);
-    OpenSim_DECLARE_OUTPUT(normalized_fiber_length, double,
+    OpenSim_DECLARE_OUTPUT(normalized_fiber_length, osim_double_adouble,
             getNormalizedFiberLength, SimTK::Stage::Position);
-    OpenSim_DECLARE_OUTPUT(fiber_length_along_tendon, double,
+    OpenSim_DECLARE_OUTPUT(fiber_length_along_tendon, osim_double_adouble,
             getFiberLengthAlongTendon, SimTK::Stage::Position);
-    OpenSim_DECLARE_OUTPUT(tendon_strain, double, getTendonStrain,
+    OpenSim_DECLARE_OUTPUT(tendon_strain, osim_double_adouble, getTendonStrain,
             SimTK::Stage::Position);
-    OpenSim_DECLARE_OUTPUT(passive_force_multiplier, double,
+    OpenSim_DECLARE_OUTPUT(passive_force_multiplier, osim_double_adouble,
             getPassiveForceMultiplier, SimTK::Stage::Position);
-    OpenSim_DECLARE_OUTPUT(active_force_length_multiplier, double,
+    OpenSim_DECLARE_OUTPUT(active_force_length_multiplier, osim_double_adouble,
             getActiveForceLengthMultiplier, SimTK::Stage::Position);
-    OpenSim_DECLARE_OUTPUT(fiber_velocity, double, getFiberVelocity,
+    OpenSim_DECLARE_OUTPUT(fiber_velocity, osim_double_adouble, getFiberVelocity,
             SimTK::Stage::Velocity);
-    OpenSim_DECLARE_OUTPUT(normalized_fiber_velocity, double,
+    OpenSim_DECLARE_OUTPUT(normalized_fiber_velocity, osim_double_adouble,
             getNormalizedFiberVelocity, SimTK::Stage::Velocity);
-    OpenSim_DECLARE_OUTPUT(fiber_velocity_along_tendon, double,
+    OpenSim_DECLARE_OUTPUT(fiber_velocity_along_tendon, osim_double_adouble,
             getFiberVelocityAlongTendon, SimTK::Stage::Velocity);
-    OpenSim_DECLARE_OUTPUT(tendon_velocity, double, getTendonVelocity,
+    OpenSim_DECLARE_OUTPUT(tendon_velocity, osim_double_adouble, getTendonVelocity,
             SimTK::Stage::Velocity);
-    OpenSim_DECLARE_OUTPUT(force_velocity_multiplier, double,
+    OpenSim_DECLARE_OUTPUT(force_velocity_multiplier, osim_double_adouble,
             getForceVelocityMultiplier, SimTK::Stage::Velocity);
-    OpenSim_DECLARE_OUTPUT(pennation_angular_velocity, double,
+    OpenSim_DECLARE_OUTPUT(pennation_angular_velocity, osim_double_adouble,
             getPennationAngularVelocity, SimTK::Stage::Velocity);
-    OpenSim_DECLARE_OUTPUT(fiber_force, double, getFiberForce,
+    OpenSim_DECLARE_OUTPUT(fiber_force, osim_double_adouble, getFiberForce,
             SimTK::Stage::Dynamics);
-    OpenSim_DECLARE_OUTPUT(fiber_force_along_tendon, double,
+    OpenSim_DECLARE_OUTPUT(fiber_force_along_tendon, osim_double_adouble,
             getFiberForceAlongTendon, SimTK::Stage::Dynamics);
-    OpenSim_DECLARE_OUTPUT(active_fiber_force, double, getActiveFiberForce,
+    OpenSim_DECLARE_OUTPUT(active_fiber_force, osim_double_adouble, getActiveFiberForce,
             SimTK::Stage::Dynamics);
-    OpenSim_DECLARE_OUTPUT(passive_fiber_force, double, getPassiveFiberForce,
+    OpenSim_DECLARE_OUTPUT(passive_fiber_force, osim_double_adouble, getPassiveFiberForce,
             SimTK::Stage::Dynamics);
-    OpenSim_DECLARE_OUTPUT(active_fiber_force_along_tendon, double,
+    OpenSim_DECLARE_OUTPUT(active_fiber_force_along_tendon, osim_double_adouble,
             getActiveFiberForceAlongTendon, SimTK::Stage::Dynamics);
-    OpenSim_DECLARE_OUTPUT(passive_fiber_force_along_tendon, double,
+    OpenSim_DECLARE_OUTPUT(passive_fiber_force_along_tendon, osim_double_adouble,
             getPassiveFiberForceAlongTendon, SimTK::Stage::Dynamics);
-    OpenSim_DECLARE_OUTPUT(tendon_force, double, getTendonForce,
+    OpenSim_DECLARE_OUTPUT(tendon_force, osim_double_adouble, getTendonForce,
             SimTK::Stage::Dynamics);
-    OpenSim_DECLARE_OUTPUT(fiber_stiffness, double, getFiberStiffness,
+    OpenSim_DECLARE_OUTPUT(fiber_stiffness, osim_double_adouble, getFiberStiffness,
             SimTK::Stage::Dynamics);
-    OpenSim_DECLARE_OUTPUT(fiber_stiffness_along_tendon, double,
+    OpenSim_DECLARE_OUTPUT(fiber_stiffness_along_tendon, osim_double_adouble,
             getFiberStiffnessAlongTendon, SimTK::Stage::Dynamics);
-    OpenSim_DECLARE_OUTPUT(tendon_stiffness, double, getTendonStiffness,
+    OpenSim_DECLARE_OUTPUT(tendon_stiffness, osim_double_adouble, getTendonStiffness,
             SimTK::Stage::Dynamics);
-    OpenSim_DECLARE_OUTPUT(muscle_stiffness, double, getMuscleStiffness,
+    OpenSim_DECLARE_OUTPUT(muscle_stiffness, osim_double_adouble, getMuscleStiffness,
             SimTK::Stage::Dynamics);
-    OpenSim_DECLARE_OUTPUT(fiber_active_power, double, getFiberActivePower,
+    OpenSim_DECLARE_OUTPUT(fiber_active_power, osim_double_adouble, getFiberActivePower,
             SimTK::Stage::Dynamics);
-    OpenSim_DECLARE_OUTPUT(fiber_passive_power, double, getFiberPassivePower,
+    OpenSim_DECLARE_OUTPUT(fiber_passive_power, osim_double_adouble, getFiberPassivePower,
             SimTK::Stage::Dynamics);
-    OpenSim_DECLARE_OUTPUT(tendon_power, double, getTendonPower,
+    OpenSim_DECLARE_OUTPUT(tendon_power, osim_double_adouble, getTendonPower,
             SimTK::Stage::Dynamics);
-    OpenSim_DECLARE_OUTPUT(muscle_power, double, getMusclePower,
+    OpenSim_DECLARE_OUTPUT(muscle_power, osim_double_adouble, getMusclePower,
             SimTK::Stage::Dynamics);
 
 //=============================================================================
@@ -183,24 +183,24 @@ public:
      */ 
     //@{
     /** get/set the maximum isometric force (in N) that the fibers can generate */
-    double getMaxIsometricForce() const; 
-    void setMaxIsometricForce(double maxIsometricForce);
+    osim_double_adouble getMaxIsometricForce() const; 
+    void setMaxIsometricForce(osim_double_adouble maxIsometricForce);
 
     /** get/set the optimal length (in m) of the muscle fibers (lumped as a single fiber) */
-    double getOptimalFiberLength() const;
-    void setOptimalFiberLength(double optimalFiberLength);
+    osim_double_adouble getOptimalFiberLength() const;
+    void setOptimalFiberLength(osim_double_adouble optimalFiberLength);
 
     /** get/set the resting (slack) length (in m) of the tendon that is in series with the muscle fiber */
-    double getTendonSlackLength() const;
-    void setTendonSlackLength(double tendonSlackLength);
+    osim_double_adouble getTendonSlackLength() const;
+    void setTendonSlackLength(osim_double_adouble tendonSlackLength);
 
     /** get/set the angle (in radians) between fibers at their optimal fiber length and the tendon */
-    double getPennationAngleAtOptimalFiberLength() const;
-    void setPennationAngleAtOptimalFiberLength(double pennationAngle);
+    osim_double_adouble getPennationAngleAtOptimalFiberLength() const;
+    void setPennationAngleAtOptimalFiberLength(osim_double_adouble pennationAngle);
     
     /** get/set the maximum contraction velocity of the fibers, in optimal fiber-lengths per second */
-    double getMaxContractionVelocity() const;
-    void setMaxContractionVelocity(double maxContractionVelocity);
+    osim_double_adouble getMaxContractionVelocity() const;
+    void setMaxContractionVelocity(osim_double_adouble maxContractionVelocity);
 
     // End of Muscle Parameter Accessors.
     //@} 
@@ -228,110 +228,109 @@ public:
     /** get the activation level of the muscle, which modulates the active force
         of the muscle and has a normalized (0 to 1) value 
         Note: method remains virtual to permit override by deprecated muscles. */
-    virtual double getActivation(const SimTK::State& s) const;
+    virtual osim_double_adouble getActivation(const SimTK::State& s) const;
 
     /** get the current working fiber length (m) for the muscle */
-    double getFiberLength(const SimTK::State& s) const;
+    osim_double_adouble getFiberLength(const SimTK::State& s) const;
     /** get the current pennation angle (radians) between the fiber and tendon at the current fiber length  */
-    double getPennationAngle(const SimTK::State& s) const;
+    osim_double_adouble getPennationAngle(const SimTK::State& s) const;
     /** get the cosine of the current pennation angle (radians) between the fiber and tendon at the current fiber length  */
-    double getCosPennationAngle(const SimTK::State& s) const;
+    osim_double_adouble getCosPennationAngle(const SimTK::State& s) const;
     /** get the current tendon length (m)  given the current joint angles and fiber length */
-    double getTendonLength(const SimTK::State& s) const;
+    osim_double_adouble getTendonLength(const SimTK::State& s) const;
     /** get the current normalized fiber length (fiber_length/optimal_fiber_length) */
-    double getNormalizedFiberLength(const SimTK::State& s) const;
+    osim_double_adouble getNormalizedFiberLength(const SimTK::State& s) const;
     /** get the current fiber length (m) projected (*cos(pennationAngle)) onto the tendon direction */
-    double getFiberLengthAlongTendon(const SimTK::State& s) const;
+    osim_double_adouble getFiberLengthAlongTendon(const SimTK::State& s) const;
     /** get the current tendon strain (delta_l/tendon_slack_length is dimensionless)  */
-    double getTendonStrain(const SimTK::State& s) const;
+    osim_double_adouble getTendonStrain(const SimTK::State& s) const;
 
     /** the potential energy (J) stored in the fiber due to its parallel elastic element */
-    double getFiberPotentialEnergy(const SimTK::State& s) const;
+    osim_double_adouble getFiberPotentialEnergy(const SimTK::State& s) const;
     /** the potential energy (J) stored in the tendon */    
-    double getTendonPotentialEnergy(const SimTK::State& s) const;
+    osim_double_adouble getTendonPotentialEnergy(const SimTK::State& s) const;
     /** the total potential energy (J) stored in the muscle */  
-    double getMusclePotentialEnergy(const SimTK::State& s) const;
+    osim_double_adouble getMusclePotentialEnergy(const SimTK::State& s) const;
     
     /** get the passive fiber (parallel elastic element) force multiplier */
-    double getPassiveForceMultiplier(const SimTK::State& s) const;
+    osim_double_adouble getPassiveForceMultiplier(const SimTK::State& s) const;
     /** get the active fiber (contractile element) force multiplier due to current fiber length */
-    double getActiveForceLengthMultiplier(const SimTK::State& s) const;
+    osim_double_adouble getActiveForceLengthMultiplier(const SimTK::State& s) const;
 
     /** get current fiber velocity (m/s) positive is lengthening */
-    double getFiberVelocity(const SimTK::State& s) const;
-    /** get normalized fiber velocity. This is the fiber velocity in m/s divided by
-    the maximum contraction velocity expressed in m/s; therefore, this quantity is
-    dimensionless and generally lies in the range [-1, 1]. */
-    double getNormalizedFiberVelocity(const SimTK::State& s) const;
+    osim_double_adouble getFiberVelocity(const SimTK::State& s) const;
+    /** get normalize fiber velocity (fiber_lengths/s / max_contraction_velocity) */
+    osim_double_adouble getNormalizedFiberVelocity(const SimTK::State& s) const;
     /** get the current fiber velocity (m/s) projected onto the tendon direction */
-    double getFiberVelocityAlongTendon(const SimTK::State& s) const;
+    osim_double_adouble getFiberVelocityAlongTendon(const SimTK::State& s) const;
     /** get pennation angular velocity (radians/s) */
-    double getPennationAngularVelocity(const SimTK::State& s) const;
+    osim_double_adouble getPennationAngularVelocity(const SimTK::State& s) const;
     /** get the tendon velocity (m/s) positive is lengthening */
-    double getTendonVelocity(const SimTK::State& s) const;
+    osim_double_adouble getTendonVelocity(const SimTK::State& s) const;
     /** get the dimensionless multiplier resulting from the fiber's force-velocity curve */
-    double getForceVelocityMultiplier(const SimTK::State& s) const;
+    osim_double_adouble getForceVelocityMultiplier(const SimTK::State& s) const;
 
     /** get the current fiber force (N) applied to the tendon */
-    double getFiberForce(const SimTK::State& s) const;
+    osim_double_adouble getFiberForce(const SimTK::State& s) const;
     /**get the force of the fiber (N/m) along the direction of the tendon*/
-    double getFiberForceAlongTendon(const SimTK::State& s) const;
+    osim_double_adouble getFiberForceAlongTendon(const SimTK::State& s) const;
     /** get the current active fiber force (N) due to activation*force_length*force_velocity relationships */
-    double getActiveFiberForce(const SimTK::State& s) const;
+    osim_double_adouble getActiveFiberForce(const SimTK::State& s) const;
     /** get the total force applied by all passive elements in the fiber (N) */
-    double getPassiveFiberForce(const SimTK::State& s) const;
+    osim_double_adouble getPassiveFiberForce(const SimTK::State& s) const;
     /** get the current active fiber force (N) projected onto the tendon direction */
-    double getActiveFiberForceAlongTendon(const SimTK::State& s) const;
+    osim_double_adouble getActiveFiberForceAlongTendon(const SimTK::State& s) const;
     /** get the total force applied by all passive elements in the fiber (N)
         projected onto the tendon direction */
-    double getPassiveFiberForceAlongTendon(const SimTK::State& s) const;
+    osim_double_adouble getPassiveFiberForceAlongTendon(const SimTK::State& s) const;
     /** get the current tendon force (N) applied to bones */
-    double getTendonForce(const SimTK::State& s) const;
+    osim_double_adouble getTendonForce(const SimTK::State& s) const;
 
     /** get the current fiber stiffness (N/m) defined as the partial derivative
         of fiber force with respect to fiber length */
-    double getFiberStiffness(const SimTK::State& s) const;
+    osim_double_adouble getFiberStiffness(const SimTK::State& s) const;
     /**get the stiffness of the fiber (N/m) along the direction of the tendon,
     that is the partial derivative of the fiber force along the tendon with
     respect to small changes in fiber length along the tendon*/
-    double getFiberStiffnessAlongTendon(const SimTK::State& s) const;
+    osim_double_adouble getFiberStiffnessAlongTendon(const SimTK::State& s) const;
     /** get the current tendon stiffness (N/m) defined as the partial derivative
         of tendon force with respect to tendon length */
-    double getTendonStiffness(const SimTK::State& s) const;
+    osim_double_adouble getTendonStiffness(const SimTK::State& s) const;
     /** get the current muscle stiffness (N/m) defined as the partial derivative
         of muscle force with respect to muscle length */
-    double getMuscleStiffness(const SimTK::State& s) const;
+    osim_double_adouble getMuscleStiffness(const SimTK::State& s) const;
 
     /** get the current active fiber power (W) */
-    double getFiberActivePower(const SimTK::State& s) const;
+    osim_double_adouble getFiberActivePower(const SimTK::State& s) const;
     /** get the current passive fiber power (W) */
-    double getFiberPassivePower(const SimTK::State& s) const;
+    osim_double_adouble getFiberPassivePower(const SimTK::State& s) const;
 
     /** get the current tendon power (W) */
-    double getTendonPower(const SimTK::State& s) const;
+    osim_double_adouble getTendonPower(const SimTK::State& s) const;
     /** get the current muscle power (W) */
-    double getMusclePower(const SimTK::State& s) const;
+    osim_double_adouble getMusclePower(const SimTK::State& s) const;
     
     /** get the stress in the muscle (part of the Actuator interface as well) */
-    double getStress(const SimTK::State& s) const override;
+    osim_double_adouble getStress(const SimTK::State& s) const override;
     
     /** set the excitation (control) for this muscle. NOTE if controllers are connected to the
         muscle and are adding in their controls, and setExcitation is called after the model's
         computeControls(), then setExcitation will override the controller values. If called 
         before computeControls, then controller value(s) are added to the excitation set here. */
-    void setExcitation(SimTK::State& s, double excitation) const;
-    double getExcitation(const SimTK::State& s) const;
+    void setExcitation(SimTK::State& s, osim_double_adouble excitation) const;
+    //osim_double_adouble getExcitation(const SimTK::State& s) const;
 
 
     /** DEPRECATED: only for backward compatibility */
-    virtual void setActivation(SimTK::State& s, double activation) const = 0;
+    virtual void setActivation(SimTK::State& s, osim_double_adouble activation) const = 0;
 
     // End of Muscle's State Dependent Accessors.
     //@} 
 
     /** Actuator interface for a muscle computes the tension in the muscle
         and applied by the tendon to bones (i.e. not the fiber force) */
-    double computeActuation(const SimTK::State& s) const override = 0;
+    //osim_double_adouble computeActuation(const SimTK::State& s) const override = 0;
+
 
     /** @name Muscle initialization 
      */ 
@@ -350,8 +349,8 @@ public:
     // relationship between activation and force. This is used by CMC and 
     // StaticOptimization to solve the muscle force redundancy problem.
     //--------------------------------------------------------------------------    
-    virtual double calcInextensibleTendonActiveFiberForce(SimTK::State& s, 
-                                                  double aActivation) const;
+    virtual osim_double_adouble calcInextensibleTendonActiveFiberForce(SimTK::State& s, 
+                                                  osim_double_adouble aActivation) const;
     ///@endcond
 //=============================================================================
 // PROTECTED METHODS
@@ -429,11 +428,11 @@ protected:
                       SimTK::Vector& generalizedForce) const override;
 
     /** Potential energy stored by the muscle */
-    double computePotentialEnergy(const SimTK::State& state) const override;
+    osim_double_adouble computePotentialEnergy(const SimTK::State& state) const override;
 
     /** Override PathActuator virtual to calculate a preferred color for the 
     muscle path based on activation. **/
-    SimTK::Vec3 computePathColor(const SimTK::State& state) const override;
+    //SimTK::Vec3 computePathColor(const SimTK::State& state) const override;
     
     /** Model Component creation interface */
     void extendConnectToModel(Model& aModel) override;
@@ -456,7 +455,7 @@ private:
     // Implement Object interface.
     //--------------------------------------------------------------------------
     /** Override of the default implementation to account for versioning. */
-    void updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber=-1) override;
+    //void updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber=-1) override;
 
 
 //=============================================================================
@@ -466,7 +465,7 @@ protected:
 
     /** The assumed fixed muscle-width from which the fiber pennation angle can
         be calculated. */
-    double _muscleWidth;
+    osim_double_adouble _muscleWidth;
 
  /**
     The MuscleLengthInfo struct contains information about the muscle that is
@@ -557,20 +556,20 @@ protected:
        
     */
     struct MuscleLengthInfo{             //DIMENSION         Units      
-        double fiberLength;              //length            m  
-        double fiberLengthAlongTendon;   //length            m
-        double normFiberLength;          //length/length     m/m        
+        osim_double_adouble fiberLength;              //length            m  
+        osim_double_adouble fiberLengthAlongTendon;   //length            m
+        osim_double_adouble normFiberLength;          //length/length     m/m        
                 
-        double tendonLength;             //length            m
-        double normTendonLength;         //length/length     m/m        
-        double tendonStrain;             //length/length     m/m        
+        osim_double_adouble tendonLength;             //length            m
+        osim_double_adouble normTendonLength;         //length/length     m/m        
+        osim_double_adouble tendonStrain;             //length/length     m/m        
                                          //
-        double pennationAngle;           //angle             1/s (rads)        
-        double cosPennationAngle;        //NA                NA         
-        double sinPennationAngle;        //NA                NA         
+        osim_double_adouble pennationAngle;           //angle             1/s (rads)        
+        osim_double_adouble cosPennationAngle;        //NA                NA         
+        osim_double_adouble sinPennationAngle;        //NA                NA         
 
-        double fiberPassiveForceLengthMultiplier;   //NA             NA
-        double fiberActiveForceLengthMultiplier;  //NA             NA
+        osim_double_adouble fiberPassiveForceLengthMultiplier;   //NA             NA
+        osim_double_adouble fiberActiveForceLengthMultiplier;  //NA             NA
         
         SimTK::Vector userDefinedLengthExtras;//NA        NA
 
@@ -624,10 +623,9 @@ protected:
         [1] fiberVelocityAlongTendon is the first derivative of the symbolic
             equation that defines the fiberLengthAlongTendon.
 
-        [2] normFiberVelocity is the fiberVelocity (in m/s) divided by  
-            the optimal length of the fiber (in m) and by the maximum fiber
-            velocity (in optimal-fiber-lengths/s). normFiberVelocity has
-            units of 1/optimal-fiber-length.
+        [2] normFiberVelocity is the fiberVelocity normalized with respect to 
+            the optimal fiber length of the fiber and the maximum fiber velocity
+            defined in fiber-lengths/s.
 
         [3] The sign of the angular velocity is defined using the right 
             hand rule.
@@ -653,16 +651,16 @@ protected:
 
     */
     struct FiberVelocityInfo {              //DIMENSION             UNITS
-        double fiberVelocity;               //length/time           m/s
-        double fiberVelocityAlongTendon;    //length/time           m/s
-        double normFiberVelocity;           //(length/time)/Vmax    NA
+        osim_double_adouble fiberVelocity;               //length/time           m/s
+        osim_double_adouble fiberVelocityAlongTendon;    //length/time           m/s
+        osim_double_adouble normFiberVelocity;           //(length/time)/length  (m/s)/m
                                             //
-        double pennationAngularVelocity;    //angle/time            rad/s
+        osim_double_adouble pennationAngularVelocity;    //angle/time            rad/s
                                             //
-        double tendonVelocity;              //length/time           m/s
-        double normTendonVelocity;          //(length/time)/length  (m/s)/m
+        osim_double_adouble tendonVelocity;              //length/time           m/s
+        osim_double_adouble normTendonVelocity;          //(length/time)/length  (m/s)/m
 
-        double fiberForceVelocityMultiplier;     //force/force           NA
+        osim_double_adouble fiberForceVelocityMultiplier;     //force/force           NA
 
         SimTK::Vector userDefinedVelocityExtras;//NA                  NA
 
@@ -766,26 +764,26 @@ protected:
 
     */
     struct MuscleDynamicsInfo {     //DIMENSION             UNITS
-        double activation;              // NA                   NA
+        osim_double_adouble activation;              // NA                   NA
                                         //
-        double fiberForce;              // force                N
-        double fiberForceAlongTendon;   // force                N
-        double normFiberForce;          // force/force          N/N
-        double activeFiberForce;        // force                N
-        double passiveFiberForce;       // force                N
+        osim_double_adouble fiberForce;              // force                N
+        osim_double_adouble fiberForceAlongTendon;   // force                N
+        osim_double_adouble normFiberForce;          // force/force          N/N
+        osim_double_adouble activeFiberForce;        // force                N
+        osim_double_adouble passiveFiberForce;       // force                N
                                         //
-        double tendonForce;             // force                N
-        double normTendonForce;         // force/force          N/N
+        osim_double_adouble tendonForce;             // force                N
+        osim_double_adouble normTendonForce;         // force/force          N/N
                                         //
-        double fiberStiffness;          // force/length         N/m
-        double fiberStiffnessAlongTendon;//force/length         N/m
-        double tendonStiffness;         // force/length         N/m
-        double muscleStiffness;         // force/length         N/m
+        osim_double_adouble fiberStiffness;          // force/length         N/m
+        osim_double_adouble fiberStiffnessAlongTendon;//force/length         N/m
+        osim_double_adouble tendonStiffness;         // force/length         N/m
+        osim_double_adouble muscleStiffness;         // force/length         N/m
                                         //
-        double fiberActivePower;        // force*velocity       W
-        double fiberPassivePower;       // force*velocity       W
-        double tendonPower;             // force*velocity       W
-        double musclePower;             // force*velocity       W
+        osim_double_adouble fiberActivePower;        // force*velocity       W
+        osim_double_adouble fiberPassivePower;       // force*velocity       W
+        osim_double_adouble tendonPower;             // force*velocity       W
+        osim_double_adouble musclePower;             // force*velocity       W
 
         SimTK::Vector userDefinedDynamicsExtras; //NA          NA
 
@@ -837,9 +835,9 @@ protected:
 
     */
     struct MusclePotentialEnergyInfo {              //DIMENSION             UNITS
-        double fiberPotentialEnergy;     //force*distance    J (Nm)     
-        double tendonPotentialEnergy;    //force*distance    J (Nm)     
-        double musclePotentialEnergy;    //force*distance    J (Nm)
+        osim_double_adouble fiberPotentialEnergy;     //force*distance    J (Nm)     
+        osim_double_adouble tendonPotentialEnergy;    //force*distance    J (Nm)     
+        osim_double_adouble musclePotentialEnergy;    //force*distance    J (Nm)
 
         SimTK::Vector userDefinedPotentialEnergyExtras;//NA                  NA
 
@@ -858,10 +856,10 @@ protected:
 
 
     /** to support deprecated muscles */
-    double _maxIsometricForce;
-    double _optimalFiberLength;
-    double _pennationAngleAtOptimal;
-    double _tendonSlackLength;
+    osim_double_adouble _maxIsometricForce;
+    osim_double_adouble _optimalFiberLength;
+    osim_double_adouble _pennationAngleAtOptimal;
+    osim_double_adouble _tendonSlackLength;
 
 //=============================================================================
 };  // END of class Muscle

@@ -57,7 +57,7 @@ public:
     //=========================================================================
     // OUTPUTS
     //=========================================================================
-    OpenSim_DECLARE_OUTPUT(potential_energy, double,
+    OpenSim_DECLARE_OUTPUT(potential_energy, osim_double_adouble,
                            computePotentialEnergy, SimTK::Stage::Velocity);
 
 //=============================================================================
@@ -95,9 +95,9 @@ public:
      * forces, application location frame, etc. used in conjunction with 
      * getRecordLabels and should return same size Array.
      */
-    virtual OpenSim::Array<double>
+    virtual OpenSim::Array<osim_double_adouble>
     getRecordValues(const SimTK::State& state) const {
-        return OpenSim::Array<double>();
+        return OpenSim::Array<osim_double_adouble>();
     };
 
 
@@ -115,8 +115,8 @@ protected:
 
     /** Deserialization from XML, necessary so that derived classes can 
     (de)serialize. **/
-    Force(SimTK::Xml::Element& node) : Super(node) 
-    {   setNull(); constructProperties(); }
+    //Force(SimTK::Xml::Element& node) : Super(node) 
+    //{   setNull(); constructProperties(); }
 
     //--------------------------------------------------------------------------
     // ModelComponent interface.
@@ -154,7 +154,7 @@ protected:
      * energy of the system.  The default implementation returns 0, which is appropriate for forces
      * that do not contribute to potential energy.
      */
-    virtual double computePotentialEnergy(const SimTK::State& state) const;
+    virtual osim_double_adouble computePotentialEnergy(const SimTK::State& state) const;
     /**
      * Apply a force at a particular point (a "station") on a given body. Note
      * that the point Vec3(0) is the body origin, not necessarily the center
@@ -214,12 +214,12 @@ protected:
      */
     void applyGeneralizedForce(const SimTK::State&  state, 
                                const Coordinate&    coord,
-                               double               force, 
+                               osim_double_adouble               force, 
                                SimTK::Vector&       generalizedForces) const;
 
 protected:
-    void updateFromXMLNode(SimTK::Xml::Element& node,
-                           int versionNumber) override;
+    //void updateFromXMLNode(SimTK::Xml::Element& node,
+    //                       int versionNumber) override;
 
     /** ID for the force in Simbody. */
     SimTK::ResetOnCopy<SimTK::ForceIndex> _index;

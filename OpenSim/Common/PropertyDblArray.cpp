@@ -49,7 +49,7 @@ using namespace std;
  */
 PropertyDblArray::
 PropertyDblArray(const string &aName,
-    const Array<double> &aArray) :
+    const Array<osim_double_adouble> &aArray) :
     Property_Deprecated(Property_Deprecated::DblArray,aName), _array(0.0)
 {
     _array = aArray;
@@ -70,7 +70,7 @@ PropertyDblArray() :
  */
 PropertyDblArray::
 PropertyDblArray(const string &aName,
-    int aSize,const double aArray[]) :
+    int aSize,const osim_double_adouble aArray[]) :
     Property_Deprecated(Property_Deprecated::DblArray,aName), _array(0.0)
 {
     if(aSize<=0) return;
@@ -162,7 +162,7 @@ getTypeName() const
  * @param aArray Array to which this property is to be assigned.
  */
 void PropertyDblArray::
-setValue(const Array<double>& aArray)
+setValue(const Array<osim_double_adouble>& aArray)
 {
     _array = aArray;
 }
@@ -174,7 +174,7 @@ setValue(const Array<double>& aArray)
  * @param aValue Array to which this property is to be assigned.
  */
 void PropertyDblArray::
-setValue(int aSize,const double aArray[])
+setValue(int aSize,const osim_double_adouble aArray[])
 {
     _array.setSize(0);
     if(aSize<=0) return;
@@ -188,7 +188,7 @@ setValue(int aSize,const double aArray[])
  *
  * @return Reference to the value of this property.
  */
-Array<double>& PropertyDblArray::
+Array<osim_double_adouble>& PropertyDblArray::
 getValueDblArray()
 {
     return(_array);
@@ -199,7 +199,7 @@ getValueDblArray()
  *
  * @return Reference to the value of this property.
  */
-const Array<double>& PropertyDblArray::
+const Array<osim_double_adouble>& PropertyDblArray::
 getValueDblArray() const
 {
     return(_array);

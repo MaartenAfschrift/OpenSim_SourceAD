@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------- *
- *                       OpenSim:  testC3DFileAdapter.cpp                     *
+ *                            OpenSim:  testC3DFileAdapter.cpp                *
  * -------------------------------------------------------------------------- *
  * The OpenSim API is a toolkit for musculoskeletal modeling and simulation.  *
  * See http://opensim.stanford.edu and the NOTICE file for more information.  *
@@ -22,7 +22,6 @@
 
 #include "OpenSim/Common/C3DFileAdapter.h"
 #include "OpenSim/Common/TRCFileAdapter.h"
-#include "OpenSim/Common/STOFileAdapter.h"
 #include <OpenSim/Auxiliary/auxiliaryTestFunctions.h>
 
 #include <vector>
@@ -32,167 +31,75 @@
 #include <thread>
 #include <cmath>
 
-template<typename ETY = SimTK::Real>
-void compare_tables(const OpenSim::TimeSeriesTable_<ETY>& table1,
-            const OpenSim::TimeSeriesTable_<ETY>& table2,
-            const double tolerance = SimTK::SignificantReal) {
+template<typename> class shrik;
+
+void compare_tables(const OpenSim::TimeSeriesTableVec3& table1,
+                    const OpenSim::TimeSeriesTableVec3& table2) {
     using namespace OpenSim;
     try {
         OPENSIM_THROW_IF(table1.getColumnLabels() != table2.getColumnLabels(),
                          Exception,
                          "Column labels are not the same for tables.");
-
-        ASSERT_EQUAL( table1.getIndependentColumn(), 
-                      table2.getIndependentColumn(), tolerance,
-                       __FILE__, __LINE__,
-                         "Independent columns are not equivalent.");
+        OPENSIM_THROW_IF(table1.getIndependentColumn() != 
+                         table2.getIndependentColumn(),
+                         Exception,
+                         "Independent columns are not the same for tables.");
     } catch (const OpenSim::KeyNotFound&) {}
 
     const auto& matrix1 = table1.getMatrix();
     const auto& matrix2 = table2.getMatrix();
-
     for(int r = 0; r < matrix1.nrow(); ++r)
         for(int c = 0; c < matrix1.ncol(); ++c) {
             auto elt1 = matrix1.getElt(r, c); 
             auto elt2 = matrix2.getElt(r, c);
-
-            ASSERT_EQUAL(elt1, elt2, tolerance, __FILE__, __LINE__,
-                "Element at row, " + std::to_string(r) + " col, " +
-                std::to_string(c) + " failed to have matching value.");
+            ASSERT_EQUAL(elt1[0], elt2[0], 1e-6);
+            ASSERT_EQUAL(elt1[1], elt2[1], 1e-6);
+            ASSERT_EQUAL(elt1[2], elt2[2], 1e-6);
         }
-}
-
-template<typename ETY = SimTK::Real>
-void downsample_table(OpenSim::TimeSeriesTable_<ETY>& table,
-    const unsigned int increment) {
-    for (size_t r = table.getNumRows() - 2; r > 0; --r) {
-        if (r%increment)
-            table.removeRowAtIndex(r);
-    }
 }
 
 
 void test(const std::string filename) {
     using namespace OpenSim;
-    using namespace std;
-
-    // The walking C3D files included in this test should not take more
-    // than 40ms on most hardware. We make the max time 100ms to account
-    // for potentially slower CI machines.
-    const double MaximumLoadTimeInMS = 100;
     
     std::clock_t startTime = std::clock();
-    C3DFileAdapter c3dFileAdapter{};
-    auto tables = c3dFileAdapter.read(filename);
+    auto tables = C3DFileAdapter::read(filename);
 
-    double loadTime = 1.e3*(std::clock() - startTime) / CLOCKS_PER_SEC;
+    std::cout << "\nC3DFileAdapter '" << filename << "' read time = " 
+        << 1.e3*(std::clock() - startTime) / CLOCKS_PER_SEC 
+        << "ms\n" << std::endl;
 
-    cout << "\tC3DFileAdapter '" << filename << "' loaded in " 
-        << loadTime << "ms" << endl;
+    auto& marker_table = tables.at("markers");
+    auto&  force_table = tables.at("forces");
 
-/*  Disabled performance test because Travis CI is consistently unable to
-    meet this timing requirement. Consider PR#2221 to address this issue
-    longer term.
-    #ifdef NDEBUG
-    ASSERT(loadTime < MaximumLoadTimeInMS, __FILE__, __LINE__,
-        "Unable to load '" + filename + "' within " + 
-        to_string(MaximumLoadTimeInMS) + "ms.");
-    #endif
-*/
-
-    std::shared_ptr<TimeSeriesTableVec3> marker_table = c3dFileAdapter.getMarkersTable(tables);
-    std::shared_ptr<TimeSeriesTableVec3> force_table = c3dFileAdapter.getForcesTable(tables);
-    downsample_table(*marker_table, 10);
-    downsample_table(*force_table, 100);
-
-    size_t ext = filename.rfind(".");
-    std::string base = filename.substr(0, ext);
-
-    const std::string marker_file = base + "_markers.trc";
-    const std::string forces_file = base + "_grfs.sto";
-
-    ASSERT(marker_table->getNumRows() > 0, __FILE__, __LINE__,
-        "Failed to read marker data from " + filename);
-
-    marker_table->updTableMetaData().setValueForKey("Units", 
-                                                    std::string{"mm"});
-    TRCFileAdapter trc_adapter{};
-    std::clock_t t0 = std::clock();
-    trc_adapter.write(*marker_table, marker_file);
-    cout << "\tWrote '" << marker_file << "' in "
-        << 1.e3*(std::clock() - t0) / CLOCKS_PER_SEC << "ms" << endl;
-
-    ASSERT(force_table->getNumRows() > 0, __FILE__, __LINE__,
-        "Failed to read forces data from " + filename);
-
-    force_table->updTableMetaData().setValueForKey("Units", 
-                                                    std::string{"mm"});
-    STOFileAdapter sto_adapter{};
-    t0 = std::clock();
-    sto_adapter.write((force_table->flatten()), forces_file);
-    cout << "\tWrote'" << forces_file << "' in "
-        << 1.e3*(std::clock() - t0) / CLOCKS_PER_SEC << "ms" << endl;
-
-    // Verify that marker data was written out and can be read in
-    t0 = std::clock();
-    TimeSeriesTable_<SimTK::Vec3> markers(marker_file);
-    TimeSeriesTable_<SimTK::Vec3> std_markers("std_" + marker_file);
-    cout << "\tRead'" << marker_file << "' and its standard in "
-        << 1.e3*(std::clock() - t0) / CLOCKS_PER_SEC << "ms" << endl;
-
-    // Compare C3DFileAdapter read-in and written marker data
-    compare_tables<SimTK::Vec3>(markers, *marker_table);
-    // Compare C3DFileAdapter written marker data to standard
-    // Note std exported from Mokka with only 5 decimal places 
-    compare_tables<SimTK::Vec3>(markers, std_markers, 1e-4);
-
-    cout << "\tMarkers " << marker_file << " equivalent to standard." << endl;
-
-    // Verify that grfs data was written out and can be read in
-    TimeSeriesTable forces(forces_file);
-    TimeSeriesTable std_forces("std_" + forces_file);
-    // Compare C3DFileAdapter read-in and written forces data
-    compare_tables<SimTK::Vec3>(forces.pack<SimTK::Vec3>(), 
-                                *force_table,
-                                SimTK::SqrtEps);
-    // Compare C3DFileAdapter written forces data to standard
-    // Note std generated using MATLAB C3D processing scripts 
-    compare_tables(forces, std_forces, SimTK::SqrtEps);
-
-    cout << "\tForces " << forces_file << " equivalent to standard." << endl;
-
-    t0 = std::clock();
-    // Reread in C3D file with forces resolved to the COP 
-    auto c3dFileAdapter2 = C3DFileAdapter{};
-    c3dFileAdapter2.setLocationForForceExpression(C3DFileAdapter::ForceLocation::CenterOfPressure);
-    auto tables2 = c3dFileAdapter2.read(filename);
+    std::cout << marker_table->toString({6, 7, 8, 9, 10}) << std::endl;
+    std::cout <<  force_table->toString({6, 7, 8, 9, 10}) << std::endl;
     
-    loadTime = 1.e3*(std::clock() - t0) / CLOCKS_PER_SEC;
-    cout << "\tC3DFileAdapter '" << filename << "' read with forces at COP in "
-        << loadTime << "ms" << endl;
+    {
+        using namespace OpenSim;
+        using MT = TimeSeriesTableVec3;
+        using FT = TimeSeriesTableVec3;
 
-    #ifdef NDEBUG
-    ASSERT(loadTime < MaximumLoadTimeInMS, __FILE__, __LINE__,
-        "Unable to load '" + filename + "' within " +
-        to_string(MaximumLoadTimeInMS) + "ms.");
-    #endif
-    std::shared_ptr<TimeSeriesTableVec3> force_table_cop = c3dFileAdapter.getForcesTable(tables2);
-    downsample_table(*force_table_cop, 100);
+        MT marker_table1{filename, "markers"};
+        FT  force_table1{filename, "forces"};
 
-    sto_adapter.write(force_table_cop->flatten(), "cop_"+ forces_file);
+        compare_tables(*marker_table, marker_table1);
+        compare_tables( *force_table,  force_table1);
+    }
 
-    TimeSeriesTable std_forces_cop("std_cop_" + forces_file);
-    // Compare C3DFileAdapter written forces data to standard
-    // Note std generated using MATLAB C3D processing scripts 
-    compare_tables<SimTK::Vec3>(*force_table_cop, 
-                                std_forces_cop.pack<SimTK::Vec3>(),
-                                SimTK::SqrtEps);
+    if(marker_table->getNumRows() != 0) {
+        marker_table->updTableMetaData().setValueForKey("Units", 
+                                                        std::string{"mm"});
+        TRCFileAdapter trc_adapter{};
+        trc_adapter.write(*marker_table, filename + ".markers.trc");
+    }
 
-    cout << "\tcop_" << forces_file << " is equivalent to its standard."<< endl;
-
-    cout << "\ttestC3DFileAdapter '" << filename << "' completed in "
-        << 1.e3*(std::clock() - startTime) / CLOCKS_PER_SEC  << "ms" << endl;
-
+    if(force_table->getNumRows() != 0) {
+        force_table->updTableMetaData().setValueForKey("Units", 
+                                                       std::string{"mm"});
+        TRCFileAdapter trc_adapter{};
+        trc_adapter.write(*force_table, filename + ".forces.trc");
+    }
 }
 
 int main() {
@@ -201,17 +108,9 @@ int main() {
     filenames.push_back("walking5.c3d");
 
     for(const auto& filename : filenames) {
-        std::cout << "\nTest reading '" + filename + "'." << std::endl;
-        try {
-            test(filename);
-        }
-        catch (const std::exception& ex) {
-            std::cout << "testC3DFileAdapter FAILED: " << ex.what() << std::endl;
-            return 1;
-        }
+        std::cout << "Test reading '" + filename + "'." << std::endl;
+        test(filename);
     }
-
-    std::cout << "\nAll testC3DFileAdapter cases passed." << std::endl;
 
     return 0;
 }

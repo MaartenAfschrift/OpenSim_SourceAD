@@ -52,7 +52,7 @@ public:
     // A variant that uses basic types for use by GUI, e.g. OpenSimContext
     /** <b>(Deprecated)</b> Old PathPoint interface */
     DEPRECATED_14("Use setLocation() instead.")
-    void setLocationCoord(const SimTK::State&s, int aXYZ, double aValue) {
+    void setLocationCoord(const SimTK::State&s, int aXYZ, osim_double_adouble aValue) {
         assert(aXYZ>=0 && aXYZ<=2);
         updStation().upd_location()[aXYZ]=aValue;
     }
@@ -66,7 +66,7 @@ public:
     void changeBodyPreserveLocation(const SimTK::State& s,
                                     const PhysicalFrame& body);
 
-    void extendScale(const SimTK::State& s, const ScaleSet& scaleSet) override;
+    void scale(const SimTK::Vec3& scaleFactors) override;
 
     SimTK::Vec3 getdPointdQ(const SimTK::State& s) const override {
         return SimTK::Vec3(0);

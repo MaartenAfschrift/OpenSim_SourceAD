@@ -339,9 +339,6 @@ int main()
         osimModel.setName("testAddComponents_model");
         addComponentsToModel(osimModel);
 
-        osimModel.printSubcomponentInfo();
-        osimModel.finalizeConnections(); // Needed so sockets have correct absolute path on print
-
         // Save the model to a file
         osimModel.print(osimModel.getName()+".osim");
 
@@ -364,18 +361,20 @@ int main()
         // Compute initial conditions for muscles
         osimModel.equilibrateMuscles(si);
 
+        // Create the integrator for integrating system dynamics
+        SimTK::RungeKuttaMersonIntegrator integrator(osimModel.getMultibodySystem());
+        integrator.setAccuracy(1.0e-6);
+        
         // Create the manager managing the forward integration and its outputs
-        Manager manager(osimModel);
-        manager.setIntegratorAccuracy(1.0e-6);
+        Manager manager(osimModel,  integrator);
 
         // Print out details of the model
         osimModel.printDetailedInfo(si, cout);
 
         // Integrate from initial time to final time
         si.setTime(initialTime);
-        manager.initialize(si);
         cout<<"\nIntegrating from "<<initialTime<<" to "<<finalTime<<endl;
-        manager.integrate(finalTime);
+        manager.integrate(si, finalTime);
 
         //////////////////////////////
         // SAVE THE RESULTS TO FILE //

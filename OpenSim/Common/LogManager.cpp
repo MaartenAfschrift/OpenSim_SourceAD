@@ -102,18 +102,15 @@ sync()
 LogManager::LogManager()
 {
     // Seems to be causing crashes in the GUI... maybe a multithreading issue.
-
+#if 1
     // Change the underlying streambuf for the standard cout/cerr to our custom buffers
     std::cout.rdbuf(&out);
     std::cerr.rdbuf(&err);
 
-    // Redirect output to the terminal
+    // Example setup: redirect output to both the terminal and an output file
     out.addLogCallback(new StreamLogCallback(&cout,false));
-    err.addLogCallback(new StreamLogCallback(&cerr,false));
-
-    // Optional: Redirect output to file
-#if OPENSIM_LOG_TO_FILE
     out.addLogCallback(new StreamLogCallback("out.log"));
+    err.addLogCallback(new StreamLogCallback(&cerr,false));
     err.addLogCallback(new StreamLogCallback("err.log"));
 #endif
 }

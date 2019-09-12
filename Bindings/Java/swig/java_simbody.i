@@ -3,6 +3,8 @@
 
 #pragma SWIG nowarn=822,451,503,516,325,401
 
+%include java_exception.i
+
 %{
 #include <SimTKsimbody.h>
 #include <OpenSim/Common/Object.h>
@@ -10,8 +12,6 @@
 
 using namespace SimTK;
 %}
-
-%include "java_preliminaries.i";
 
 /* This file is for creation/handling of arrays */
 %include "arrays_java.i";
@@ -96,66 +96,74 @@ public:
 %include exception.i
 
 %extend SimTK::RowVectorBase<double> {
-     double get(int i) {
+     double get(size_t i) {
          if(i >= $self->nelt())
              throw std::out_of_range{"Index out of Range."};
          
          return $self->getElt(0, i);
      }
 
-     void set(int i, double value) {
+     double set(size_t i, double value) {
          if(i >= $self->nelt())
              throw std::out_of_range{"Index out of Range."};
 
+         double prevValue = $self->getElt(0, i);
          $self->updElt(0, i) = value;
+         return prevValue;
      }
 }
 
 %extend SimTK::VectorBase<double> {
-     double get(int i) {
+     double get(size_t i) {
          if(i >= $self->nelt())
              throw std::out_of_range{"Index out of Range."};
 
          return $self->getElt(i, 0);
      }
 
-     void set(int i, double value) {
+     double set(size_t i, double value) {
          if(i >= $self->nelt())
              throw std::out_of_range{"Index out of Range."};
 
+         double prevValue = $self->getElt(i, 0);
          $self->updElt(i, 0) = value;
+         return prevValue;
      }
 }
 
 %extend SimTK::RowVectorBase<SimTK::Vec3> {
-     Vec3 get(int i) {
+     Vec3 get(size_t i) {
          if(i >= $self->nelt())
              throw std::out_of_range{"Index out of Range."};
 
          return $self->getElt(0, i);
      }
 
-     void set(int i, Vec3 value) {
+     Vec3 set(size_t i, Vec3 value) {
          if(i >= $self->nelt())
              throw std::out_of_range{"Index out of Range."};
 
+         Vec3 prevValue = $self->getElt(0, i);
          $self->updElt(0, i) = value;
+         return prevValue;
      }
 }
 
 %extend SimTK::VectorBase<SimTK::Vec3> {
-     Vec3 get(int i) {
+     Vec3 get(size_t i) {
          if(i >= $self->nelt())
              throw std::out_of_range{"Index out of Range."};
 
          return $self->getElt(i, 0);
      }
 
-     void set(int i, Vec3 value) {
+     Vec3 set(size_t i, Vec3 value) {
          if(i >= $self->nelt())
              throw std::out_of_range{"Index out of Range."};
 
+         Vec3 prevValue = $self->getElt(i, 0);
          $self->updElt(i, 0) = value;
+         return prevValue;
      }
 }
 

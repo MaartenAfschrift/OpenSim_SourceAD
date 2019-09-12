@@ -43,13 +43,17 @@
 #include <string>
 #include "Array.h"
 #include "ArrayPtrs.h"
+#include "Set.h"
+
+#include "osim_adouble.h"
 
 
 #ifdef _WIN32
 
 extern template class OSIMCOMMON_API Array<bool>;
 extern template class OSIMCOMMON_API Array<int>;
-extern template class OSIMCOMMON_API Array<double>;
+//extern template class OSIMCOMMON_API Array<double>;
+extern template class OSIMCOMMON_API Array<osim_double_adouble>;
 extern template class OSIMCOMMON_API Array<std::string>;
 
 #endif  // _WIN32

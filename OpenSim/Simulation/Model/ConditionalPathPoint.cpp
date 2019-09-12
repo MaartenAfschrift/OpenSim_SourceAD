@@ -57,51 +57,25 @@ ConditionalPathPoint::~ConditionalPathPoint()
  * Override default implementation by object to intercept and fix the XML node
  * underneath the model to match current version
  */
-void ConditionalPathPoint::updateFromXMLNode(SimTK::Xml::Element& node, 
-                                             int versionNumber)
-{
-    if (versionNumber <= 20001) {
-        // Version has to be 1.6 or later, otherwise assert
-        XMLDocument::renameChildNode(node, "coordinates", "coordinate");
-    }
-    if (versionNumber < 30505) {
-        // replace old properties with latest use of Sockets
-        SimTK::Xml::element_iterator coord = node.element_begin("coordinate");
-        std::string coordName("");
-        if (coord != node.element_end())
-            coord->getValueAs<std::string>(coordName);
-
-        // As a backup, we will specify just the coordinate name as the
-        // connectee name...
-        std::string connectee_name = coordName;
-
-        // ...but if possible, we try to create a relative path from this
-        // PathPoint to the coordinate.
-        SimTK::Xml::Element coordElem = 
-            XMLDocument::findElementWithName(node, coordName);
-        if (coordElem.isValid() && coordElem.hasParentElement()) {
-            // We found an Xml Element with the coordinate's name.
-            std::string jointName =
-                coordElem.getParentElement().getOptionalAttributeValue("name");
-            // PathPoints in pre-4.0 models are necessarily
-            // 3 levels deep (model, muscle, geometry path), and Coordinates 
-            // are necessarily 2 levels deep.
-            // Here we create the correct relative path (accounting for sets
-            // being components).
-            if (jointName.empty())
-                jointName = IO::Lowercase(
-                        coordElem.getParentElement().getElementTag());
-            connectee_name = XMLDocument::updateConnecteePath30517(
-                    "jointset", jointName + "/" + coordName);
-        }
-
-        XMLDocument::addConnector(node, "Connector_Coordinate_", "coordinate",
-                connectee_name);
-    }
-
-    // Call base class now assuming _node has been corrected for current version
-    Super::updateFromXMLNode(node, versionNumber);
-}
+//void ConditionalPathPoint::updateFromXMLNode(SimTK::Xml::Element& node, 
+//                                             int versionNumber)
+//{
+//    if (versionNumber <= 20001) {
+//        // Version has to be 1.6 or later, otherwise assert
+//        XMLDocument::renameChildNode(node, "coordinates", "coordinate");
+//    }
+//    if (versionNumber < 30505) {
+//        // replace old properties with latest use of Sockets
+//        SimTK::Xml::element_iterator coord = node.element_begin("coordinate");
+//        std::string coord_name("");
+//        if (coord != node.element_end())
+//            coord->getValueAs<std::string>(coord_name);
+//        XMLDocument::addConnector(node, "Connector_Coordinate_", "coordinate", coord_name);
+//    }
+//
+//    // Call base class now assuming _node has been corrected for current version
+//    Super::updateFromXMLNode(node, versionNumber);
+//}
 
 //_____________________________________________________________________________
 /*
@@ -109,7 +83,7 @@ void ConditionalPathPoint::updateFromXMLNode(SimTK::Xml::Element& node,
  */
 void ConditionalPathPoint::constructProperties()
 {
-    Array<double> defaultRange(0.0, 2); //two values of the range
+    Array<osim_double_adouble> defaultRange(0.0, 2); //two values of the range
     constructProperty_range(defaultRange);
 }
 
@@ -138,7 +112,7 @@ const Coordinate& ConditionalPathPoint::getCoordinate() const
 /*
  * Set the range min.
  */
-void ConditionalPathPoint::setRangeMin(double minVal)
+void ConditionalPathPoint::setRangeMin(osim_double_adouble minVal)
 {
     set_range(0, minVal);
 }
@@ -147,7 +121,7 @@ void ConditionalPathPoint::setRangeMin(double minVal)
 /*
  * Set the range max.
  */
-void ConditionalPathPoint::setRangeMax(double maxVal)
+void ConditionalPathPoint::setRangeMax(osim_double_adouble maxVal)
 {
     set_range(1, maxVal);
 }
@@ -160,7 +134,7 @@ void ConditionalPathPoint::setRangeMax(double maxVal)
 bool ConditionalPathPoint::isActive(const SimTK::State& s) const
 {
     if (getSocket<Coordinate>("coordinate").isConnected()) {
-        double value = getConnectee<Coordinate>("coordinate").getValue(s);
+        osim_double_adouble value = getConnectee<Coordinate>("coordinate").getValue(s);
         if (value >= get_range(0) - 1e-5 &&
              value <= get_range(1) + 1e-5)
             return true;

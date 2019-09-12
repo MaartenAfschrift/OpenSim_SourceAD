@@ -2,15 +2,15 @@
 //osimTools
 %include <OpenSim/Tools/osimToolsDLL.h>
 %include <OpenSim/Tools/IKTask.h>
-%template(SetIKTasks) OpenSim::Set<OpenSim::IKTask, OpenSim::Object>;
+%template(SetIKTasks) OpenSim::Set<OpenSim::IKTask>;
 %include <OpenSim/Tools/IKMarkerTask.h>
 %include <OpenSim/Tools/IKCoordinateTask.h>
 %include <OpenSim/Tools/IKTaskSet.h>
 %include <OpenSim/Tools/MarkerPair.h>
-%template(SetMarkerPairs) OpenSim::Set<OpenSim::MarkerPair, OpenSim::Object>;
+%template(SetMarkerPairs) OpenSim::Set<OpenSim::MarkerPair>;
 %include <OpenSim/Tools/MarkerPairSet.h>
 %include <OpenSim/Tools/Measurement.h>
-%template(SetMeasurements) OpenSim::Set<OpenSim::Measurement, OpenSim::Object>;
+%template(SetMeasurements) OpenSim::Set<OpenSim::Measurement>;
 %include <OpenSim/Tools/MeasurementSet.h>
 %include <OpenSim/Tools/GenericModelMaker.h>
 %include <OpenSim/Tools/ModelScaler.h>
@@ -26,7 +26,7 @@
 %include <OpenSim/Tools/CMC_Task.h>
 %include <OpenSim/Tools/CMC_Joint.h>
 %include <OpenSim/Tools/CMC_Point.h>
-%template (SetTrackingTasks) OpenSim::Set<OpenSim::TrackingTask, OpenSim::Object>;
+%template (SetTrackingTasks) OpenSim::Set<OpenSim::TrackingTask>;
 %include <OpenSim/Tools/CMC_TaskSet.h>
 
 %include <OpenSim/Tools/CMCTool.h>

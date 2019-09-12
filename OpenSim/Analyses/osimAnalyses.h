@@ -23,7 +23,6 @@
  * limitations under the License.                                             *
  * -------------------------------------------------------------------------- */
 
-#include "OutputReporter.h"
 #include "Kinematics.h"
 #include "Actuation.h"
 #include "ForceReporter.h"

@@ -1,5 +1,5 @@
-#ifndef OPENSIM_PISTON_ACTUATOR_H_
-#define OPENSIM_PISTON_ACTUATOR_H_
+#ifndef _PistonActuator_h_
+#define _PistonActuator_h_
 /* -------------------------------------------------------------------------- *
  *                         OpenSim:  PistonActuator.h                         *
  * -------------------------------------------------------------------------- *
@@ -31,16 +31,18 @@
 
 //=============================================================================
 //=============================================================================
-/** A class that implements a force actuator acting between two points on two
- * bodies. The direction of the force is along the line between the points,
- * with a positive value acting to expand the distance between them.  This
- * actuator has no states; the control is simply the force to be applied to the
- * model.
+/**
+ * A class that implements a force actuator acting between two points on two bodies.
+ * The direction of the force is along the line between the points, with a positive
+ * value acting to expand the distance between them.  This actuator has no states; 
+ * the control is simply the force to be applied to the model.
  *
- * @author Matt DeMers */
+ * @author Matt DeMers
+ * @version 2.0
+ */
 namespace OpenSim { 
 
-class PhysicalFrame;
+class Body;
 class Model;
 
 class PistonActuator : public ScalarActuator {
@@ -52,28 +54,37 @@ OpenSim_DECLARE_CONCRETE_OBJECT(PistonActuator, ScalarActuator);
 protected:
     // PROPERTIES
 
-    // frameA is described below..
+    /** Name of Body to which the Body actuator is applied. */
+    OpenSim_DECLARE_PROPERTY(bodyA, std::string,
+    "Name of Body to which the Body actuator is applied.");
+
+    /** Name of Body to which the equal and opposite torque is applied. */
+    OpenSim_DECLARE_PROPERTY(bodyB, std::string,
+    "Name of Body to which the equal and opposite torque is applied.");
+
+    /** Point of application on each body. */
     OpenSim_DECLARE_PROPERTY(pointA, SimTK::Vec3,
-    "Point of application on frameA.");
+    "Point of application on each body.");
 
+    /** Name of Body to which the equal and opposite torque is applied. */
     OpenSim_DECLARE_PROPERTY(pointB, SimTK::Vec3,
-    "Point of application on frameB.");
+    "Point of application on each body.");
 
+    /** bool to indicate whether or not the points are expressed in global frame*/
     OpenSim_DECLARE_PROPERTY(points_are_global, bool,
     "bool to indicate whether or not the points are expressed in global frame.");
 
+    /** Optimal force. */
     OpenSim_DECLARE_PROPERTY(optimal_force, double,
-    "Force = control * optimal_force.");
+    "Optimal force.");
 
-    // SOCKETS
+    /** Corresponding Body to which the force actuator is applied. */
+    Body *_bodyA;
 
-    // Sockets allow this actuator to access the PhysicalFrames (e.g., bodies)
-    // to which this actuator applies force.
-    OpenSim_DECLARE_SOCKET(frameA, PhysicalFrame,
-    "The frame to which this actuator applies force.");
+    /** Corresponding Body to which the equal and force torque is applied. */
+    Body *_bodyB;
 
-    OpenSim_DECLARE_SOCKET(frameB, PhysicalFrame,
-    "The frame to which this actuator applies an equal and opposite force.");
+    // INTERNAL WORKING VARIABLES
 
 //=============================================================================
 // METHODS
@@ -82,9 +93,10 @@ protected:
     // CONSTRUCTION
     //--------------------------------------------------------------------------
 public:
-    PistonActuator();
-    PistonActuator(const PhysicalFrame& frameA, const PhysicalFrame& frameB);
+    PistonActuator( std::string aBodyNameA="", std::string abodyNameB="");
+    virtual ~PistonActuator();
 private:
+    void setNull();
     void constructProperties();
 
 public:
@@ -92,14 +104,11 @@ public:
     //--------------------------------------------------------------------------
     // GET AND SET
     //--------------------------------------------------------------------------
-    /** Set the PhysicalFrame (e.g., Body) to which the Body actuator is
-     * applied. */
-    void setFrameA(const PhysicalFrame& frameA);
-    /** Set the generalized Body to which the equal and opposite Body actuation
-     * is applied. */
-    void setFrameB(const PhysicalFrame& frameB);
-    const PhysicalFrame& getFrameA() const;
-    const PhysicalFrame& getFrameB() const;
+    // GENERALIZED Body
+    void setBodyA(Body* aBody);
+    void setBodyB(Body* aBody);
+    Body* getBodyA() const;
+    Body* getBodyB() const;
 
     // Force points of application
     void setPointA(SimTK::Vec3 aPosition) { set_pointA(aPosition); } ;
@@ -112,33 +121,38 @@ public:
     bool getPointsAreGlobal() {return get_points_are_global(); };
 
     // OPTIMAL FORCE
-    /** The force applied by this actuator is its control signal multiplied
-     * by this optimal force. */
     void setOptimalForce(double aOptimalForce);
     double getOptimalForce() const override;
-    /** This is the absolute value of the force generated by this actuator
-     * divided by its optimal force. */
-    double getStress(const SimTK::State& s) const override;
+    // STRESS
+#ifndef SWIG
+    double getStress( const SimTK::State& s ) const override;
     //--------------------------------------------------------------------------
-    // FORCE INTERFACE
+    // APPLICATION
     //--------------------------------------------------------------------------
-    /** Apply the actuator force to frameA and frameB. */
-    void computeForce(const SimTK::State& s, 
+    virtual void computeForce(const SimTK::State& s, 
                               SimTK::Vector_<SimTK::SpatialVec>& bodyForces,
                               SimTK::Vector& generalizedForces) const override;
 
     //--------------------------------------------------------------------------
-    // ACTUATOR INTERFACE
+    // COMPUTATIONS
     //--------------------------------------------------------------------------
-    /** Compute the control-dependent force magnitude applied by this actuator.
-     */
-    double computeActuation(const SimTK::State& s) const override;
+    
+    double computeActuation( const SimTK::State& s) const override;
+
+#endif
+    // Setup method to initialize Body reference
+    void extendConnectToModel(Model& aModel) override;
+
+    //--------------------------------------------------------------------------
+    // XML
+    //--------------------------------------------------------------------------
+    void updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber=-1) override;
 
 //=============================================================================
-}; // END of class PistonActuator
+};  // END of class PistonActuator
 
-} //namespace OpenSim
+}; //namespace
 //=============================================================================
 //=============================================================================
 
-#endif // OPENSIM_PISTON_ACTUATOR_H_
+#endif // __PistonActuator_h__

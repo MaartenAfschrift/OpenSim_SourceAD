@@ -41,14 +41,14 @@ class TestSockets(unittest.TestCase):
 
         # Check that the connectees point to the correct objects.
         assert (shoulder.getConnectee("child_frame").this ==
-                shoulder.getComponent("r_humerus_offset").this)
+                model.getBodySet().get("r_humerus").this)
 
         assert (
             type(shoulder.getSocket("child_frame").getConnecteeAsObject())
             == osim.OpenSimObject)
         # In Python, we are able to get the concrete type from this method.
         # by using a SWIG typemap(out).
-        assert type(shoulder.getConnectee("child_frame")) == osim.PhysicalOffsetFrame
+        assert type(shoulder.getConnectee("child_frame")) == osim.Body
 
     def test_iterate_sockets(self):
         model = osim.Model(os.path.join(test_dir, "arm26.osim"))
@@ -134,7 +134,7 @@ class TestInputsOutputs(unittest.TestCase):
         # AbstractChannel.
         coord = model.getCoordinateSet().get(0)
         self.assertEquals(coord.getOutput('speed').getChannel('').getPathName(),
-                '/jointset/r_shoulder/r_shoulder_elev|speed')
+                '/arm26/r_shoulder/r_shoulder_elev|speed')
 
         # Access the value of a concrete Channel.
         # TODO Concrete channels are not wrapped yet.
@@ -211,8 +211,8 @@ class TestInputsOutputs(unittest.TestCase):
         s = m.initSystem()
 
         # Access and iterate through AbstractInputs, using names.
-        expectedLabels = ['/jointset/pin/pin_coord_0|value', 'spd',
-                          '/source|column:col1', 'second_col']
+        expectedLabels = ['/model_/pin/pin_coord_0|value', 'spd',
+                          '/model_/source|column:col1', 'second_col']
         i = 0
         for name in rep.getInputNames():
             # Actually, there is only one input, which we connected to 4
@@ -255,18 +255,15 @@ class TestInputsOutputs(unittest.TestCase):
             reporter = osim.TableReporterVec3()
             reporter.setName('reporter')
             reporter.set_report_time_interval(0.1)
-
             reporter.addToReport(model.getOutput('com_position'))
-
-            model.addComponent(reporter)
-            model.finalizeConnections()
-
             reporter.getInput('inputs').setAlias(0, 'com_pos')
 
             # Display what input-output connections look like in XML
             # (in .osim files).
             print("Reporter input-output connections in XML:\n" + \
                   reporter.dump())
+
+            model.addComponent(reporter)
 
             model.printToXML(model_filename)
 

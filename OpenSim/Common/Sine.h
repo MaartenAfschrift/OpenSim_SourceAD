@@ -50,16 +50,16 @@ protected:
 // PROPERTIES
 //==============================================================================
 
-    OpenSim_DECLARE_PROPERTY(amplitude, double,
+    OpenSim_DECLARE_PROPERTY(amplitude, osim_double_adouble,
         "The amplitude of the sinusoidal function.");
 
-    OpenSim_DECLARE_PROPERTY(omega, double,
+    OpenSim_DECLARE_PROPERTY(omega, osim_double_adouble,
         "The angular frequency (omega) in radians/sec.");
 
-    OpenSim_DECLARE_PROPERTY(phase, double,
+    OpenSim_DECLARE_PROPERTY(phase, osim_double_adouble,
         "The phase shift of the sinusoidal function.");
 
-    OpenSim_DECLARE_PROPERTY(offset, double,
+    OpenSim_DECLARE_PROPERTY(offset, osim_double_adouble,
         "The DC offset in the sinusoidal function.");
 
 //=============================================================================
@@ -72,7 +72,7 @@ public:
     }
 
     // Convenience Constructor
-    Sine(double amplitude, double omega, double phase, double offset=0) : Sine()
+    Sine(osim_double_adouble amplitude, osim_double_adouble omega, osim_double_adouble phase, osim_double_adouble offset=0) : Sine()
     {
         set_amplitude(amplitude);
         set_omega(omega);
@@ -85,12 +85,12 @@ public:
     //--------------------------------------------------------------------------
     // EVALUATION
     //--------------------------------------------------------------------------
-    double calcValue(const SimTK::Vector& x) const override {
+	osim_double_adouble calcValue(const SimTK::Vector& x) const override {
         return get_amplitude()*sin(get_omega()*x[0] + get_phase())
             + get_offset();
     }
     
-    double calcDerivative(const std::vector<int>& derivComponents,
+	osim_double_adouble calcDerivative(const std::vector<int>& derivComponents,
         const SimTK::Vector& x) const override {
         int n = (int)derivComponents.size();
         return get_amplitude()*pow(get_omega(),n) * 

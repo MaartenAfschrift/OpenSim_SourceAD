@@ -53,18 +53,15 @@ const std::string modelFilename = "arm26.osim";
 // to recompose existing components, this will need continual updating. For example,
 // Joint's often add PhysicalOffsetFrames to handle what used to be baked in location
 // and orientation offsets.
-// 2018-09-05 updates to accommodate ModelComponentSets: BodySet, JointSet,
-//    ConstraintSet, ForceSet, ProbeSet, WrapObjectSet, ...
-const int expectedNumComponents = 200; 
+const int expectedNumComponents = 180;
 const int expectedNumJointsWithStateVariables = 2;
-// 2018-08-22 added 2 for JointSet and ForceSet that contain Components with states
-const int expectedNumModelComponentsWithStateVariables = 12;
-// Below updated from 1 to 7 to account for offset frame and its geometry and 
-// wrapobjectset that are now part of the Joint
-const int expectedNumJntComponents = 7;
+const int expectedNumModelComponentsWithStateVariables = 10;
+// Below updated from 1 to 3 to account for offset frame and its geometry added
+// to the Joint
+const int expectedNumJntComponents = 3;
 // Test using the iterator to skip over every other Component (Frame in this case)
-// nf = 1 ground + 2 bodies + 4 joint offsets = 7, skipping - 3 = 4
-const int expectedNumCountSkipFrames = 4;
+// nf = 1 ground + 2 bodies + 2 joint offsets = 5, skipping - 2 = 3
+const int expectedNumCountSkipFrames = 3;
 
 namespace OpenSim {
     
@@ -104,17 +101,17 @@ void testNestedComponentListConsistency() {
 
     std::cout << "Joints in the model: " << std::endl;
     for(const auto& joint : model.getComponentList<Joint>()) {
-        std::cout << "    " << joint.getAbsolutePathString() << std::endl;
+        std::cout << "    " << joint.getAbsolutePathName() << std::endl;
         joints1.push_back(&joint);
     }
 
     std::cout << "Joints and Coordinates: " << std::endl;
     for(const auto& joint : model.getComponentList<Joint>()) {
         joints2.push_back(&joint);
-        std::cout << "    Joint: " << joint.getAbsolutePathString() << std::endl;
+        std::cout << "    Joint: " << joint.getAbsolutePathName() << std::endl;
         for(const auto& coord : joint.getComponentList<Coordinate>()) {
             std::cout << "        Coord: "
-                      << coord.getAbsolutePathString() << std::endl;
+                      << coord.getAbsolutePathName() << std::endl;
             coords.insert(&coord);
         }
     }
@@ -137,7 +134,7 @@ void testComponentListConst() {
     int numComponents = 0;
     for (ComponentList<const Component>::const_iterator 
             it = componentsList.begin(); it != componentsList.end();  ++it) {
-        cout << "Iterator is at: " << it->getAbsolutePathString() <<
+        cout << "Iterator is at: " << it->getAbsolutePathName() << 
             " <" << it->getConcreteClassName() << ">" << endl;
         numComponents++;
         // it->setName("this line should not compile; using const_iterator.");
@@ -188,7 +185,7 @@ void testComponentListConst() {
     for (ComponentList<Component>::const_iterator
             it = jComponentsList.begin(); it != jComponentsList.end(); ++it) {
         cout << "Iterator is at: " << it->getConcreteClassName() << " "
-            << it->getAbsolutePathString() << endl;
+            << it->getAbsolutePathName() << endl;
         numJntComponents++;
     }
     cout << "Num all components = " << numComponents << endl;
@@ -204,10 +201,10 @@ void testComponentListConst() {
 
     unsigned numJoints{}, numCoords{};
     for(const auto& joint : model.getComponentList<Joint>()) {
-        cout << "Joint: " << joint.getAbsolutePathString() << endl;
+        cout << "Joint: " << joint.getAbsolutePathName() << endl;
         ++numJoints;
         for(const auto& coord : joint.getComponentList<Coordinate>()) {
-            cout << "Coord: " << coord.getAbsolutePathString() << endl;
+            cout << "Coord: " << coord.getAbsolutePathName() << endl;
             ++numCoords;
         }
     }
@@ -221,7 +218,7 @@ void testComponentListConst() {
     jointsWithStates.setFilter(myFilter); 
     for (const Joint& comp : jointsWithStates) {
         cout << comp.getConcreteClassName() << ":" 
-            << comp.getAbsolutePathString() << endl;
+            << comp.getAbsolutePathName() << endl;
         numJointsWithStateVariables++;
     }
 
@@ -231,12 +228,9 @@ void testComponentListConst() {
     comps.setFilter(myFilter);
     for (const ModelComponent& comp : comps) {
         cout << comp.getConcreteClassName() << ":" 
-            << comp.getAbsolutePathString() << endl;
+            << comp.getAbsolutePathName() << endl;
         numModelComponentsWithStateVariables++;
     }
-
-    cout << "numModelComponentsWithStateVariables ="
-        << numModelComponentsWithStateVariables << endl;
 
     //Now test a std::iterator method
     ComponentList<const Frame> allFrames = model.getComponentList<Frame>();
@@ -244,7 +238,7 @@ void testComponentListConst() {
     int countSkipFrames = 0;
     while (skipIter != allFrames.end()){
         cout << skipIter->getConcreteClassName() << ":" 
-            << skipIter->getAbsolutePathString() << endl;
+            << skipIter->getAbsolutePathName() << endl;
         std::advance(skipIter, 2);
         countSkipFrames++;
     }
@@ -285,7 +279,7 @@ void testComponentListNonConstWithConstIterator() {
     for (ComponentList<Component>::const_iterator it = componentsList.begin();
             it != componentsList.end();
             ++it) {
-        std::cout << "Iterator is at: " << it->getAbsolutePathString() << " <" << it->getConcreteClassName() << ">" << std::endl;
+        std::cout << "Iterator is at: " << it->getAbsolutePathName() << " <" << it->getConcreteClassName() << ">" << std::endl;
         numComponents++;
         // it->setName("this line should not compile; using const_iterator.");
     }
@@ -340,7 +334,7 @@ void testComponentListNonConstWithConstIterator() {
     for (ComponentList<Component>::const_iterator it = jComponentsList.begin();
         it != jComponentsList.end();
         ++it) {
-        std::cout << "Iterator is at: " << it->getConcreteClassName() << " " << it->getAbsolutePathString() << std::endl;
+        std::cout << "Iterator is at: " << it->getConcreteClassName() << " " << it->getAbsolutePathName() << std::endl;
         numJntComponents++;
     }
     cout << "Num all components = " << numComponents << std::endl;
@@ -357,14 +351,14 @@ void testComponentListNonConstWithConstIterator() {
     ComponentWithStateVariables myFilter;
     jointsWithStates.setFilter(myFilter); 
     for (const Joint& comp : jointsWithStates) {
-        cout << comp.getConcreteClassName() << ":" << comp.getAbsolutePathString() << endl;
+        cout << comp.getConcreteClassName() << ":" << comp.getAbsolutePathName() << endl;
         numJointsWithStateVariables++;
     }
     int numModelComponentsWithStateVariables = 0;
     ComponentList<ModelComponent> comps = model.updComponentList<ModelComponent>();
     comps.setFilter(myFilter);
     for (const ModelComponent& comp : comps) {
-        cout << comp.getConcreteClassName() << ":" << comp.getAbsolutePathString() << endl;
+        cout << comp.getConcreteClassName() << ":" << comp.getAbsolutePathName() << endl;
         numModelComponentsWithStateVariables++;
     }
     //Now test a std::iterator method
@@ -373,7 +367,7 @@ void testComponentListNonConstWithConstIterator() {
     ComponentList<Frame>::const_iterator skipIter = allFrames.begin();
     int countSkipFrames = 0;
     while (skipIter != allFrames.end()){
-        cout << skipIter->getConcreteClassName() << ":" << skipIter->getAbsolutePathString() << endl;
+        cout << skipIter->getConcreteClassName() << ":" << skipIter->getAbsolutePathName() << endl;
         std::advance(skipIter, 2);
         countSkipFrames++;
     }
@@ -498,10 +492,6 @@ void testComponentListNonConstWithNonConstIterator() {
     ASSERT(numBodiesPost == numBodies);
     ASSERT(numMuscles == model.getMuscles().getSize());
     ASSERT(numJointsWithStateVariables == expectedNumJointsWithStateVariables);
-
-    cout << "numModelComponentsWithStateVariables ="
-        << numModelComponentsWithStateVariables << endl;
-
     ASSERT(numModelComponentsWithStateVariables ==
            expectedNumModelComponentsWithStateVariables);
     ASSERT(numJntComponents == expectedNumJntComponents);

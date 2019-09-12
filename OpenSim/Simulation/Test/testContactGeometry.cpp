@@ -133,15 +133,15 @@ int testBouncingBall(bool useMesh, const std::string mesh_filename)
     ContactHalfSpace *floor = new ContactHalfSpace(Vec3(0),
                                                    Vec3(0, 0, -0.5*SimTK_PI),
                                                    ground,
-                                                   "floor");
+                                                   "ground");
     osimModel->addContactGeometry(floor);
     OpenSim::ContactGeometry* geometry;
     if (useMesh){
         geometry = new ContactMesh(mesh_filename, Vec3(0), Vec3(0),
-                                   ball, "sphere");
+                                   ball, "ball");
     }
     else
-        geometry = new ContactSphere(radius, Vec3(0), ball, "sphere");
+        geometry = new ContactSphere(radius, Vec3(0), ball, "ball");
     osimModel->addContactGeometry(geometry);
 
     OpenSim::Force* force;
@@ -151,8 +151,8 @@ int testBouncingBall(bool useMesh, const std::string mesh_filename)
         auto* contactParams =
             new OpenSim::ElasticFoundationForce::ContactParameters(
                     1.0e6/radius, 1e-5, 0.0, 0.0, 0.0);
-        contactParams->addGeometry("sphere");
-        contactParams->addGeometry("floor");
+        contactParams->addGeometry("ball");
+        contactParams->addGeometry("ground");
         force = new OpenSim::ElasticFoundationForce(contactParams);
         osimModel->addForce(force);
     }
@@ -162,8 +162,8 @@ int testBouncingBall(bool useMesh, const std::string mesh_filename)
         auto* contactParams =
             new OpenSim::HuntCrossleyForce::ContactParameters(
                     1.0e6, 1e-5, 0.0, 0.0, 0.0);
-        contactParams->addGeometry("sphere");
-        contactParams->addGeometry("floor");
+        contactParams->addGeometry("ball");
+        contactParams->addGeometry("ground");
         force = new OpenSim::HuntCrossleyForce(contactParams);
         osimModel->addForce(force);
     }
@@ -187,14 +187,14 @@ int testBouncingBall(bool useMesh, const std::string mesh_filename)
     // Simulate it and see if it bounces correctly.
     cout << "stateY=" << osim_state.getY() << std::endl;
 
-    Manager manager(*osimModel);
-    manager.setIntegratorAccuracy(integ_accuracy);
+    RungeKuttaMersonIntegrator integrator(osimModel->getMultibodySystem() );
+    integrator.setAccuracy(integ_accuracy);
+    Manager manager(*osimModel, integrator);
     osim_state.setTime(0.0);
-    manager.initialize(osim_state);
 
     for (unsigned int i = 0; i < duration/interval; ++i)
     {
-        osim_state = manager.integrate((i + 1)*interval);
+        manager.integrate(osim_state, (i + 1)*interval);
         double time = osim_state.getTime();
 
         osimModel->getMultibodySystem().realize(osim_state, Stage::Acceleration);
@@ -322,12 +322,12 @@ int testBallToBallContact(bool useElasticFoundation, bool useMesh1, bool useMesh
     // Simulate it and see if it bounces correctly.
     cout << "stateY=" << osim_state.getY() << std::endl;
 
-    Manager manager(*osimModel);
-    manager.setIntegratorAccuracy(integ_accuracy);
-    manager.setIntegratorMaximumStepSize(100*integ_accuracy);
+    RungeKuttaMersonIntegrator integrator(osimModel->getMultibodySystem() );
+    integrator.setAccuracy(integ_accuracy);
+    integrator.setMaximumStepSize(100*integ_accuracy);
+    Manager manager(*osimModel, integrator);
     osim_state.setTime(0.0);
-    manager.initialize(osim_state);
-    osim_state = manager.integrate(duration);
+    manager.integrate(osim_state, duration);
 
     kin->printResults(prefix);
     reporter->printResults(prefix);
@@ -488,11 +488,11 @@ void testIntermediateFrames() {
         coord.setValue(state, 0.15 * SimTK::Pi);
 
         // Integrate.
-        Manager manager(model);
-        manager.setIntegratorAccuracy(integ_accuracy);
+        RungeKuttaMersonIntegrator integrator(model.getMultibodySystem());
+        integrator.setAccuracy(integ_accuracy);
+        Manager manager(model, integrator);
         state.setTime(0.0);
-        manager.initialize(state);
-        state = manager.integrate(1.0);
+        manager.integrate(state, 1.0);
 
         return state;
     };

@@ -27,6 +27,8 @@
 #include "Object.h"
 #include <string>
 
+#include "osim_adouble.h"
+
 
 using namespace OpenSim;
 using namespace SimTK;
@@ -39,8 +41,8 @@ using namespace std;
 // Doubles compare equal if they are close enough, and they compare equal
 // if they are both NaN. Vec3, Vector, and Array<double> properties must all
 // be implemented in terms of this method.
-bool Property<double>::TypeHelper::
-isEqual(double a, double b) {
+bool Property<osim_double_adouble>::TypeHelper::
+isEqual(osim_double_adouble a, osim_double_adouble b) {
     if (a == b)
         return true; // catch exact match and Infinities
 
@@ -49,14 +51,14 @@ isEqual(double a, double b) {
 
     // Floating point need only match to a tolerance.
     // TODO: why is this the right number??
-    return std::abs(a - b) <= 1e-7;
+    return fabs(a - b) <= 1e-7;
 }
 
 
 bool Property<SimTK::Vec3>::TypeHelper::
 isEqual(const SimTK::Vec3& a, const SimTK::Vec3& b) {
     for (int i=0; i < 3; ++i)
-        if (!Property<double>::TypeHelper::isEqual(a[i],b[i]))
+        if (!Property<osim_double_adouble>::TypeHelper::isEqual(a[i],b[i]))
             return false;
     return true;
 }
@@ -64,7 +66,7 @@ isEqual(const SimTK::Vec3& a, const SimTK::Vec3& b) {
 bool Property<SimTK::Vec6>::TypeHelper::
 isEqual(const SimTK::Vec6& a, const SimTK::Vec6& b) {
     for (int i = 0; i < 6; ++i)
-        if (!Property<double>::TypeHelper::isEqual(a[i], b[i]))
+        if (!Property<osim_double_adouble>::TypeHelper::isEqual(a[i], b[i]))
             return false;
     return true;
 }
@@ -75,7 +77,7 @@ isEqual(const SimTK::Vector& a, const SimTK::Vector& b) {
     if (a.size() != b.size())
         return false;
     for (int i=0; i < a.size(); ++i)
-        if (!Property<double>::TypeHelper::isEqual(a[i],b[i]))
+        if (!Property<osim_double_adouble>::TypeHelper::isEqual(a[i],b[i]))
             return false;
     return true;
 }
@@ -101,7 +103,8 @@ isEqual(const SimTK::Transform& a, const SimTK::Transform& b) {
 // Try a few instantiations so we catch bugs now.
 namespace OpenSim {
 template class SimpleProperty<int>;
-template class SimpleProperty<double>;
+template class SimpleProperty<osim_double_adouble>;
+//template class SimpleProperty<osim_double_adouble>;
 template class SimpleProperty<std::string>;
 template class ObjectProperty<Object>;
 }

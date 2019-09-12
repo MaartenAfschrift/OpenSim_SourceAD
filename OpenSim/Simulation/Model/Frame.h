@@ -83,18 +83,16 @@ public:
 //==============================================================================
 // PROPERTIES
 //==============================================================================
-    OpenSim_DECLARE_PROPERTY(frame_geometry, FrameGeometry,
-        "The geometry used to display the axes of this Frame.");
-    OpenSim_DECLARE_LIST_PROPERTY(attached_geometry, Geometry,
-        "List of geometry attached to this Frame. Note, the geometry "
-        "are treated as fixed to the frame and they share the transform "
-        "of the frame when visualized");
+    //OpenSim_DECLARE_PROPERTY(frame_geometry, FrameGeometry,
+    //    "The geometry used to display the axes of this Frame.");
+    //OpenSim_DECLARE_LIST_PROPERTY(attached_geometry, Geometry,
+    //    "List of geometry attached to this Frame. Note, the geometry "
+    //    "are treated as fixed to the frame and they share the transform "
+    //    "of the frame when visualized");
 //=============================================================================
 // OUTPUTS
 //=============================================================================
     OpenSim_DECLARE_OUTPUT(position, SimTK::Vec3, getPositionInGround,
-        SimTK::Stage::Position);
-    OpenSim_DECLARE_OUTPUT(rotation, SimTK::Rotation, getRotationInGround,
         SimTK::Stage::Position);
     OpenSim_DECLARE_OUTPUT(transform, SimTK::Transform, getTransformInGround,
         SimTK::Stage::Position);
@@ -184,6 +182,7 @@ public:
     Find the transform that describes this frame (F) relative to another
     frame (A). It transforms quantities expressed in F to quantities expressed
     in A. This is mathematically stated as:
+    This is mathematically stated as:
         vec_A = X_AF*vec_F ,
     where X_AF is the transform returned by this method.
 
@@ -321,11 +320,6 @@ public:
         return getTransformInGround(state).p();
     };
 
-    /** Accessor for Rotation matrix of the Frame in Ground. */
-    SimTK::Rotation getRotationInGround(const SimTK::State& state) const {
-        return getTransformInGround(state).R();
-    };
-
     // End of Base Frame and Transform accessors
     ///@}
 
@@ -333,19 +327,7 @@ public:
         it by adding it to this Frame's \<attached_geometry\> property list.
         The Geometry is treated as being fixed to this Frame such that the
         transform used to position the Geometry is that of this Frame. */
-    void attachGeometry(OpenSim::Geometry* geom);
-
-    void scaleAttachedGeometry(const SimTK::Vec3& scaleFactors);
-
-    /** Scales Geometry components that reside in the Frame's
-        `attached_geometry` list property. Note that Geometry residing elsewhere
-        (e.g., in the `components` list property of a Frame or any other
-        Component) will not be scaled. Note also that ContactGeometry derives
-        from ModelComponent so the classes derived from ContactGeometry are
-        responsible for scaling themselves. (However, `scale()` is not currently
-        implemented on ContactGeometry or classes derived therefrom so they will
-        not scale with the Model.) */
-    void extendScale(const SimTK::State& s, const ScaleSet& scaleSet) override;
+    //void attachGeometry(OpenSim::Geometry* geom);
 
 protected:
     /** @name Extension of calculations of Frame kinematics.

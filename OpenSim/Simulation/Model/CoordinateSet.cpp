@@ -29,6 +29,35 @@
 using namespace std;
 using namespace OpenSim;
 
+//=============================================================================
+// DESTRUCTOR AND CONSTRUCTORS
+//=============================================================================
+//_____________________________________________________________________________
+/**
+ * Destructor.
+ */
+CoordinateSet::~CoordinateSet(void)
+{
+}
+
+//_____________________________________________________________________________
+/**
+ * Default constructor of a CoordinateSet.
+ */
+CoordinateSet::CoordinateSet() :
+    ModelComponentSet<Coordinate>()
+{
+}
+
+//_____________________________________________________________________________
+/**
+ * Copy constructor of a CoordinateSet.
+ */
+CoordinateSet::CoordinateSet(const CoordinateSet& aCoordinateSet):
+    ModelComponentSet<Coordinate>(aCoordinateSet)
+{
+    *this = aCoordinateSet;
+}
 
 //=============================================================================
 // CONSTRUCTION METHODS
@@ -38,6 +67,7 @@ using namespace OpenSim;
  */
 void CoordinateSet::populate(Model& model)
 {
+    setModel(model);
     // Aggregate Coordinates owned by the Joint's into a single CoordinateSet
     setMemoryOwner(false);
     setSize(0);
@@ -60,3 +90,20 @@ void CoordinateSet::getSpeedNames(OpenSim::Array<std::string> &rNames) const {
     }
 }
 
+
+//=============================================================================
+// OPERATORS
+//=============================================================================
+//_____________________________________________________________________________
+/**
+ * Assignment operator.
+ *
+ * @return Reference to this object.
+ */
+#ifndef SWIG
+CoordinateSet& CoordinateSet::operator=(const CoordinateSet &aCoordinateSet)
+{
+    Set<Coordinate>::operator=(aCoordinateSet);
+    return (*this);
+}
+#endif

@@ -100,7 +100,7 @@ void CustomJoint::extendFinalizeFromProperties()
     constructCoordinates();
 
     // Axes should be independent otherwise Simbody throws an exception in extendAddToSystem
-    double tol = 1e-5;
+    osim_double_adouble tol = 1e-5;
     // Verify that none of the rotation axes are collinear
     const std::vector<SimTK::Vec3> axes = getSpatialTransform().getAxes();
     for (int startIndex = 0; startIndex <= 3; startIndex += 3) {
@@ -125,16 +125,38 @@ void CustomJoint::extendConnectToModel(Model& aModel)
     updSpatialTransform().connectToJoint(*this);
 }
 
-void CustomJoint::extendScale(const SimTK::State& s, const ScaleSet& scaleSet)
+
+//=============================================================================
+// GET AND SET
+//=============================================================================
+// SCALING
+//=============================================================================
+//_____________________________________________________________________________
+/**
+ * Scale a joint based on XYZ scale factors for the bodies.
+ *
+ * @param aScaleSet Set of XYZ scale factors for the bodies.
+ * @todo Need to scale transforms appropriately, given an arbitrary axis.
+ */
+void CustomJoint::scale(const ScaleSet& aScaleSet)
 {
-    Super::extendScale(s, scaleSet);
+    Vec3 scaleFactors(1.0);
 
-    // Get scale factors (if an entry for the parent Frame's base Body exists).
-    const Vec3& scaleFactors = getScaleFactors(scaleSet, getParentFrame());
-    if (scaleFactors == ModelComponent::InvalidScaleFactors)
-        return;
+    // Joint knows how to scale locations of the joint in parent and on the body
+    Super::scale(aScaleSet);
 
-    //TODO: Need to scale transforms appropriately, given an arbitrary axis.
+    // SCALING TO DO WITH THE PARENT BODY -----
+    // Joint kinematics are scaled by the scale factors for the
+    // parent body, so get those body's factors
+    const string& parentName = getParentFrame().getName();
+    for (int i=0; i<aScaleSet.getSize(); i++) {
+        Scale& scale = aScaleSet.get(i);
+        if (scale.getSegmentName()==parentName) {
+            scale.getScaleFactors(scaleFactors);
+            break;
+        }
+    }
+
     updSpatialTransform().scale(scaleFactors);
 }
 
@@ -171,23 +193,20 @@ void CustomJoint::constructCoordinates()
                 if (spatialTransform[j].hasFunction()) {
                     lf = dynamic_cast<const LinearFunction*>(
                             &spatialTransform[j].get_function() );
-                    // if displacement on axis is linear (w/ slope of +/-1)
-                    // w.r.t. the coordinate value, we have a pure
-                    // rotation/translation
-                    if (lf && (lf->getSlope() == 1.0 || lf->getSlope() == -1.0))
-                    {
+                    // if displacement on axis is linear (w/ slope of 1) w.r.t.
+                    // the coordinate value, we have a pure rotation/translation
+                    if (lf && lf->getSlope() == 1.0) {
                         // coordinate is pure axis displacement
                         if (j < 3)
                             // coordinate about rotational axis 
                             mt = Coordinate::MotionType::Rotational;
                         else // otherwise translational axis 
                             mt = Coordinate::MotionType::Translational;
-                    } else {
-                        // scaled (slope != +/-1) or nonlinear relationship
-                        // means not a pure rotational or translational for
-                        // this axis. designate as Coupled unless already
-                        // defined as pure Rotational or Translational about
-                        // another axis
+                    }
+                    else { // scaled (slope !=1) or nonlinear relationship means
+                           // not a pure rotational or translational for this axis.
+                           // designate as Coupled unless already defined as
+                           // pure Rotational or Translational about another axis
                         mt = (mt == Coordinate::MotionType::Undefined ?
                             Coordinate::MotionType::Coupled : mt);
                     }
@@ -279,110 +298,110 @@ void CustomJoint::extendAddToSystem(SimTK::MultibodySystem& system) const
 //_____________________________________________________________________________
 
 /** Override of the default implementation to account for versioning. */
-void CustomJoint::
-updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber)
-{
-    int documentVersion = versionNumber;
-    if ( documentVersion < XMLDocument::getLatestVersion()){
-        if (Object::getDebugLevel()>=1)
-            cout << "Updating CustomJoint to latest format..." << endl;
-        // Version before refactoring spatialTransform
-        if (documentVersion<10901){
-            // replace TransformAxisSet with SpatialTransform
-            /////renameChildNode("TransformAxisSet", "SpatialTransform");
-            // Check how many TransformAxes are defined
-            SimTK::Xml::element_iterator spatialTransformNode = 
-                aNode.element_begin("TransformAxisSet");
-            if (spatialTransformNode == aNode.element_end()) return;
-
-            SimTK::Xml::element_iterator axesSetNode = 
-                spatialTransformNode->element_begin("objects");
-            /////if (axesSetNode != NULL)
-            /////   spatialTransformNode->removeChild(axesSetNode);
-            /////DOMElement*grpNode = XMLNode::GetFirstChildElementByTagName(spatialTransformNode,"groups");
-            /////if (grpNode != NULL)
-            /////   spatialTransformNode->removeChild(grpNode);
-            // (0, 1, 2 rotations & 3, 4, 5 translations then remove the is_rotation node)
-            SimTK::Array_<SimTK::Xml::Element> list = 
-                axesSetNode->getAllElements();
-            unsigned int listLength = list.size();
-            //int objectsFound = 0;
-            Array<int> translationIndices(-1, 0);
-            Array<int>  rotationIndices(-1, 0);
-            int nextAxis = 0;
-            std::vector<TransformAxis *> axes;
-            // Add children for all six axes here
-            //////_node->removeChild(SpatialTransformNode);
-            
-            // Create a blank Spatial Transform and use it to populate the 
-            // XML structure
-            for(int i=0; i<6; i++)
-                updSpatialTransform()[i].setFunction(new OpenSim::Constant(0));
-            
-            Array<OpenSim::TransformAxis*> oldAxes;
-            for(unsigned int j=0;j<listLength;j++) {
-                // getChildNodes() returns all types of DOMNodes including 
-                // comments, text, etc., but we only want
-                // to process element nodes
-                SimTK::Xml::Element objElmt = list[j];
-                string objectType = objElmt.getElementTag();
-                // (sherm) this is cleaning up old TransformAxis here but
-                // that should really be done in TransformAxis instead.
-                if (objectType == "TransformAxis"){
-                    OpenSim::TransformAxis* readAxis = 
-                        new OpenSim::TransformAxis(objElmt);
-                    assert(nextAxis <=5);
-                    bool isRotation = false;
-                    SimTK::Xml::element_iterator rotationNode = 
-                        objElmt.element_begin("is_rotation");
-                    if (rotationNode != objElmt.element_end()){
-                        SimTK::String sValue = 
-                            rotationNode->getValueAs<SimTK::String>();
-                        bool value = (sValue.toLower() == "true");
-                                isRotation = value;
-                        objElmt.eraseNode(rotationNode);
-                            }
-                    SimTK::Xml::element_iterator coordinateNode = 
-                        objElmt.element_begin("coordinate");
-                    SimTK::String coordinateName = 
-                        coordinateNode->getValueAs<SimTK::String>();
-                    Array<std::string> names("");
-                    names.append(coordinateName);
-                    readAxis->setCoordinateNames(names);
-                    SimTK::Xml::element_iterator axisNode = 
-                        objElmt.element_begin("axis");
-                    
-                    SimTK::Vec3 axisVec= axisNode->getValueAs<SimTK::Vec3>();
-                    readAxis->setAxis(axisVec);
-                    if (isRotation){
-                        rotationIndices.append(nextAxis);
-                    }
-                    else {
-                        translationIndices.append(nextAxis);
-                    }
-                    axes.push_back(readAxis);
-                    nextAxis++;
-                }
-            }
-            assert(rotationIndices.getSize() <=3);
-            assert(translationIndices.getSize() <=3);
-            //XMLNode::RemoveChildren(SpatialTransformAxesNode);
-            int nRotations = rotationIndices.getSize();
-            int nTranslations = translationIndices.getSize();
-            // Now copy coordinateName, Axis, Function into proper slot
-            for (int i=0; i<nRotations; i++){
-                updSpatialTransform()[i] = *axes[rotationIndices[i]];
-            }
-            updSpatialTransform().constructIndependentAxes(nRotations, 0);
-            // Add Translations from old list then pad with default ones, 
-            // make sure no singularity.
-            for (int i=0; i<nTranslations; i++){
-                updSpatialTransform()[i+3] = *axes[translationIndices[i]];
-            }
-            updSpatialTransform().constructIndependentAxes(nTranslations, 3);
-        }
-    }
-
-    // Delegate to superclass now.
-    Super::updateFromXMLNode(aNode, versionNumber);
-}
+//void CustomJoint::
+//updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber)
+//{
+//    int documentVersion = versionNumber;
+//    if ( documentVersion < XMLDocument::getLatestVersion()){
+//        if (Object::getDebugLevel()>=1)
+//            cout << "Updating CustomJoint to latest format..." << endl;
+//        // Version before refactoring spatialTransform
+//        if (documentVersion<10901){
+//            // replace TransformAxisSet with SpatialTransform
+//            /////renameChildNode("TransformAxisSet", "SpatialTransform");
+//            // Check how many TransformAxes are defined
+//            SimTK::Xml::element_iterator spatialTransformNode = 
+//                aNode.element_begin("TransformAxisSet");
+//            if (spatialTransformNode == aNode.element_end()) return;
+//
+//            SimTK::Xml::element_iterator axesSetNode = 
+//                spatialTransformNode->element_begin("objects");
+//            /////if (axesSetNode != NULL)
+//            /////   spatialTransformNode->removeChild(axesSetNode);
+//            /////DOMElement*grpNode = XMLNode::GetFirstChildElementByTagName(spatialTransformNode,"groups");
+//            /////if (grpNode != NULL)
+//            /////   spatialTransformNode->removeChild(grpNode);
+//            // (0, 1, 2 rotations & 3, 4, 5 translations then remove the is_rotation node)
+//            SimTK::Array_<SimTK::Xml::Element> list = 
+//                axesSetNode->getAllElements();
+//            unsigned int listLength = list.size();
+//            //int objectsFound = 0;
+//            Array<int> translationIndices(-1, 0);
+//            Array<int>  rotationIndices(-1, 0);
+//            int nextAxis = 0;
+//            std::vector<TransformAxis *> axes;
+//            // Add children for all six axes here
+//            //////_node->removeChild(SpatialTransformNode);
+//            
+//            // Create a blank Spatial Transform and use it to populate the 
+//            // XML structure
+//            for(int i=0; i<6; i++)
+//                updSpatialTransform()[i].setFunction(new OpenSim::Constant(0));
+//            
+//            Array<OpenSim::TransformAxis*> oldAxes;
+//            for(unsigned int j=0;j<listLength;j++) {
+//                // getChildNodes() returns all types of DOMNodes including 
+//                // comments, text, etc., but we only want
+//                // to process element nodes
+//                SimTK::Xml::Element objElmt = list[j];
+//                string objectType = objElmt.getElementTag();
+//                // (sherm) this is cleaning up old TransformAxis here but
+//                // that should really be done in TransformAxis instead.
+//                if (objectType == "TransformAxis"){
+//                    OpenSim::TransformAxis* readAxis = 
+//                        new OpenSim::TransformAxis(objElmt);
+//                    assert(nextAxis <=5);
+//                    bool isRotation = false;
+//                    SimTK::Xml::element_iterator rotationNode = 
+//                        objElmt.element_begin("is_rotation");
+//                    if (rotationNode != objElmt.element_end()){
+//                        SimTK::String sValue = 
+//                            rotationNode->getValueAs<SimTK::String>();
+//                        bool value = (sValue.toLower() == "true");
+//                                isRotation = value;
+//                        objElmt.eraseNode(rotationNode);
+//                            }
+//                    SimTK::Xml::element_iterator coordinateNode = 
+//                        objElmt.element_begin("coordinate");
+//                    SimTK::String coordinateName = 
+//                        coordinateNode->getValueAs<SimTK::String>();
+//                    Array<std::string> names("");
+//                    names.append(coordinateName);
+//                    readAxis->setCoordinateNames(names);
+//                    SimTK::Xml::element_iterator axisNode = 
+//                        objElmt.element_begin("axis");
+//                    
+//                    SimTK::Vec3 axisVec= axisNode->getValueAs<SimTK::Vec3>();
+//                    readAxis->setAxis(axisVec);
+//                    if (isRotation){
+//                        rotationIndices.append(nextAxis);
+//                    }
+//                    else {
+//                        translationIndices.append(nextAxis);
+//                    }
+//                    axes.push_back(readAxis);
+//                    nextAxis++;
+//                }
+//            }
+//            assert(rotationIndices.getSize() <=3);
+//            assert(translationIndices.getSize() <=3);
+//            //XMLNode::RemoveChildren(SpatialTransformAxesNode);
+//            int nRotations = rotationIndices.getSize();
+//            int nTranslations = translationIndices.getSize();
+//            // Now copy coordinateName, Axis, Function into proper slot
+//            for (int i=0; i<nRotations; i++){
+//                updSpatialTransform()[i] = *axes[rotationIndices[i]];
+//            }
+//            updSpatialTransform().constructIndependentAxes(nRotations, 0);
+//            // Add Translations from old list then pad with default ones, 
+//            // make sure no singularity.
+//            for (int i=0; i<nTranslations; i++){
+//                updSpatialTransform()[i+3] = *axes[translationIndices[i]];
+//            }
+//            updSpatialTransform().constructIndependentAxes(nTranslations, 3);
+//        }
+//    }
+//
+//    // Delegate to superclass now.
+//    Super::updateFromXMLNode(aNode, versionNumber);
+//}

@@ -128,21 +128,17 @@ void ClutchedPathSpring::setInitialStretch(double stretch0)
 
      OPENSIM_THROW_IF_FRMOBJ(
          (SimTK::isNaN(get_stiffness()) || get_stiffness() < 0),
-         InvalidPropertyValue, getProperty_stiffness().getName(),
-         "Stiffness cannot be less than zero");
+         InvalidPropertyValue, getProperty_stiffness().getName());
      OPENSIM_THROW_IF_FRMOBJ(
          (SimTK::isNaN(get_dissipation()) || get_dissipation() < 0),
-         InvalidPropertyValue, getProperty_dissipation().getName(),
-         "Dissipation cannot be less than zero");
+         InvalidPropertyValue, getProperty_dissipation().getName());
      OPENSIM_THROW_IF_FRMOBJ(
          (SimTK::isNaN(get_relaxation_time_constant()) || get_relaxation_time_constant() < 0),
          InvalidPropertyValue, 
-         getProperty_relaxation_time_constant().getName(),
-         "Relaxation time constant cannot be less than zero");
+         getProperty_relaxation_time_constant().getName());
      OPENSIM_THROW_IF_FRMOBJ(
          (SimTK::isNaN(get_initial_stretch()) || get_initial_stretch() < 0),
-         InvalidPropertyValue, getProperty_initial_stretch().getName(),
-         "Initial stretch cannot be less than zero");
+         InvalidPropertyValue, getProperty_initial_stretch().getName());
  }
 
 

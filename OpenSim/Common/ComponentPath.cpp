@@ -28,7 +28,7 @@ using namespace std;
 
 // Set static member variables.
 const char ComponentPath::separator = '/';
-const std::string ComponentPath::invalidChars = "\\/*+ \t\n";
+const std::string ComponentPath::invalidChars = "\\/*+";
 
 ComponentPath::ComponentPath() :
     Path(getSeparator(), getInvalidChars())

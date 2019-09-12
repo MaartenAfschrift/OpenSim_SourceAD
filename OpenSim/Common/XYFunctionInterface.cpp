@@ -47,11 +47,12 @@ bool XYFunctionInterface::isXYFunction(Function* f)
 
     if (dynamic_cast<Constant*>(func) ||
         dynamic_cast<StepFunction*>(func) ||
-        dynamic_cast<PiecewiseLinearFunction*>(func) ||
+        //dynamic_cast<PiecewiseLinearFunction*>(func) ||
         dynamic_cast<LinearFunction*>(func) ||
-        dynamic_cast<SimmSpline*>(func) ||
-        dynamic_cast<GCVSpline*>(func)||
-        dynamic_cast<PiecewiseConstantFunction*>(func))
+        //dynamic_cast<SimmSpline*>(func) ||
+        dynamic_cast<GCVSpline*>(func))
+		//||
+  //      dynamic_cast<PiecewiseConstantFunction*>(func))
         return true;
 
     return false;
@@ -87,26 +88,26 @@ XYFunctionInterface::XYFunctionInterface(Function* f) :
         _functionType = typeStepFunction;
         return;
     }
-    _mStepFunction = dynamic_cast<PiecewiseConstantFunction*>(func);
-    if (_mStepFunction) {
-        _functionType = typePiecewiseConstantFunction;
-        return;
-    }
-    _piecewiseLinearFunction = dynamic_cast<PiecewiseLinearFunction*>(func);
-    if (_piecewiseLinearFunction) {
-        _functionType = typePiecewiseLinearFunction;
-        return;
-    }
+    //_mStepFunction = dynamic_cast<PiecewiseConstantFunction*>(func);
+    //if (_mStepFunction) {
+    //    _functionType = typePiecewiseConstantFunction;
+    //    return;
+    //}
+    //_piecewiseLinearFunction = dynamic_cast<PiecewiseLinearFunction*>(func);
+    //if (_piecewiseLinearFunction) {
+    //    _functionType = typePiecewiseLinearFunction;
+    //    return;
+    //}
     _linearFunction = dynamic_cast<LinearFunction*>(func);
     if (_linearFunction) {
         _functionType = typeLinearFunction;
         return;
     }
-    _natCubicSpline = dynamic_cast<SimmSpline*>(func);
-    if (_natCubicSpline) {
-        _functionType = typeNatCubicSpline;
-        return;
-    }
+    //_natCubicSpline = dynamic_cast<SimmSpline*>(func);
+    //if (_natCubicSpline) {
+    //    _functionType = typeNatCubicSpline;
+    //    return;
+    //}
     _gcvSpline = dynamic_cast<GCVSpline*>(func);
     if (_gcvSpline) {
         _functionType = typeGCVSpline;
@@ -137,14 +138,14 @@ int XYFunctionInterface::getNumberOfPoints() const
     {
         case typeConstant:
             return 0;
-       case typePiecewiseConstantFunction:
-            return _mStepFunction->getNumberOfPoints();
-       case typePiecewiseLinearFunction:
-           return _piecewiseLinearFunction->getNumberOfPoints();
+       //case typePiecewiseConstantFunction:
+       //     return _mStepFunction->getNumberOfPoints();
+       //case typePiecewiseLinearFunction:
+       //    return _piecewiseLinearFunction->getNumberOfPoints();
        case typeLinearFunction:
            return 2;
-        case typeNatCubicSpline:
-           return _natCubicSpline->getNumberOfPoints();
+        //case typeNatCubicSpline:
+        //   return _natCubicSpline->getNumberOfPoints();
        case typeGCVSpline:
            return _gcvSpline->getNumberOfPoints();
         default:
@@ -152,7 +153,7 @@ int XYFunctionInterface::getNumberOfPoints() const
     }
 }
 
-const double* XYFunctionInterface::getXValues() const
+const osim_double_adouble* XYFunctionInterface::getXValues() const
 {
     switch (_functionType)
     {
@@ -160,19 +161,19 @@ const double* XYFunctionInterface::getXValues() const
             return NULL;
        case typeStepFunction:
             return NULL;
-       case typePiecewiseConstantFunction:
-            return _mStepFunction->getXValues();
-       case typePiecewiseLinearFunction:
-           return _piecewiseLinearFunction->getXValues();
+       //case typePiecewiseConstantFunction:
+       //     return _mStepFunction->getXValues();
+       //case typePiecewiseLinearFunction:
+       //    return _piecewiseLinearFunction->getXValues();
        case typeLinearFunction:
             {
-                double* xValues = new double[2];
+                osim_double_adouble* xValues = new osim_double_adouble[2];
                 xValues[0] = -1.0;
                 xValues[1] = 1.0;
                 return xValues; // possible memory leak
             }
-        case typeNatCubicSpline:
-           return _natCubicSpline->getXValues();
+        //case typeNatCubicSpline:
+        //   return _natCubicSpline->getXValues();
        case typeGCVSpline:
            return _gcvSpline->getXValues();
         default:
@@ -180,10 +181,10 @@ const double* XYFunctionInterface::getXValues() const
     }
 }
 
-const double* XYFunctionInterface::getYValues() const
+const osim_double_adouble* XYFunctionInterface::getYValues() const
 {
-    const double* yValues = NULL;
-    double* tmp = NULL;
+    const osim_double_adouble* yValues = NULL;
+    osim_double_adouble* tmp = NULL;
     int numPoints = getNumberOfPoints();
 
     switch (_functionType)
@@ -193,20 +194,20 @@ const double* XYFunctionInterface::getYValues() const
        case typeStepFunction:
             return NULL;;
             break;
-       case typePiecewiseConstantFunction:
-            yValues = _mStepFunction->getYValues();
-            break;
-       case typePiecewiseLinearFunction:
-           yValues = _piecewiseLinearFunction->getYValues();
-            break;
+       //case typePiecewiseConstantFunction:
+       //     yValues = _mStepFunction->getYValues();
+            //break;
+       //case typePiecewiseLinearFunction:
+       //    yValues = _piecewiseLinearFunction->getYValues();
+       //     break;
        case typeLinearFunction:
-           tmp = new double[2];
+           tmp = new osim_double_adouble[2];
             tmp[0] = _linearFunction->getCoefficients()[1] - _linearFunction->getCoefficients()[0];
             tmp[1] = _linearFunction->getCoefficients()[1] + _linearFunction->getCoefficients()[0];
             break;
-        case typeNatCubicSpline:
-           yValues = _natCubicSpline->getYValues();
-            break;
+        //case typeNatCubicSpline:
+        //   yValues = _natCubicSpline->getYValues();
+        //    break;
        case typeGCVSpline:
            yValues = _gcvSpline->getYValues();
             break;
@@ -214,13 +215,13 @@ const double* XYFunctionInterface::getYValues() const
             return NULL;
     }
 
-    double* scaledY = new double[numPoints];
+    osim_double_adouble* scaledY = new osim_double_adouble[numPoints];
     if (tmp){
         scaledY[0] = tmp[0];
         scaledY[1] = tmp[1];
     }
     else
-        memcpy(scaledY, yValues, numPoints*sizeof(double));
+        memcpy(scaledY, yValues, numPoints*sizeof(osim_double_adouble));
     for (int i=0; i<numPoints; i++)
         scaledY[i] *= _scaleFactor;
 
@@ -231,7 +232,7 @@ const double* XYFunctionInterface::getYValues() const
     return scaledY;
 }
 
-double XYFunctionInterface::getX(int aIndex) const
+osim_double_adouble XYFunctionInterface::getX(int aIndex) const
 {
     switch (_functionType)
     {
@@ -239,10 +240,10 @@ double XYFunctionInterface::getX(int aIndex) const
             return 0; //_constant->getX(aIndex);
        case typeStepFunction:
             return 0; //_stepFunction->getX(aIndex);
-        case typePiecewiseConstantFunction:
-            return _mStepFunction->getX(aIndex);
-        case typePiecewiseLinearFunction:
-           return _piecewiseLinearFunction->getX(aIndex);
+        //case typePiecewiseConstantFunction:
+        //    return _mStepFunction->getX(aIndex);
+        //case typePiecewiseLinearFunction:
+        //   return _piecewiseLinearFunction->getX(aIndex);
        case typeLinearFunction:
            if (aIndex == 0)
                 return -1.0;
@@ -250,8 +251,8 @@ double XYFunctionInterface::getX(int aIndex) const
                 return 1.0;
             else
                 return 0.0;
-        case typeNatCubicSpline:
-           return _natCubicSpline->getX(aIndex);
+        //case typeNatCubicSpline:
+        //   return _natCubicSpline->getX(aIndex);
        case typeGCVSpline:
            return _gcvSpline->getX(aIndex);
         default:
@@ -259,7 +260,7 @@ double XYFunctionInterface::getX(int aIndex) const
     }
 }
 
-double XYFunctionInterface::getY(int aIndex) const
+osim_double_adouble XYFunctionInterface::getY(int aIndex) const
 {
     switch (_functionType)
     {
@@ -267,10 +268,10 @@ double XYFunctionInterface::getY(int aIndex) const
             return _constant->getValue() * _scaleFactor;
        case typeStepFunction:
            return SimTK::NaN;
-       case typePiecewiseConstantFunction:
-           return _mStepFunction->getY(aIndex) * _scaleFactor;
-       case typePiecewiseLinearFunction:
-           return _piecewiseLinearFunction->getY(aIndex) * _scaleFactor;
+       //case typePiecewiseConstantFunction:
+       //    return _mStepFunction->getY(aIndex) * _scaleFactor;
+       //case typePiecewiseLinearFunction:
+       //    return _piecewiseLinearFunction->getY(aIndex) * _scaleFactor;
        case typeLinearFunction:
            if (aIndex == 0)
                 return (_linearFunction->getCoefficients()[1] - _linearFunction->getCoefficients()[0]) * _scaleFactor;
@@ -278,8 +279,8 @@ double XYFunctionInterface::getY(int aIndex) const
                 return (_linearFunction->getCoefficients()[1] + _linearFunction->getCoefficients()[0]) * _scaleFactor;
             else
                 return 0.0;
-        case typeNatCubicSpline:
-           return _natCubicSpline->getY(aIndex) * _scaleFactor;
+        //case typeNatCubicSpline:
+        //   return _natCubicSpline->getY(aIndex) * _scaleFactor;
        case typeGCVSpline:
            return _gcvSpline->getY(aIndex) * _scaleFactor;
         default:
@@ -287,22 +288,22 @@ double XYFunctionInterface::getY(int aIndex) const
     }
 }
 
-void XYFunctionInterface::setX(int aIndex, double aValue)
+void XYFunctionInterface::setX(int aIndex, osim_double_adouble aValue)
 {
     switch (_functionType)
     {
         case typeConstant:
             break;
-        case typePiecewiseConstantFunction:
-           _mStepFunction->setX(aIndex, aValue);
-           break;
-       case typePiecewiseLinearFunction:
-           _piecewiseLinearFunction->setX(aIndex, aValue);
+        //case typePiecewiseConstantFunction:
+        //   _mStepFunction->setX(aIndex, aValue);
+        //   break;
+       //case typePiecewiseLinearFunction:
+       //    _piecewiseLinearFunction->setX(aIndex, aValue);
            break;
        case typeLinearFunction:
            break;
-        case typeNatCubicSpline:
-           _natCubicSpline->setX(aIndex, aValue);
+        //case typeNatCubicSpline:
+        //   _natCubicSpline->setX(aIndex, aValue);
            break;
        case typeGCVSpline:
            _gcvSpline->setX(aIndex, aValue);
@@ -312,7 +313,7 @@ void XYFunctionInterface::setX(int aIndex, double aValue)
     }
 }
 
-void XYFunctionInterface::setY(int aIndex, double aValue)
+void XYFunctionInterface::setY(int aIndex, osim_double_adouble aValue)
 {
     aValue /= _scaleFactor;
 
@@ -320,17 +321,17 @@ void XYFunctionInterface::setY(int aIndex, double aValue)
     {
         case typeConstant:
             break;
-       case typePiecewiseConstantFunction:
-           _mStepFunction->setY(aIndex, aValue);
-           break;
-       case typePiecewiseLinearFunction:
-           _piecewiseLinearFunction->setY(aIndex, aValue);
-           break;
+       //case typePiecewiseConstantFunction:
+       //    _mStepFunction->setY(aIndex, aValue);
+       //    break;
+       //case typePiecewiseLinearFunction:
+       //    _piecewiseLinearFunction->setY(aIndex, aValue);
+       //    break;
         case typeLinearFunction:
             break;
-        case typeNatCubicSpline:
-           _natCubicSpline->setY(aIndex, aValue);
-           break;
+        //case typeNatCubicSpline:
+        //   _natCubicSpline->setY(aIndex, aValue);
+        //   break;
        case typeGCVSpline:
            _gcvSpline->setY(aIndex, aValue);
            break;
@@ -347,14 +348,14 @@ bool XYFunctionInterface::deletePoint(int aIndex)
             return true;
        case typeStepFunction:
            return false;
-       case typePiecewiseConstantFunction:
-           return _mStepFunction->deletePoint(aIndex);
-       case typePiecewiseLinearFunction:
-           return _piecewiseLinearFunction->deletePoint(aIndex);
+       //case typePiecewiseConstantFunction:
+       //    return _mStepFunction->deletePoint(aIndex);
+       //case typePiecewiseLinearFunction:
+       //    return _piecewiseLinearFunction->deletePoint(aIndex);
        case typeLinearFunction:
            return false;
-        case typeNatCubicSpline:
-           return _natCubicSpline->deletePoint(aIndex);
+        //case typeNatCubicSpline:
+        //   return _natCubicSpline->deletePoint(aIndex);
        case typeGCVSpline:
            return _gcvSpline->deletePoint(aIndex);
         default:
@@ -370,14 +371,14 @@ bool XYFunctionInterface::deletePoints(const Array<int>& indices)
             return true;
        case typeStepFunction:
            return false;
-       case typePiecewiseConstantFunction:
-           return _mStepFunction->deletePoints(indices);
-       case typePiecewiseLinearFunction:
-           return _piecewiseLinearFunction->deletePoints(indices);
+       //case typePiecewiseConstantFunction:
+       //    return _mStepFunction->deletePoints(indices);
+       //case typePiecewiseLinearFunction:
+       //    return _piecewiseLinearFunction->deletePoints(indices);
        case typeLinearFunction:
            return false;
-        case typeNatCubicSpline:
-           return _natCubicSpline->deletePoints(indices);
+        //case typeNatCubicSpline:
+        //   return _natCubicSpline->deletePoints(indices);
        case typeGCVSpline:
            return _gcvSpline->deletePoints(indices);
         default:
@@ -385,7 +386,7 @@ bool XYFunctionInterface::deletePoints(const Array<int>& indices)
     }
 }
 
-int XYFunctionInterface::addPoint(double aX, double aY)
+int XYFunctionInterface::addPoint(osim_double_adouble aX, osim_double_adouble aY)
 {
     aY /= _scaleFactor;
 
@@ -395,14 +396,14 @@ int XYFunctionInterface::addPoint(double aX, double aY)
             return 1;
        case typeStepFunction:
            return 0;
-       case typePiecewiseConstantFunction:
-           return _mStepFunction->addPoint(aX, aY);
-       case typePiecewiseLinearFunction:
-           return _piecewiseLinearFunction->addPoint(aX, aY);
+       //case typePiecewiseConstantFunction:
+       //    return _mStepFunction->addPoint(aX, aY);
+       //case typePiecewiseLinearFunction:
+       //    return _piecewiseLinearFunction->addPoint(aX, aY);
        case typeLinearFunction:
            return 0;
-        case typeNatCubicSpline:
-           return _natCubicSpline->addPoint(aX, aY);
+        //case typeNatCubicSpline:
+        //   return _natCubicSpline->addPoint(aX, aY);
        case typeGCVSpline:
            return _gcvSpline->addPoint(aX, aY);
         default:
@@ -417,8 +418,8 @@ Array<XYPoint>* XYFunctionInterface::renderAsLineSegments(int aIndex)
         return NULL;
 
     Array<XYPoint>* xyPts = new Array<XYPoint>(XYPoint());
-    const double* x = getXValues();
-    const double* y = getYValues();
+    const osim_double_adouble* x = getXValues();
+    const osim_double_adouble* y = getYValues();
 
     if (_functionType == typeStepFunction)  {
         xyPts->append(XYPoint(x[aIndex], y[aIndex]));
@@ -427,21 +428,23 @@ Array<XYPoint>* XYFunctionInterface::renderAsLineSegments(int aIndex)
     } else if (_functionType == typePiecewiseLinearFunction) {
         xyPts->append(XYPoint(x[aIndex], y[aIndex]));
         xyPts->append(XYPoint(x[aIndex+1], y[aIndex+1]));
-    } else if (_functionType == typeNatCubicSpline) {
+    } 
+	//else if (_functionType == typeNatCubicSpline) {
+ //       // X sometimes goes slightly beyond the range due to roundoff error,
+ //       // so do the last point separately.
+ //       int numSegs = 20;
+ //       for (int i=0; i<numSegs-1; i++) {
+ //           osim_double_adouble xValue = x[aIndex] + (osim_double_adouble)i * (x[aIndex + 1] - x[aIndex]) / ((osim_double_adouble)numSegs - 1.0);
+ //           xyPts->append(XYPoint(xValue, _natCubicSpline->calcValue(SimTK::Vector(1,xValue)) * _scaleFactor));
+ //       }
+ //       xyPts->append(XYPoint(x[aIndex + 1], _natCubicSpline->calcValue(SimTK::Vector(1,x[aIndex+1])) * _scaleFactor));
+ //   } 
+	else if (_functionType == typeGCVSpline) {
         // X sometimes goes slightly beyond the range due to roundoff error,
         // so do the last point separately.
         int numSegs = 20;
         for (int i=0; i<numSegs-1; i++) {
-            double xValue = x[aIndex] + (double)i * (x[aIndex + 1] - x[aIndex]) / ((double)numSegs - 1.0);
-            xyPts->append(XYPoint(xValue, _natCubicSpline->calcValue(SimTK::Vector(1,xValue)) * _scaleFactor));
-        }
-        xyPts->append(XYPoint(x[aIndex + 1], _natCubicSpline->calcValue(SimTK::Vector(1,x[aIndex+1])) * _scaleFactor));
-    } else if (_functionType == typeGCVSpline) {
-        // X sometimes goes slightly beyond the range due to roundoff error,
-        // so do the last point separately.
-        int numSegs = 20;
-        for (int i=0; i<numSegs-1; i++) {
-            double xValue = x[aIndex] + (double)i * (x[aIndex + 1] - x[aIndex]) / ((double)numSegs - 1.0);
+            osim_double_adouble xValue = x[aIndex] + (osim_double_adouble)i * (x[aIndex + 1] - x[aIndex]) / ((osim_double_adouble)numSegs - 1.0);
             xyPts->append(XYPoint(xValue, _gcvSpline->calcValue(SimTK::Vector(1,xValue)) * _scaleFactor));
         }
         xyPts->append(XYPoint(x[aIndex + 1], _gcvSpline->calcValue(SimTK::Vector(1,x[aIndex + 1])) * _scaleFactor));

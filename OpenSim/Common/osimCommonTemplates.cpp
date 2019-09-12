@@ -34,6 +34,9 @@
 #include "ArrayPtrs.h"
 #include "Set.h"
 
+#include "osim_adouble.h"
+
+
 
 using namespace OpenSim;
 #ifdef _WIN32
@@ -50,6 +53,7 @@ using namespace OpenSim;
 
 typedef Array<bool> ArrayBool;
 typedef Array<int> ArrayInt;
-typedef Array<double> ArrayDbl;
+typedef Array<osim_double_adouble> ArrayDbl;
+//typedef Array<osim_double_adouble> ArrayDbl;
 typedef Array<std::string> ArrayStr;
 

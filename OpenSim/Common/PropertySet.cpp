@@ -136,7 +136,7 @@ getSize() const
  * @throws Exception if the index is out of bounds.
  */
 Property_Deprecated* PropertySet::
-get(int aIndex)
+get(int aIndex) throw(Exception)
 {
     // NO SUCH PROPERTY - THROW EXCEPTION
     if((aIndex<0)||(aIndex>=_array.getSize())) {
@@ -172,7 +172,7 @@ get(int aIndex) const
  * @throws Exception if there is no such property.
  */
 Property_Deprecated* PropertySet::
-get(const string &aName)
+get(const string &aName) throw(Exception)
 {
     int i;
     PropertyInt prop(aName,0);

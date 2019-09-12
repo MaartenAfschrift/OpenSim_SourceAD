@@ -3,6 +3,8 @@
 
 #pragma SWIG nowarn=822,451,503,516,325,401
 
+%include java_exception.i
+
 %{
 #include <Bindings/OpenSimHeaders_common.h>
 #include <Bindings/OpenSimHeaders_actuators.h>
@@ -12,8 +14,6 @@
 using namespace OpenSim;
 using namespace SimTK;
 %}
-
-%include "java_preliminaries.i";
 
 %import "java_actuators.i"
 

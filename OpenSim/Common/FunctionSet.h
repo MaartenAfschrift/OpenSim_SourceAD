@@ -59,7 +59,7 @@ public:
     // CONSTRUCTION
     //--------------------------------------------------------------------------
     FunctionSet();
-    FunctionSet(const std::string &aFileName);
+    //FunctionSet(const std::string &aFileName);
     virtual ~FunctionSet();
 
 private:
@@ -69,12 +69,12 @@ public:
     //--------------------------------------------------------------------------
     // EVALUATION
     //--------------------------------------------------------------------------
-    virtual double
+    virtual osim_double_adouble
         evaluate(int aIndex,int aDerivOrder,
-        double aX=0.0) const;
+			osim_double_adouble aX=0.0) const;
     virtual void
-        evaluate(Array<double> &rValues,int aDerivOrder,
-        double aX=0.0) const;
+        evaluate(Array<osim_double_adouble> &rValues,int aDerivOrder,
+			osim_double_adouble aX=0.0) const;
 
 //=============================================================================
 };  // END class FunctionSet

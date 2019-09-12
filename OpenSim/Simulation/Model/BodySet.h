@@ -1,5 +1,5 @@
-#ifndef OPENSIM_BODY_SET_H_
-#define OPENSIM_BODY_SET_H_
+#ifndef __BodySet_h__
+#define __BodySet_h__
 /* -------------------------------------------------------------------------- *
  *                            OpenSim:  BodySet.h                             *
  * -------------------------------------------------------------------------- *
@@ -9,7 +9,7 @@
  * National Institutes of Health (U54 GM072970, R24 HD065690) and by DARPA    *
  * through the Warrior Web program.                                           *
  *                                                                            *
- * Copyright (c) 2005-2018 Stanford University and the Authors                *
+ * Copyright (c) 2005-2017 Stanford University and the Authors                *
  * Author(s): Peter Loan                                                      *
  *                                                                            *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may    *
@@ -23,10 +23,21 @@
  * limitations under the License.                                             *
  * -------------------------------------------------------------------------- */
 
+#include <OpenSim/Simulation/osimSimulationDLL.h>
 #include <OpenSim/Simulation/Model/ModelComponentSet.h>
 #include <OpenSim/Simulation/SimbodyEngine/Body.h>
 
+#ifdef SWIG
+    #ifdef OSIMSIMULATION_API
+        #undef OSIMSIMULATION_API
+        #define OSIMSIMULATION_API
+    #endif
+#endif
+
 namespace OpenSim {
+
+class ScaleSet;
+
 //=============================================================================
 //=============================================================================
 /**
@@ -35,14 +46,33 @@ namespace OpenSim {
  * @authors Peter Loan
  * @version 1.0
  */
+
 class OSIMSIMULATION_API BodySet :  public ModelComponentSet<Body> {
 OpenSim_DECLARE_CONCRETE_OBJECT(BodySet, ModelComponentSet<Body>);
 
+private:
+    void setNull();
 public:
-    /** Use Super's constructors. @see ModelComponentSet */
-    using Super::Super;
+    BodySet();
+    BodySet(Model& model);
+    BodySet(const BodySet& aAbsBodySet);
+    ~BodySet(void);
 
-    // default copy, assignment operator, and destructor
+    // Somehow the following function is not exported from base template
+    //BodySet(Model& model, const std::string &aFileName, 
+    //        bool aUpdateFromXMLNode = true) 
+    //:   Super(model, aFileName, aUpdateFromXMLNode) {}
+
+    //--------------------------------------------------------------------------
+    // OPERATORS
+    //--------------------------------------------------------------------------
+#ifndef SWIG
+    BodySet& operator=(const BodySet &aAbsBodySet);
+#endif
+    //--------------------------------------------------------------------------
+    // UTILITIES
+    //--------------------------------------------------------------------------
+    void scale(const ScaleSet& aScaleSet, bool aScaleMass = false);
 
 //=============================================================================
 };  // END of class BodySet
@@ -51,4 +81,4 @@ public:
 
 } // end of namespace OpenSim
 
-#endif // OPENSIM_BODY_SET_H_
+#endif // __BodySet_h__

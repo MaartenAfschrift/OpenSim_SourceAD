@@ -33,6 +33,7 @@
 #include <cstdio>
 #include "SimTKcommon/Scalar.h"
 
+#include "osim_adouble.h"
 
 
 using namespace OpenSim;
@@ -46,7 +47,7 @@ using namespace std;
  * Constructor.
  */
 PropertyDbl::
-PropertyDbl(const string &aName,double aValue) :
+PropertyDbl(const string &aName,osim_double_adouble aValue) :
     Property_Deprecated(Property_Deprecated::Dbl,aName)
 {
     _value = aValue;
@@ -149,7 +150,7 @@ getTypeName() const
  * @param aValue Value to which this property is assigned.
  */
 void PropertyDbl::
-setValue(double aValue)
+setValue(osim_double_adouble aValue)
 {
     _value = aValue;
 }
@@ -160,7 +161,7 @@ setValue(double aValue)
  *
  * @return Reference to the value of this property.
  */
-double& PropertyDbl::
+osim_double_adouble& PropertyDbl::
 getValueDbl()
 {
     return(_value);
@@ -171,7 +172,7 @@ getValueDbl()
  *
  * @return Constant reference to the value of this property.
  */
-const double& PropertyDbl::
+const osim_double_adouble& PropertyDbl::
 getValueDbl() const
 {
     return(_value);

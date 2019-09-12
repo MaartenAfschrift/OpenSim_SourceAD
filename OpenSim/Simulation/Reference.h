@@ -81,7 +81,7 @@ public:
                            SimTK::Array_<T> &values) const = 0;
     /** get the weighting (importance) of meeting this Reference */
     virtual void getWeights(const SimTK::State &s, 
-                            SimTK::Array_<double>& weights) const = 0;
+                            SimTK::Array_<osim_double_adouble>& weights) const = 0;
 
     //--------------------------------------------------------------------------
     // Convenience Interface
@@ -93,8 +93,8 @@ public:
         return values;
     }
     /* getWeights as above, but a copy is returned, which may be costly */
-    virtual SimTK::Array_<double> getWeights(const SimTK::State &s) const {
-        SimTK::Array_<double> weights(getNumRefs());
+    virtual SimTK::Array_<osim_double_adouble> getWeights(const SimTK::State &s) const {
+        SimTK::Array_<osim_double_adouble> weights(getNumRefs());
         getWeights(s, weights);
         return weights;
     }

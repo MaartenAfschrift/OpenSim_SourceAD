@@ -7,7 +7,7 @@
  * National Institutes of Health (U54 GM072970, R24 HD065690) and by DARPA    *
  * through the Warrior Web program.                                           *
  *                                                                            *
- * Copyright (c) 2005-2018 Stanford University and the Authors                *
+ * Copyright (c) 2005-2017 Stanford University and the Authors                *
  * Author(s): Ajay Seth, Jack Middleton                                       *
  *                                                                            *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may    *
@@ -30,16 +30,118 @@
 using namespace std;
 using namespace OpenSim;
 
-void ForceSet::extendConnectToModel(Model& aModel)
+#ifndef SWIG
+namespace OpenSim {
+template class OSIMSIMULATION_API ModelComponentSet<Force>;
+}
+#endif
+
+
+//=============================================================================
+// CONSTRUCTOR(S) AND DESTRUCTOR
+//=============================================================================
+//_____________________________________________________________________________
+/**
+ * Destructor.
+ */
+ForceSet::~ForceSet()
 {
-    // BASE CLASS
-    Super::extendConnectToModel(aModel);
+}
+//_____________________________________________________________________________
+/**
+ * Default constructor.
+ */
+ForceSet::ForceSet()
+{
+    setNull();
+}
+
+ForceSet::ForceSet(Model& model) : 
+ModelComponentSet<Force>(model)
+{
+    setNull();
+}
+
+//_____________________________________________________________________________
+/**
+ * Construct an actuator set from file.
+ *
+ * @param aFileName Name of the file.
+ */
+//ForceSet::ForceSet(Model& model, const std::string &aFileName, bool aUpdateFromXMLNode) :
+//    ModelComponentSet<Force>(model, aFileName, false)
+//{
+//    setNull();
+//
+//    if(aUpdateFromXMLNode)
+//        updateFromXMLDocument();
+//}
+
+
+//_____________________________________________________________________________
+/**
+ * Copy constructor.
+ *
+ * @param aForceSet ForceSet to be copied.
+ */
+ForceSet::ForceSet(const ForceSet &aForceSet) :
+    ModelComponentSet<Force>(aForceSet)
+{
+    setNull();
+
+}
+
+//=============================================================================
+// CONSTRUCTION
+//=============================================================================
+//_____________________________________________________________________________
+/**
+ * Set the data members of this ForceSet to their null values.
+ */
+void ForceSet::setNull()
+{
+    setAuthors("Ajay Seth, Jack Middleton");
+
+    // PROPERTIES
+    setupSerializedMembers();
 
     _actuators.setMemoryOwner(false);
+
     _muscles.setMemoryOwner(false);
+}
+
+//_____________________________________________________________________________
+/**
+ * Set up the serialized member variables.
+ */
+void ForceSet::setupSerializedMembers()
+{
+}
+
+void ForceSet::invokeConnectToModel(Model& aModel)
+{
+    // BASE CLASS
+    Super::invokeConnectToModel(aModel);
 
     updateActuators();
     updateMuscles();
+}
+
+//=============================================================================
+// OPERATORS
+//=============================================================================
+//_____________________________________________________________________________
+/**
+ * Assignment operator.
+ *
+ * @return Reference to this object.
+ */
+ForceSet& ForceSet::operator=(const ForceSet &aAbsForceSet)
+{
+    // BASE CLASS
+    Set<Force>::operator=(aAbsForceSet);
+
+    return(*this);
 }
 
 
@@ -59,7 +161,7 @@ void ForceSet::extendConnectToModel(Model& aModel)
  */
 bool ForceSet::remove(int aIndex)
 {
-    bool success = Super::remove(aIndex);
+    bool success = Set<Force>::remove(aIndex);
 
     updateActuators();
     updateMuscles();
@@ -78,9 +180,10 @@ bool ForceSet::remove(int aIndex)
  * @param aActuator Pointer to the actuator to be appended.
  * @return True if successful; false otherwise.
  */
-bool ForceSet::append(Force *aForce)
+bool ForceSet::
+append(Force *aForce)
 {
-    bool success = Super::adoptAndAppend(aForce);
+    bool success = ModelComponentSet<Force>::adoptAndAppend(aForce);
 
     if (success && hasModel()) {
         updateActuators();
@@ -103,7 +206,7 @@ bool ForceSet::append(Force *aForce)
 bool ForceSet::
 append(Force &aForce)
 {
-    bool success = Super::cloneAndAppend(aForce);
+    bool success = ModelComponentSet<Force>::cloneAndAppend(aForce);
 
 
     if (success && hasModel()) {
@@ -140,7 +243,7 @@ bool ForceSet::append(ForceSet &aForceSet, bool aAllowDuplicateNames)
             }
         }
         if(!nameExists) {
-            if(!Super::adoptAndAppend(&aForceSet.get(i))) 
+            if(!ModelComponentSet<Force>::adoptAndAppend(&aForceSet.get(i))) 
                 success = false;
         }
     }
@@ -155,7 +258,7 @@ bool ForceSet::append(ForceSet &aForceSet, bool aAllowDuplicateNames)
 //_____________________________________________________________________________
 /**
  * Set the actuator at an index.  A copy of the specified actuator is NOT made.
- * The actuator previously set at the index is removed (and deleted).
+ * The actuator previously set a the index is removed (and deleted).
  *
  * This method overrides the method in Set<Force> so that several
  * internal variables of the actuator set can be updated.
@@ -165,9 +268,9 @@ bool ForceSet::append(ForceSet &aForceSet, bool aAllowDuplicateNames)
  * @param aActuator Pointer to the actuator to be set.
  * @return True if successful; false otherwise.
  */
-bool ForceSet::set(int aIndex,Force *aActuator, bool preserveGroups)
+bool ForceSet::set(int aIndex,Force *aActuator)
 {
-    bool success = Super::set(aIndex, aActuator, preserveGroups);
+    bool success = ModelComponentSet<Force>::set(aIndex,aActuator);
 
     if(success) {
         updateActuators();
@@ -179,7 +282,7 @@ bool ForceSet::set(int aIndex,Force *aActuator, bool preserveGroups)
 
 bool ForceSet::insert(int aIndex, Force *aForce)
 {
-    bool success = Super::insert(aIndex, aForce);
+    bool success = ModelComponentSet<Force>::insert(aIndex, aForce);
 
     if(success) {
         updateActuators();
@@ -209,11 +312,11 @@ Set<Actuator>& ForceSet::updActuators()
  */
 void ForceSet::updateActuators()
 {
-    _actuators.setMemoryOwner(false);
     _actuators.setSize(0);
-    for (int i = 0; i < getSize(); ++i) {
+    for (int i = 0; i < getSize(); ++i)
+    {
         Actuator* act = dynamic_cast<Actuator*>(&get(i));
-        if (act)  _actuators.adoptAndAppend(act);
+        if (act != NULL)  _actuators.adoptAndAppend(act);
     }
 }
 
@@ -228,8 +331,7 @@ const Set<Muscle>& ForceSet::getMuscles() const
 }
 Set<Muscle>& ForceSet::updMuscles() 
 {
-    if (_muscles.getSize() == 0)
-        updateMuscles();
+    updateMuscles();
     return _muscles;
 }
 //_____________________________________________________________________________
@@ -238,11 +340,11 @@ Set<Muscle>& ForceSet::updMuscles()
  */
 void ForceSet::updateMuscles()
 {
-    _muscles.setMemoryOwner(false);
     _muscles.setSize(0);
-    for (int i = 0; i < getSize(); ++i) {
+    for (int i = 0; i < getSize(); ++i)
+    {
         Muscle* m = dynamic_cast<Muscle*>(&get(i));
-        if (m)  _muscles.adoptAndAppend(m);
+        if (m != NULL)  _muscles.adoptAndAppend(m);
     }
 }
 

@@ -69,12 +69,12 @@ FunctionSet::FunctionSet() :
  *
  * @param aFileName Name of the file.
  */
-FunctionSet::FunctionSet(const string &aFileName) :
-    Set<Function>(aFileName, false)
-{
-    setNull();
-    updateFromXMLDocument();
-}
+//FunctionSet::FunctionSet(const string &aFileName) :
+//    Set<Function>(aFileName, false)
+//{
+//    setNull();
+//    updateFromXMLDocument();
+//}
 
 
 //=============================================================================
@@ -105,8 +105,8 @@ setNull()
  * SimTK::NaN is returned.
  * @see Function
  */
-double FunctionSet::
-evaluate(int aIndex,int aDerivOrder,double aX) const
+osim_double_adouble FunctionSet::
+evaluate(int aIndex,int aDerivOrder, osim_double_adouble aX) const
 {
     Function& func = get(aIndex);
 
@@ -135,7 +135,7 @@ evaluate(int aIndex,int aDerivOrder,double aX) const
  * @see Function
  */
 void FunctionSet::
-evaluate(Array<double> &rValues,int aDerivOrder,double aX) const
+evaluate(Array<osim_double_adouble> &rValues,int aDerivOrder, osim_double_adouble aX) const
 {
     int size = getSize();
     rValues.setSize(size);

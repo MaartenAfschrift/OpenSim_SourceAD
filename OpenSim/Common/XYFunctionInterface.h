@@ -53,10 +53,10 @@ class StepFunction;
 #if 1
 class XYPoint {
 public:
-    double _x;
-    double _y;
+    osim_double_adouble _x;
+    osim_double_adouble _y;
     XYPoint() { _x = _y = 0.0; }
-    XYPoint(double aX, double aY) { _x = aX; _y = aY; }
+    XYPoint(osim_double_adouble aX, osim_double_adouble aY) { _x = aX; _y = aY; }
 
 #ifndef SWIG
     bool operator==(const XYPoint &aXYPoint) const { return false; }
@@ -98,7 +98,7 @@ private:
     PiecewiseConstantFunction* _mStepFunction;
     Function* _genericFunction;
 
-    double _scaleFactor;  // = 1.0 unless function is a MultiplierFunction
+    osim_double_adouble _scaleFactor;  // = 1.0 unless function is a MultiplierFunction
 
 
 public:
@@ -108,19 +108,19 @@ public:
     bool isSpecifiedByControlPoints() const; // Flag to indicate whether function can be edited by changing control points
 
     int getNumberOfPoints() const;
-    const double* getXValues() const;
-    const double* getYValues() const;
-    double getX(int aIndex) const;
-    double getY(int aIndex) const;
-    void setX(int aIndex, double aValue);
-    void setY(int aIndex, double aValue);
+    const osim_double_adouble* getXValues() const;
+    const osim_double_adouble* getYValues() const;
+    osim_double_adouble getX(int aIndex) const;
+    osim_double_adouble getY(int aIndex) const;
+    void setX(int aIndex, osim_double_adouble aValue);
+    void setY(int aIndex, osim_double_adouble aValue);
     bool deletePoint(int aIndex);
     bool deletePoints(const Array<int>& indices);
-    int addPoint(double aX, double aY);
+    int addPoint(osim_double_adouble aX, osim_double_adouble aY);
     Array<XYPoint>* renderAsLineSegments(int aIndex);
     static void deleteXYPointArray(Array<XYPoint>* aArray) { if (aArray) delete aArray; }
     FunctionType getFunctionType() const { return _functionType; }
-    double getScale() const { return _scaleFactor; }
+    osim_double_adouble getScale() const { return _scaleFactor; }
     // Utility methods for getting the function as each of the supported types
     Constant* getConstant() const { return _constant; }
     StepFunction* getStepFunction() const { return _stepFunction; }

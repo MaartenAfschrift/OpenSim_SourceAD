@@ -309,32 +309,29 @@ bool ModelScaler::processModel(Model* aModel, const string& aPathToSubject,
         }
 
         /* Now scale the model. */
-        aModel->scale(s, theScaleSet, _preserveMassDist, aSubjectMass);
+        aModel->scale(s, theScaleSet, aSubjectMass, _preserveMassDist);
+
 
         if(_printResultFiles) {
             std::string savedCwd = IO::getCwd();
             IO::chDir(aPathToSubject);
-            try { // writing can throw an exception
-                if (_outputModelFileNameProp.isValidFileName()) {
-                    if (aModel->print(_outputModelFileName))
-                        cout << "Wrote model file " << _outputModelFileName <<
-                        " from model " << aModel->getName() << endl;
-                }
 
-                if (_outputScaleFileNameProp.isValidFileName()) {
-                    if (theScaleSet.print(_outputScaleFileName))
-                        cout << "Wrote scale file " << _outputScaleFileName <<
-                        " for model " << aModel->getName() << endl;
-                }
-            } // catch the exception so we can reset the working directory
-            catch (std::exception& ex) {
-                IO::chDir(savedCwd);
-                OPENSIM_THROW_FRMOBJ(Exception, ex.what());
+            if (!_outputModelFileNameProp.getValueIsDefault())
+            {
+                if (aModel->print(_outputModelFileName))
+                    cout << "Wrote model file " << _outputModelFileName << " from model " << aModel->getName() << endl;
+            }
+
+            if (!_outputScaleFileNameProp.getValueIsDefault())
+            {
+                if (theScaleSet.print(_outputScaleFileName))
+                    cout << "Wrote scale file " << _outputScaleFileName << " for model " << aModel->getName() << endl;
             }
             IO::chDir(savedCwd);
         }
     }
-    catch (const Exception& x) {
+    catch (const Exception& x)
+    {
         x.print(cout);
         return false;
     }

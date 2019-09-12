@@ -113,11 +113,11 @@ public:
     // Number of properties
     int getSize() const;
     // Get
-    virtual Property_Deprecated* get(int i);
+    virtual Property_Deprecated* get(int i) throw (Exception);
 #ifndef SWIG
     virtual const Property_Deprecated* get(int i) const;
 #endif
-    virtual Property_Deprecated* get(const std::string &aName);
+    virtual Property_Deprecated* get(const std::string &aName) throw (Exception);
 #ifndef SWIG
     virtual const Property_Deprecated* get(const std::string &aName) const;
 #endif

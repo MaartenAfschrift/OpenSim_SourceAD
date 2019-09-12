@@ -65,15 +65,16 @@ public:
     /* TODO: Both VisibleObject and the WrapObjectSet should NOT be properties
     of the PhysicalFrame. This is an intermediate solution as we integrate Frames 
     use into the OpenSim API. These properties should be their own components with
-    Sockets to the PhysicalFrames they attach to. - aseth
+    Sockets to the PhysicalFrames they attach to. This must be addressed prior
+    to OpenSim 4.0 release. - aseth
 
     Note: VisibleObject was removed from this class by @aymanhab via PR #417.
                                                             -@chrisdembia
     */
-    OpenSim_DECLARE_UNNAMED_PROPERTY(WrapObjectSet,
-        "Set of wrap objects fixed to this body that GeometryPaths can wrap over."
-        "This property used to be a member of Body but was moved up with "
-        "the introduction of Frames.");
+    //OpenSim_DECLARE_UNNAMED_PROPERTY(WrapObjectSet,
+    //    "Set of wrap objects fixed to this body that GeometryPaths can wrap over."
+    //    "This property used to be a member of Body but was moved up with "
+    //    "the introduction of Frames.");
 
     //==========================================================================
     // PUBLIC METHODS
@@ -135,6 +136,10 @@ public:
     // End of underlying MobilizedBody accessors.
     ///@}
 
+    /** Scale PhysicalFrame related dimensions according to predetermined 
+        ScaleFactors */
+    void scale(const SimTK::Vec3& scaleFactors);
+
     /** @name DEPRECATED API */
 
     ///@{
@@ -144,13 +149,13 @@ public:
     * @param aName Name of the wrap object.
     * @return const Pointer to the wrap object.
     */
-    const WrapObject* getWrapObject(const std::string& aName) const;
-    const WrapObjectSet& getWrapObjectSet() const { return get_WrapObjectSet(); }
+    //const WrapObject* getWrapObject(const std::string& aName) const;
+    //const WrapObjectSet& getWrapObjectSet() const { return get_WrapObjectSet(); }
 
     /** Add a wrap object to the Body. Note that the Body takes ownership of
     * the WrapObject.
     */
-    void addWrapObject(WrapObject* wrapObject);
+    //void addWrapObject(WrapObject* wrapObject);
     ///@} 
 
 protected:
@@ -179,12 +184,12 @@ protected:
     /// Associate a FrameGeometry (visualization) with the this PhysicalFrame
     void extendFinalizeFromProperties() override;
     /// Connect bound WrapObjects
-    void extendConnectToModel(Model& model) override;
+    //void extendConnectToModel(Model& model) override;
     /**@}**/
 
     /** Override to account for version updates in the XML format. */
-    void updateFromXMLNode(SimTK::Xml::Element& aNode,
-        int versionNumber = -1) override;
+    //void updateFromXMLNode(SimTK::Xml::Element& aNode,
+    //    int versionNumber = -1) override;
 
 private:
     /** The transform X_GF for this PhysicalFrame, F, in ground, G. */
@@ -199,21 +204,19 @@ private:
         calcAccelerationInGround(const SimTK::State& state) const override;
 
     /* Component construction interface */
-    void constructProperties();
+    //void constructProperties();
 
     /* Utility to convert Geometry version 3.2 to recent 4.0 format */
-    static void convertDisplayGeometryToGeometryXML(SimTK::Xml::Element& aNode,
-        const SimTK::Vec3& outerScaleFactors,
-        const SimTK::Vec6& outerTransform,
-        SimTK::Xml::Element& geomSetElement);
+    //static void convertDisplayGeometryToGeometryXML(SimTK::Xml::Element& aNode,
+    //    const SimTK::Vec3& outerScaleFactors,
+    //    const SimTK::Vec6& outerTransform,
+    //    SimTK::Xml::Element& geomSetElement);
 
-    /* Utility for updating XML: add a PhysicalOffsetFrame to the XML element
-    pointed to by ownerIter, and gives the frame the provided name, transform
-    (from the frame's parent frame), and the path (connectee name) to the
-    parent frame.*/
-    static void createFrameForXform(const SimTK::Xml::element_iterator&,
-        const std::string& frameName,
-        const SimTK::Vec6& localXform, const std::string& parentConnecteeName);
+    /* Utility to construct a PhysicalOffsetFrame from properties of an
+       offset transform. */
+    //static void createFrameForXform(const SimTK::Xml::element_iterator&,
+    //    const std::string& frameName,
+    //    const SimTK::Vec6& localXform, const std::string& bodyName);
 
 
     /* ID for the underlying mobilized body in Simbody system.

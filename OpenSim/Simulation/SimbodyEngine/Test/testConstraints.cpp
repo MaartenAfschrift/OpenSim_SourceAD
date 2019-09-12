@@ -206,12 +206,17 @@ void integrateOpenSimModel(Model *osimModel, SimTK::State &osim_state)
 
     // SETUP OpenSim SIMULATION Manager
     osimModel->getMultibodySystem().realize(osim_state, Stage::Velocity);
+    RungeKuttaMersonIntegrator integrator(osimModel->getMultibodySystem() );
+    integrator.setAccuracy(integ_accuracy);
 
-    Manager manager(*osimModel);
-    manager.setIntegratorAccuracy(integ_accuracy);
+    Manager manager(*osimModel,  integrator);
 
-    manager.initialize(osim_state);
-    osim_state = manager.integrate(duration);
+    // Specify the initial and final times of the simulation.
+    // In this case, the initial and final times are set based on
+    // the range of times over which the controls are available.
+    //Control *control;
+    osim_state.setTime(0.0);
+    manager.integrate(osim_state, duration);
 }
 
 void compareSimulationStates(SimTK::Vector q_sb, SimTK::Vector u_sb,
@@ -303,8 +308,8 @@ void compareSimulations(SimTK::MultibodySystem &system, SimTK::State &state, Mod
     // Get the state at the end of the integration from OpenSim.
     Vector& qf = osim_state.updQ();
     Vector& uf = osim_state.updU();
-    qf.dump("\nOpenSim Final q's:");
-    uf.dump("\nOpenSim Final u's:");
+    cout<<"\nOpenSim Final q's:\n "<<qf<<endl;
+    cout<<"\nOpenSim Final u's:\n "<<uf<<endl;
 
     //==========================================================================================================
     // Compare Simulation Results
@@ -352,7 +357,7 @@ void testPointConstraint()
     // Setup OpenSim model
     Model *osimModel = new Model;
     //OpenSim bodies
-    const Ground& ground = osimModel->getGround();
+    const Ground& ground = osimModel->getGround();;
 
     //OpenSim foot
     OpenSim::Body osim_foot("foot", footMass.getMass(), footMass.getMassCenter(), footMass.getInertia());
@@ -430,53 +435,45 @@ void testConstantDistanceConstraint()
 
     //==========================================================================================================
     // Setup OpenSim model
-    Model osimModel;
+    Model *osimModel = new Model;
     //OpenSim bodies
-    const Ground& ground = osimModel.getGround();
+    const Ground& ground = osimModel->getGround();;
 
     //OpenSim foot
-    auto* osim_foot = new OpenSim::Body("foot", footMass.getMass(),
-                                        footMass.getMassCenter(),
-                                        footMass.getInertia());
+    OpenSim::Body osim_foot("foot", footMass.getMass(), footMass.getMassCenter(), footMass.getInertia());
 
     // create foot as a free joint
-    auto* footJoint = new FreeJoint("footToGround", ground, Vec3(0), Vec3(0),
-                                    *osim_foot, Vec3(0), Vec3(0));
+    FreeJoint footJoint("footToGround", ground, Vec3(0), Vec3(0), osim_foot, Vec3(0), Vec3(0));
     
     // Add the thigh body which now also contains the hip joint to the model
-    osimModel.addBody(osim_foot);
-    osimModel.addJoint(footJoint);
+    osimModel->addBody(&osim_foot);
+    osimModel->addJoint(&footJoint);
 
     // add a constant distance constraint
-    auto* rodConstraint = new ConstantDistanceConstraint(
-                ground, pointOnGround, *osim_foot, pointOnFoot, rodLength);
-    osimModel.addConstraint(rodConstraint);
+    ConstantDistanceConstraint rodConstraint(ground, pointOnGround, osim_foot, pointOnFoot,rodLength);
+    osimModel->addConstraint(&rodConstraint);
 
-    osimModel.setGravity(gravity_vec);
+    // BAD: have to set memoryOwner to false or program will crash when this test is complete.
+    osimModel->disownAllComponents();
+
+    osimModel->setGravity(gravity_vec);
 
     //Add analyses before setting up the model for simulation
-    Kinematics* kinAnalysis = new Kinematics(&osimModel);
+    Kinematics *kinAnalysis = new Kinematics(osimModel);
     kinAnalysis->setInDegrees(false);
-    osimModel.addAnalysis(kinAnalysis);
+    osimModel->addAnalysis(kinAnalysis);
 
-    // Need to setup model before adding an analysis since it creates the
-    // AnalysisSet for the model if it does not exist.
-    State& osim_state = osimModel.initSystem();
+    // Need to setup model before adding an analysis since it creates the AnalysisSet
+    // for the model if it does not exist.
+    State& osim_state = osimModel->initSystem();
 
-    //=========================================================================
+    //==========================================================================================================
     // Compare Simbody system and OpenSim model simulations
-    compareSimulations(system, state, &osimModel, osim_state,
-                       "testConstantDistanceConstraint FAILED\n");
+    compareSimulations(system, state, osimModel, osim_state, "testConstantDistanceConstraint FAILED\n");
 }
 void testCoordinateLocking()
 {
     using namespace SimTK;
-
-    cout << endl;
-    cout << "==================================================================" << endl;
-    cout << " OpenSim testCoordinateLocking " << endl;
-    cout << "==================================================================" << endl;
-
 
     double fixedKneeAngle = Pi/2;
 
@@ -538,10 +535,12 @@ void testCoordinateLocking()
     osimModel->getMultibodySystem().realize(si2, Stage::Velocity );
  
     // Create the integrator and manager for the simulation.
-    Manager manager(*osimModel);
-    manager.setIntegratorMaximumStepSize(1.0e-3);
-    manager.setIntegratorMinimumStepSize(1.0e-6);
-    manager.setIntegratorAccuracy(integ_accuracy);
+    RungeKuttaMersonIntegrator integrator(osimModel->getMultibodySystem());
+    integrator.setMaximumStepSize(1.0e-3);
+    integrator.setMinimumStepSize(1.0e-6);
+    integrator.setAccuracy(integ_accuracy);
+
+    Manager manager(*osimModel,  integrator);
 
     // Print out the initial position and velocity states
     si2.getQ().dump("Initial q's"); // pendulum positions
@@ -550,9 +549,8 @@ void testCoordinateLocking()
 
     // Integrate from initial time to final time
     si2.setTime(0.0);
-    manager.initialize(si2);
     cout<<"\n\nIntegrating from "<<si2.getTime()<<" to "<<duration<<std::endl;
-    si2 = manager.integrate(duration);
+    manager.integrate(si2, duration);
 
     // Print out the final position and velocity states
     Vector qf = si2.getQ();
@@ -911,7 +909,6 @@ void testCoordinateCouplerConstraint()
     osimModel->disownAllComponents();
 
     // write out the model to file
-    osimModel->finalizeConnections();
     osimModel->print("testCouplerConstraint.osim");
 
     //wipe-out the model just constructed
@@ -1030,8 +1027,8 @@ void testRollingOnSurfaceConstraint()
 
     // add a point on line constraint
     auto roll = new RollingOnSurfaceConstraint();
-    roll->connectSocket_rolling_body(*osim_rod);
-    roll->connectSocket_surface_body(ground);
+    roll->setRollingBodyByName("rod");
+    roll->setSurfaceBodyByName("ground");
 
     /*double h = */roll->get_surface_height();
     

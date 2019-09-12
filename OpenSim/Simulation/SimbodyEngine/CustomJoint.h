@@ -129,11 +129,11 @@ public:
     }
 
     // SCALE
-    void extendScale(const SimTK::State& s, const ScaleSet& scaleSet) override;
+    void scale(const ScaleSet& aScaleSet) override;
 
     /** Override of the default implementation to account for versioning. */
-    void updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber=-1)
-        override;
+    //void updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber=-1)
+    //    override;
 
 private:
     // ModelComponent extension interface

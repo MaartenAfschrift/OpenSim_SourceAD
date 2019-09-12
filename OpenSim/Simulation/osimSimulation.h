@@ -40,6 +40,7 @@
 #include "Model/CoordinateSet.h"
 #include "Model/ElasticFoundationForce.h"
 #include "Model/HuntCrossleyForce.h"
+#include "Model/HuntCrossleyForce_smooth.h"
 #include "Model/Ligament.h"
 #include "Model/JointSet.h"
 #include "Model/Marker.h"
@@ -120,8 +121,6 @@
 #include "Solver.h"
 #include "StatesTrajectory.h"
 #include "StatesTrajectoryReporter.h"
-#include "OpenSense/OpenSenseUtilities.h"
-#include "OpenSense/InverseKinematicsStudy.h"
 
 #include "SimulationUtilities.h"
 

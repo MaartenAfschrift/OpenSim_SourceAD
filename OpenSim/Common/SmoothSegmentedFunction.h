@@ -58,7 +58,7 @@ namespace OpenSim {
 
 
     */
-    class OSIMCOMMON_API SmoothSegmentedFunction : public SimTK::Function_<double>
+    class OSIMCOMMON_API SmoothSegmentedFunction : public SimTK::Function_<osim_double_adouble>
 //    class SmoothSegmentedFunction : public SimTK::Function_<double>
 
     {
@@ -92,7 +92,7 @@ namespace OpenSim {
             x in linear section:   ~5 flops
        \endverbatim
        */
-       double calcValue(double x) const;
+       osim_double_adouble calcValue(osim_double_adouble x) const;
 
       
 
@@ -120,19 +120,11 @@ namespace OpenSim {
        \endverbatim
     
        */
-       double calcDerivative(double x, int order) const;       
+       osim_double_adouble calcDerivative(osim_double_adouble x, int order) const;       
 
-#ifndef SWIG
-       /// Allow the more general calcDerivative from the base class to be used.
-       // This helps avoid the -Woverloaded-virtual warning with Clang.
-       // We could have also put this `using` line in ActiveForceLengthCurve,
-       // etc., but that would be inconsistent with how the
-       // SmoothSegmentedFunction is used (e.g., calcValue() delegates to the
-       // internal `m_value`).
-       using Function_<double>::calcDerivative;
-#endif
+       
 
-
+     
        /**This will return the value of the integral of this objects curve 
        evaluated at x. 
        
@@ -155,7 +147,7 @@ namespace OpenSim {
        \endverbatim
 
        */
-       double calcIntegral(double x) const;
+       osim_double_adouble calcIntegral(osim_double_adouble x) const;
        
        /**
         Returns a bool that indicates if the integral curve has been computed.
@@ -260,8 +252,8 @@ namespace OpenSim {
 
        */
        void printMuscleCurveToCSVFile(const std::string& path,
-                                      double domainMin,
-                                      double domainMax) const;
+                                      osim_double_adouble domainMin,
+                                      osim_double_adouble domainMax) const;
        
 ///@cond       
        /**
@@ -302,8 +294,8 @@ namespace OpenSim {
        */
 
        SimTK::Matrix calcSampledMuscleCurve(int maxOrder,
-                                            double domainMin,
-                                            double domainMax) const;
+                                            osim_double_adouble domainMin,
+                                            osim_double_adouble domainMax) const;
        ///@endcond
 
     private:
@@ -324,17 +316,17 @@ namespace OpenSim {
         int _numBezierSections;
 
         /**The minimum value of the domain*/
-        double _x0;
+        osim_double_adouble _x0;
         /**The maximum value of the domain*/
-        double _x1;
+        osim_double_adouble _x1;
         /**The minimum value of the range*/
-        double _y0;
+        osim_double_adouble _y0;
         /**The maximum value of the range*/
-        double _y1;
+        osim_double_adouble _y1;
         /**The slope at _x0*/
-        double _dydx0;
+        osim_double_adouble _dydx0;
         /**The slope at _x1*/
-        double _dydx1;
+        osim_double_adouble _dydx1;
         /**This is the users */
         bool _computeIntegral;
 
@@ -410,7 +402,7 @@ namespace OpenSim {
 
               */
        SmoothSegmentedFunction(const SimTK::Matrix& mX, const SimTK::Matrix& mY, 
-          double x0, double x1,double y0, double y1,double dydx0, double dydx1,
+          osim_double_adouble x0, osim_double_adouble x1,osim_double_adouble y0, osim_double_adouble y1,osim_double_adouble dydx0, osim_double_adouble dydx1,
           bool computeIntegral, bool intx0x1, const std::string& name); 
 
         /**
@@ -436,14 +428,14 @@ namespace OpenSim {
        This is a required virtual function required because this class extends 
        the SimTK::Function interface.
        */
-       double calcValue(const SimTK::Vector& x) const override;
+       osim_double_adouble calcValue(const SimTK::Vector& x) const override;
 
         /** Refer to the documentation for calcDerivative(double x, int order) 
        because this function is identical in function to 
-       calcDerivative(double x, int order), but requires different inputs. 
+       calcDerivative(osim_double_adouble x, int order), but requires different inputs. 
        This is a required virtual function required because this class extends 
        the SimTK::Function interface.*/
-       double calcDerivative(
+       osim_double_adouble calcDerivative(
                                const SimTK::Array_<int>& derivComponents, 
                                const SimTK::Vector& x) const override; 
 

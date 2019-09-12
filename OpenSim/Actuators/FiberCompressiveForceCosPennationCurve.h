@@ -64,9 +64,7 @@ namespace OpenSim {
 
  */
 class OSIMACTUATORS_API FiberCompressiveForceCosPennationCurve : 
-    public Function {
-    
-    OpenSim_DECLARE_CONCRETE_OBJECT(
+    public Function {OpenSim_DECLARE_CONCRETE_OBJECT(
                                 FiberCompressiveForceCosPennationCurve, 
                                 Function);
 
@@ -329,10 +327,6 @@ public:
     */
     double calcDerivative(double cosPennationAngle, int order) const;
 
-    /// If possible, use the simpler overload above.
-    double calcDerivative(const std::vector<int>& derivComponents,
-                          const SimTK::Vector& x) const override;
-
     /**     
     @param cosPennationAngle
                 The cosine of the pennation angle
@@ -446,8 +440,8 @@ private:
     double m_stiffnessAtPerpendicularInUse;
     double m_curvinessInUse;
     bool  m_isFittedCurveBeingUsed;
-};
+    };
 
-}
+    }
 
 #endif //OPENSIM_FiberCompressiveForceCosPennationCurve_h__

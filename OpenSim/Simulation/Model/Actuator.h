@@ -54,7 +54,7 @@ OpenSim_DECLARE_ABSTRACT_OBJECT(Actuator, Force);
 //=============================================================================
 // OUTPUTS
 //=============================================================================
-OpenSim_DECLARE_OUTPUT(power, double, getPower, SimTK::Stage::Dynamics);
+OpenSim_DECLARE_OUTPUT(power, osim_double_adouble, getPower, SimTK::Stage::Dynamics);
 
 //=============================================================================
 // DATA
@@ -85,6 +85,9 @@ protected:
     // ModelComponent Interface
     void extendAddToSystem(SimTK::MultibodySystem& system) const override;
 
+    // Update the geometry attached to the actuator. Use inertial frame.
+    virtual void updateGeometry();
+
 public:
 
     //Model building
@@ -94,11 +97,11 @@ public:
     virtual const SimTK::Vector getDefaultControls() { return SimTK::Vector(numControls(), 0.0); } 
 #ifndef SWIG
     // CONTROLS
-    virtual const SimTK::VectorView_<double> getControls( const SimTK::State& s ) const;
+    //virtual const SimTK::VectorView_<osim_double_adouble> getControls( const SimTK::State& s ) const;
 #endif
     /** Convenience methods for getting, setting and adding to actuator controls from/into 
         the model controls. These methods have no effect on the realization stage. */
-    virtual void getControls(const SimTK::Vector& modelControls, SimTK::Vector& actuatorControls) const;
+    //virtual void getControls(const SimTK::Vector& modelControls, SimTK::Vector& actuatorControls) const;
     /** set actuator controls subvector into the right slot in the system-wide model controls */
     virtual void setControls(const SimTK::Vector& actuatorControls, SimTK::Vector& modelControls) const;
     /** add actuator controls to the values already occupying the slot in the system-wide model controls */
@@ -107,7 +110,7 @@ public:
     //--------------------------------------------------------------------------
     // COMPUTATIONS
     //--------------------------------------------------------------------------
-    virtual double getPower(const SimTK::State& s) const = 0;
+    virtual osim_double_adouble getPower(const SimTK::State& s) const = 0;
     virtual void computeEquilibrium(SimTK::State& s) const { }
 
 //=============================================================================
@@ -133,20 +136,20 @@ public:
 // PROPERTIES
 //==============================================================================
     /** Default is -Infinity (no limit). **/
-    OpenSim_DECLARE_PROPERTY(min_control, double,
+    OpenSim_DECLARE_PROPERTY(min_control, osim_double_adouble,
         "Minimum allowed value for control signal. Used primarily when solving "
         "for control values.");
     /** Default is Infinity (no limit). **/
-    OpenSim_DECLARE_PROPERTY(max_control, double,
+    OpenSim_DECLARE_PROPERTY(max_control, osim_double_adouble,
         "Maximum allowed value for control signal. Used primarily when solving "
         "for control values.");
 
 //==============================================================================
 // OUTPUTS 
 //==============================================================================
-    OpenSim_DECLARE_OUTPUT(actuation, double, getActuation,
+    OpenSim_DECLARE_OUTPUT(actuation, osim_double_adouble, getActuation,
             SimTK::Stage::Velocity);
-    OpenSim_DECLARE_OUTPUT(speed, double, getSpeed, SimTK::Stage::Velocity);
+    OpenSim_DECLARE_OUTPUT(speed, osim_double_adouble, getSpeed, SimTK::Stage::Velocity);
 
 
 //==============================================================================
@@ -158,25 +161,25 @@ public:
 
     /** Convenience method to get control given scalar (double) valued control
      */
-    virtual double getControl(const SimTK::State& s ) const;
+    //virtual osim_double_adouble getControl(const SimTK::State& s ) const;
 
     //Model building
     int numControls() const override {return 1;};
 
     // Accessing actuation, speed, and power of a scalar valued actuator
-    virtual void setActuation(const SimTK::State& s, double aActuation) const;
-    virtual double getActuation(const SimTK::State& s) const;
-    virtual void setSpeed( const SimTK::State& s, double aspeed) const;
-    virtual double getSpeed( const SimTK::State& s) const;
-    double getPower(const SimTK::State& s) const override { return getActuation(s)*getSpeed(s); }
-    virtual double getStress(const SimTK::State& s) const;
-    virtual double getOptimalForce() const;
+    virtual void setActuation(const SimTK::State& s, osim_double_adouble aActuation) const;
+    virtual osim_double_adouble getActuation(const SimTK::State& s) const;
+    virtual void setSpeed( const SimTK::State& s, osim_double_adouble aspeed) const;
+    virtual osim_double_adouble getSpeed( const SimTK::State& s) const;
+    osim_double_adouble getPower(const SimTK::State& s) const override { return getActuation(s)*getSpeed(s); }
+    virtual osim_double_adouble getStress(const SimTK::State& s) const;
+    virtual osim_double_adouble getOptimalForce() const;
 
     /** Methods to manage the bounds on ScalarActuator's control */
-    void setMinControl(const double& aMinControl);
-    double getMinControl() const;
-    void setMaxControl(const double& aMaxControl);
-    double getMaxControl() const;
+    void setMinControl(const osim_double_adouble& aMinControl);
+    osim_double_adouble getMinControl() const;
+    void setMaxControl(const osim_double_adouble& aMaxControl);
+    osim_double_adouble getMaxControl() const;
 
     //--------------------------------------------------------------------------
     // Overriding Actuation
@@ -206,23 +209,23 @@ public:
     * @param s      current state
     * @param value  value of override actuation   
     */
-    void setOverrideActuation(SimTK::State& s, double value) const;
+    void setOverrideActuation(SimTK::State& s, osim_double_adouble value) const;
 
     /**
     * return override actuation 
     */
-    double getOverrideActuation(const SimTK::State& s) const;
+    osim_double_adouble getOverrideActuation(const SimTK::State& s) const;
 
 
 protected:
 
     // ScalarActuator interface
-    virtual double computeActuation(const SimTK::State& s) const = 0;
+    //virtual osim_double_adouble computeActuation(const SimTK::State& s) const = 0;
 
     // ModelComponent Interface
     void extendAddToSystem(SimTK::MultibodySystem& system) const override;
 
-    double computeOverrideActuation(const SimTK::State& s) const;
+    osim_double_adouble computeOverrideActuation(const SimTK::State& s) const;
 
     //Actuation reporting
     /** 
@@ -240,8 +243,8 @@ protected:
      * actuation, application location frame, etc. used in conjunction 
      * with getRecordLabels and should return same size Array
      */
-    OpenSim::Array<double> getRecordValues(const SimTK::State& state) const override {
-        OpenSim::Array<double> values(1);
+    OpenSim::Array<osim_double_adouble> getRecordValues(const SimTK::State& state) const override {
+        OpenSim::Array<osim_double_adouble> values(1);
         values.append(getActuation(state));
         return values;
     }

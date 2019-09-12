@@ -75,8 +75,8 @@ GCVSpline() :
 }
 //_____________________________________________________________________________
 GCVSpline::
-GCVSpline(int aDegree,int aN,const double *aX,const double *aF,
-    const string &aName,double aErrorVariance) :
+GCVSpline(int aDegree,int aN,const osim_double_adouble *aX,const osim_double_adouble *aF,
+    const string &aName,osim_double_adouble aErrorVariance) :
     _halfOrder(_propHalfOrder.getValueInt()),
     _errorVariance(_propErrorVariance.getValueDbl()),
     _x(_propX.getValueDblArray()),
@@ -183,25 +183,25 @@ setupProperties()
 
     // X- INDEPENDENT VARIABLES
     _propX.setName("x");
-    Array<double> x(0.0);
+    Array<osim_double_adouble> x(0.0);
     _propX.setValue(x);
     _propertySet.append( &_propX );
 
     // Y- DEPENDENT VARIABLES
     _propY.setName("y");
-    Array<double> y(0.0);
+    Array<osim_double_adouble> y(0.0);
     _propY.setValue(y);
     _propertySet.append( &_propY );
 
     // WEIGHTS
     _propWeights.setName("weights");
-    Array<double> weights(1.0);
+    Array<osim_double_adouble> weights(1.0);
     _propWeights.setValue(weights);
     _propertySet.append( &_propWeights );
 
     // COEFFICIENTS
     _propCoefficients.setName("coefficients");
-    Array<double> coefs(0.0);
+    Array<osim_double_adouble> coefs(0.0);
     _propCoefficients.setValue(coefs);
     _propertySet.append( &_propCoefficients );
 }
@@ -239,23 +239,23 @@ setEqual(const GCVSpline &aSpline)
 /**
  * Update this object based on its XML node.
  */
-void GCVSpline::updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber)
-{
-    // Base class
-    Function::updateFromXMLNode(aNode, versionNumber);
-
-    // Weights may not have been specified in the XML file.
-    int wSize = _weights.getSize();
-    if (wSize < _x.getSize()) {
-        _weights.setSize(_x.getSize()); 
-        for (int i=wSize; i<_x.getSize(); i++)
-            _weights[i] = 1.0;
-    }
-
-    // Coefficients may not have been specified in the XML file.
-    if (_coefficients.getSize() < _x.getSize())
-        _coefficients.setSize(_x.getSize());
-}   
+//void GCVSpline::updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber)
+//{
+//    // Base class
+//    Function::updateFromXMLNode(aNode, versionNumber);
+//
+//    // Weights may not have been specified in the XML file.
+//    int wSize = _weights.getSize();
+//    if (wSize < _x.getSize()) {
+//        _weights.setSize(_x.getSize()); 
+//        for (int i=wSize; i<_x.getSize(); i++)
+//            _weights[i] = 1.0;
+//    }
+//
+//    // Coefficients may not have been specified in the XML file.
+//    if (_coefficients.getSize() < _x.getSize())
+//        _coefficients.setSize(_x.getSize());
+//}   
 
 //_____________________________________________________________________________
 /**
@@ -278,8 +278,8 @@ init(Function* aFunction)
             // A GCVSpline must have at least getOrder() data points.
             // If aFunction is a Constant, use its Y value for all data points.
             // If it is not, make up the data points.
-            double* x = new double[order];
-            double* y = new double[order];
+            osim_double_adouble* x = new osim_double_adouble[order];
+            osim_double_adouble* y = new osim_double_adouble[order];
             for (int i=0; i<order; i++)
                 x[i] = i;
             Constant* cons = dynamic_cast<Constant*>(aFunction);
@@ -298,9 +298,9 @@ init(Function* aFunction)
             // Use as many data points as aFunction has, and then fill
             // in the rest by copying the last Y value, and incrementing
             // the X value by the step between the last two real data points.
-            double* x = new double[order];
-            double* y = new double[order];
-            double step = 1.0;
+            osim_double_adouble* x = new osim_double_adouble[order];
+            osim_double_adouble* y = new osim_double_adouble[order];
+            osim_double_adouble step = 1.0;
             if (xyFunc.getNumberOfPoints() >= 2)
                 step = xyFunc.getXValues()[xyFunc.getNumberOfPoints()-1] -
                 xyFunc.getXValues()[xyFunc.getNumberOfPoints()-2];
@@ -416,25 +416,25 @@ getSize() const
 // X AND COEFFICIENTS
 //-----------------------------------------------------------------------------
 //_____________________________________________________________________________
-const Array<double>& GCVSpline::
+const Array<osim_double_adouble>& GCVSpline::
 getX() const
 {
     return(_x);
 }
 //_____________________________________________________________________________
-const double* GCVSpline::
+const osim_double_adouble* GCVSpline::
 getXValues() const
 {
     return(&_x[0]);
 }
 //_____________________________________________________________________________
-const double* GCVSpline::
+const osim_double_adouble* GCVSpline::
 getYValues() const
 {
     return(&_y[0]);
 }
 //_____________________________________________________________________________
-const Array<double>& GCVSpline::
+const Array<osim_double_adouble>& GCVSpline::
 getCoefficients() const
 {
     return(_coefficients);
@@ -445,7 +445,7 @@ getCoefficients() const
 //=============================================================================
 // EVALUATION
 //=============================================================================
-double GCVSpline::
+osim_double_adouble GCVSpline::
 getX(int aIndex) const
 {
     if (aIndex >= 0 && aIndex < _x.getSize())
@@ -456,7 +456,7 @@ getX(int aIndex) const
     }
 }
 
-double GCVSpline::
+osim_double_adouble GCVSpline::
 getY(int aIndex) const
 {
     if (aIndex >= 0 && aIndex < _y.getSize())
@@ -468,7 +468,7 @@ getY(int aIndex) const
 }
 
 void GCVSpline::
-setX(int aIndex, double aValue)
+setX(int aIndex, osim_double_adouble aValue)
 {
     if (aIndex >= 0 && aIndex < _x.getSize()) {
         _x[aIndex] = aValue;
@@ -479,7 +479,7 @@ setX(int aIndex, double aValue)
 }
 
 void GCVSpline::
-setY(int aIndex, double aValue)
+setY(int aIndex, osim_double_adouble aValue)
 {
     if (aIndex >= 0 && aIndex < _y.getSize()) {
         _y[aIndex] = aValue;
@@ -493,17 +493,17 @@ setY(int aIndex, double aValue)
 // MIN AND MAX X
 //-----------------------------------------------------------------------------
 //_____________________________________________________________________________
-double GCVSpline::
+osim_double_adouble GCVSpline::
 getMinX() const
 {
-    if(getSize()<=0) return(SimTK::NaN);
+    if(getSize()<=0) return(SimTK::NaN.value());
     return(_x.get(0));
 }
 //_____________________________________________________________________________
-double GCVSpline::
+osim_double_adouble GCVSpline::
 getMaxX() const
 {
-    if(getSize()<=0) return(SimTK::NaN);
+    if(getSize()<=0) return(SimTK::NaN.value());
     return(_x.getLast());
 }
 
@@ -557,7 +557,7 @@ deletePoints(const Array<int>& indices)
 }
 
 int GCVSpline::
-addPoint(double aX, double aY)
+addPoint(osim_double_adouble aX, osim_double_adouble aY)
 {
     int i=0;
     for (i=0; i<_x.getSize(); i++)
@@ -590,9 +590,9 @@ SimTK::Function* GCVSpline::createSimTKFunction() const {
         y[i] = _y[i];
     SimTK::Spline* spline;
     if (_errorVariance < 0.0)
-        spline = new SimTK::Spline(SimTK::SplineFitter<double>::fitFromGCV(degree, x, y).getSpline());
+        spline = new SimTK::Spline(SimTK::SplineFitter<osim_double_adouble>::fitFromGCV(degree, x, y).getSpline());
     else
-        spline = new SimTK::Spline(SimTK::SplineFitter<double>::fitFromErrorVariance(degree, x, y, _errorVariance).getSpline());
+        spline = new SimTK::Spline(SimTK::SplineFitter<osim_double_adouble>::fitFromErrorVariance(degree, x, y, _errorVariance).getSpline());
 
      int sz = _coefficients.getSize();
     for (int i = 0; i < sz; ++i)

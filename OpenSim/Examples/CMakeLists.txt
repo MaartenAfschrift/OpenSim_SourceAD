@@ -34,9 +34,4 @@ elseif()
 
 endif()
 
-# We do not install the BuildDynamicWalker example, because it is assigned to
-# students as homework. The solution to the BuildDynamicWalker example is in
-# OpenSim/Examples/BuildDynamicWalker, and is tested in 
-# OpenSim/Tests/BuildDynamicWalker.
-
 install(DIRECTORY Plugins DESTINATION "${OPENSIM_INSTALL_CPPEXDIR}")

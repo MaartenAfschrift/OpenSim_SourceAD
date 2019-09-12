@@ -43,6 +43,8 @@
 #include <cstring>
 #include <cassert>
 
+#include "osim_adouble.h"
+
 // DISABLES MULTIPLE INSTANTIATION WARNINGS
 
 
@@ -250,9 +252,7 @@ public:
     properties and corresponding properties are equal, and if the objects
     are the same concrete type and the concrete class says they are equal. 
     Concrete object classes must override this if they have any fields to
-    compare, but be sure to invoke the base class operator too.
-    To print information about the exact differences,
-    set the debug level (setDebugLevel()) to a number greater than 0. **/
+    compare, but be sure to invoke the base class operator too. **/
     virtual bool operator==(const Object &aObject) const;
     /** Provide an ordering for objects so they can be put in sorted
     containers. **/
@@ -492,7 +492,7 @@ public:
     %Object doesn't have the proper type info. This works by using the defaults 
     table so that %Object does not need to know about its derived classes. It 
     uses the defaults table to get an instance. **/
-    static Object* makeObjectFromFile(const std::string& fileName);
+    //static Object* makeObjectFromFile(const std::string& fileName);
 
     /** We're given an XML element from which we are to populate this %Object.
     If the element has a \c file attribute, we'll instead read the %Object from
@@ -501,17 +501,17 @@ public:
     be interpreted relative to the current working directory, but that will
     normally have been set earlier to the directory containing the top-level 
     (root) %Object, such as the Model file. **/
-    void readObjectFromXMLNodeOrFile
-       (SimTK::Xml::Element& objectElement, 
-        int                  versionNumber);
+    //void readObjectFromXMLNodeOrFile
+    //   (SimTK::Xml::Element& objectElement, 
+    //    int                  versionNumber);
 
     /** Use this method to deserialize an object from a SimTK::Xml::Element. The 
     element is assumed to be in the format consistent with the passed-in 
     \a versionNumber. If there is a file attribute in \a objectElement it
     will be ignored; if you want it processed you should call 
     readObjectFromXMLNodeOrFile() instead. **/
-    virtual void updateFromXMLNode(SimTK::Xml::Element& objectElement, 
-                                   int                  versionNumber);
+    //virtual void updateFromXMLNode(SimTK::Xml::Element& objectElement, 
+    //                               int                  versionNumber);
 
     /** Serialize this object into the XML node that represents it.   
     @param      parent 
@@ -520,22 +520,18 @@ public:
         no parent node is supplied and this object doesn't already have an XML 
         node, this object will become the root node for a new XML document. If 
         this object already has an XML node associated with it, no new nodes 
-        are ever generated and the parent node is not used.
-    @param      prop (optional)
-        The pointer to the property that contains this object. If it is
-        present, check if the property is unnamed and if NOT, use the property
-        name as its name when updating the XML node. **/
-    void updateXMLNode(SimTK::Xml::Element& parent,
-                       const AbstractProperty* prop=nullptr) const;
+        are ever generated and the parent node is not used. 
+    **/
+    //virtual void updateXMLNode(SimTK::Xml::Element& parent) const;
 
     /** Inlined means an in-memory Object that is not associated with
     an XMLDocument. **/
-    bool getInlined() const;
+    //bool getInlined() const;
     /** Mark this as inlined or not and optionally provide a file name
     to associate with the new XMLDocument for the non-inline case. If 
     there was already a document associated with this object it is
     deleted. **/
-    void setInlined(bool aInlined, const std::string &aFileName="");
+    //void setInlined(bool aInlined, const std::string &aFileName="");
 
 protected:
     /** When an object is initialized using the current values of its
@@ -548,7 +544,9 @@ protected:
 
     This flag is cleared automatically but if you want to clear it manually
     for testing or debugging, see clearObjectIsUpToDateWithProperties(). **/
-    void setObjectIsUpToDateWithProperties();
+    void setObjectIsUpToDateWithProperties() {
+        _objectIsUpToDate = true;
+    }
 
     /** For testing or debugging purposes, manually clear the "object is up to
     date with respect to properties" flag. This is normally done automatically
@@ -558,52 +556,36 @@ protected:
         _objectIsUpToDate = false;
     }
 
-    /** Make sure the name of an object is consistent with its property type. A
-    name can be changed independent of the property name, which may be inconsistent
-    with any restrictions specified by the Property. For example, unnamed property
-    object should not have a name. Furthermore, named properties whose object
-    name is empty, should have the property name. **/
-    void makeObjectNamesConsistentWithProperties();
-
     /** Use this method only if you're deserializing from a file and the object
     is at the top level; that is, primarily in constructors that take a file
     name as input. **/
-    void updateFromXMLDocument();
+    //void updateFromXMLDocument();
     /** Unconditionally set the XMLDocument associated with this object.
     Use carefully -- if there was already a document its heap space is
     lost here. **/
-    void setDocument(XMLDocument* doc) {_document=doc;}
+    //void setDocument(XMLDocument* doc) {_document=doc;}
 
     /** Get a const pointer to the document (if any) associated with this
     object. **/
-    const XMLDocument* getDocument() const {return _document;}
+    //const XMLDocument* getDocument() const {return _document;}
     /** Get a writable pointer to the document (if any) associated with this
     object. **/
-    XMLDocument* updDocument() {return _document;}
+    //XMLDocument* updDocument() {return _document;}
 public:
     /** If there is a document associated with this object then return the
     file name maintained by the document. Otherwise return an empty string. **/
-    std::string getDocumentFileName() const;
-
-    /** If there is a document associated with this object then return its
-        version number. For example this is 30000 for OpenSim 3.x documents 
-        and is 305xx for OpenSim 4.0 beta and above. If there is no document
-        associated with the object, the method returns -1.*/
-    int getDocumentFileVersion() const;
-
+    //std::string getDocumentFileName() const;
     void setAllPropertiesUseDefault(bool aUseDefault);
 
     /** Write this %Object into an XML file of the given name; conventionally
     the suffix to use is ".osim". This is useful for writing out a Model that
     has been created programmatically, and also very useful for testing and
-    debugging. If object has invalid connections, then printing is aborted.
-    You can override this behavior by setting the debug level to at least 1 
-    (e.g., Object::setDebugLevel(1)) prior to printing. **/
-    bool print(const std::string& fileName) const;
+    debugging. **/
+    //bool print(const std::string& fileName) const;
 
     /** dump the XML representation of this %Object into an std::string and return it.
     Mainly intended for debugging and for use by the XML browser in the GUI. **/
-    std::string dump() const; 
+    //std::string dump(bool dumpName=false); 
     /**@}**/
     //--------------------------------------------------------------------------
     // ADVANCED/OBSCURE/QUESTIONABLE/BUGGY
@@ -706,7 +688,7 @@ protected:
     /** Construct the base class portion of an %Object from a given Xml 
     element that describes this Object. Assumes latest XML file format; there
     is no provision for version numbering. **/
-    explicit Object(SimTK::Xml::Element& aElement);
+    //explicit Object(SimTK::Xml::Element& aElement);
 
 
     /** Define a new single-value property of known type T, with the given 
@@ -805,17 +787,11 @@ private:
     void setNull();
 
     // Functions to support deserialization. 
-    void generateXMLDocument();
+    //void generateXMLDocument();
 
-    void updateDefaultObjectsFromXMLNode();
-    void updateDefaultObjectsXMLNode(SimTK::Xml::Element& aParent);
+    //void updateDefaultObjectsFromXMLNode();
+    //void updateDefaultObjectsXMLNode(SimTK::Xml::Element& aParent);
 
-    /** This is invoked at the start of print(). If _debugLevel is at least 1 then
-     * printing is allowed to proceed even if the resulting file is corrupt, otherwise
-     * printing is aborted.
-     * Derived classes can use this as an opportunity to issue warnings to users.
-     */
-    virtual void warnBeforePrint() const {}
 
 //==============================================================================
 // DATA
@@ -857,12 +833,10 @@ private:
     // a "defaults" section.
     static bool _serializeAllDefaults;
 
-    // Debug level:
-    // -1: Quiet mode, no warnings printed.
-    //  0: Print upon successful load of model, external loads, etc. Print 
-    //     warnings for muscles with negative force.
-    //  1: Shows illegal tags. 
-    //  2: level 1 + registration troubleshooting.
+    // Debug level: 
+    //  0: Hides non fatal warnings 
+    //  1: Shows illegal tags 
+    //  2: level 1 + registration troubleshooting
     //  3: 2 + more verbose troubleshooting of Object (de)serialization. When 
     //     used from Java wrapping in GUI/Matlab this catches all exceptions 
     //     thrown by the low-level libraries which is slower but helpful in 
@@ -1136,8 +1110,12 @@ template <> struct Object_GetClassName<unsigned long long int>
 {   static const std::string name() {return "int";} };
 template <> struct Object_GetClassName<float> 
 {   static const std::string name() {return "float";} };
-template <> struct Object_GetClassName<double> 
-{   static const std::string name() {return "double";} };
+//template <> struct Object_GetClassName<double> 
+//{   static const std::string name() {return "double";} };
+template <> struct Object_GetClassName<Recorder>
+{
+	static const std::string name() { return "double"; }
+};
 template <> struct Object_GetClassName<long double> 
 {   static const std::string name() {return "double";} };
 template <> struct Object_GetClassName<std::string> 
@@ -1160,8 +1138,6 @@ template <> struct Object_GetClassName<SimTK::SpatialVec>
 {   static const std::string name() {return "SpatialVec";} };
 template <> struct Object_GetClassName<SimTK::Transform>
 {   static const std::string name() {return "Transform";} };
-template <> struct Object_GetClassName<SimTK::Rotation_<SimTK::Real>>
-{   static const std::string name() { return "Rotation"; } };
 
 #define OpenSim_OBJECT_ANY_DEFS(ConcreteClass, SuperClass)                     \
 public:                                                                        \
@@ -1309,78 +1285,78 @@ ObjectProperty<T>::isEqualTo(const AbstractProperty& other) const {
 
 // Property element is a compound element, consisting of subelements
 // each of which is one of the object values.
-template <class T> inline void 
-ObjectProperty<T>::readFromXMLElement
-    (SimTK::Xml::Element& propertyElement,
-    int                  versionNumber)
-{
-    clearValues();
-    // LOOP THROUGH PROPERTY ELEMENT'S CHILD ELEMENTS
-    // Each element is expected to be an Object of some type given
-    // by the element's tag; that type must be derived from O or we
-    // can't store it in this property.
-    int objectsFound = 0;
-    SimTK::Xml::element_iterator iter = propertyElement.element_begin();
-    for (; iter != propertyElement.element_end(); ++iter) {
-        const SimTK::String& objTypeTag = iter->getElementTag();
-
-        const Object* registeredObj = 
-            Object::getDefaultInstanceOfType(objTypeTag);
-
-        if (!registeredObj) {
-            std::cerr 
-                << "Encountered unrecognized Object typename " 
-                << objTypeTag << " while reading property " << this->getName()
-                << ". There is no registered Object of this type; ignoring.\n";
-            continue;                        
-        }
-
-        // Check that the object type found is derived from T.
-        if (!dynamic_cast<const T*>(registeredObj)) {
-            std::cerr << "Object type " << objTypeTag  
-                        << " wrong for " << objectClassName
-                        << " property " << this->getName()
-                        << "; ignoring.\n";
-            continue;                        
-        }
-        ++objectsFound;
-
-        if (objectsFound > this->getMaxListSize())
-            continue; // ignore this one
-
-        // Create an Object of the element tag's type.
-        Object* object = Object::newInstanceOfType(objTypeTag);
-        assert(object); // we just checked above
-        object->readObjectFromXMLNodeOrFile(*iter, versionNumber);
-
-        T* objectT = dynamic_cast<T*>(object);
-        assert(objectT); // should have worked by construction
-        adoptAndAppendValueVirtual(objectT); // don't copy
-    }
-
-    if (objectsFound < this->getMinListSize()) {
-        std::cerr << "Got " << objectsFound 
-                    << " object values for Property "
-                    << this->getName() << " but the minimum is " 
-                    << this->getMinListSize() << ". Continuing anyway.\n"; 
-    }
-    if (objectsFound > this->getMaxListSize()) {
-        std::cerr << "Got " << objectsFound
-                    << " object values for Property "
-                    << this->getName() << " but the maximum is " 
-                    << this->getMaxListSize() << ". Ignoring the rest.\n"; 
-    }
-}
+//template <class T> inline void 
+//ObjectProperty<T>::readFromXMLElement
+//    (SimTK::Xml::Element& propertyElement,
+//    int                  versionNumber)
+//{
+//    clearValues();
+//    // LOOP THROUGH PROPERTY ELEMENT'S CHILD ELEMENTS
+//    // Each element is expected to be an Object of some type given
+//    // by the element's tag; that type must be derived from O or we
+//    // can't store it in this property.
+//    int objectsFound = 0;
+//    SimTK::Xml::element_iterator iter = propertyElement.element_begin();
+//    for (; iter != propertyElement.element_end(); ++iter) {
+//        const SimTK::String& objTypeTag = iter->getElementTag();
+//
+//        const Object* registeredObj = 
+//            Object::getDefaultInstanceOfType(objTypeTag);
+//
+//        if (!registeredObj) {
+//            std::cerr 
+//                << "Encountered unrecognized Object typename " 
+//                << objTypeTag << " while reading property " << this->getName()
+//                << ". There is no registered Object of this type; ignoring.\n";
+//            continue;                        
+//        }
+//
+//        // Check that the object type found is derived from T.
+//        if (!dynamic_cast<const T*>(registeredObj)) {
+//            std::cerr << "Object type " << objTypeTag  
+//                        << " wrong for " << objectClassName
+//                        << " property " << this->getName()
+//                        << "; ignoring.\n";
+//            continue;                        
+//        }
+//        ++objectsFound;
+//
+//        if (objectsFound > this->getMaxListSize())
+//            continue; // ignore this one
+//
+//        // Create an Object of the element tag's type.
+//        Object* object = Object::newInstanceOfType(objTypeTag);
+//        assert(object); // we just checked above
+//        object->readObjectFromXMLNodeOrFile(*iter, versionNumber);
+//
+//        T* objectT = dynamic_cast<T*>(object);
+//        assert(objectT); // should have worked by construction
+//        adoptAndAppendValueVirtual(objectT); // don't copy
+//    }
+//
+//    if (objectsFound < this->getMinListSize()) {
+//        std::cerr << "Got " << objectsFound 
+//                    << " object values for Property "
+//                    << this->getName() << " but the minimum is " 
+//                    << this->getMinListSize() << ". Continuing anyway.\n"; 
+//    }
+//    if (objectsFound > this->getMaxListSize()) {
+//        std::cerr << "Got " << objectsFound
+//                    << " object values for Property "
+//                    << this->getName() << " but the maximum is " 
+//                    << this->getMaxListSize() << ". Ignoring the rest.\n"; 
+//    }
+//}
 
 // Each object value serializes itself into a subelement of the given
 // property element.
-template <class T> inline void 
-ObjectProperty<T>::writeToXMLElement
-    (SimTK::Xml::Element& propertyElement) const 
-{
-    for (int i=0; i < objects.size(); ++i)
-        (objects[i])->updateXMLNode(propertyElement);
-}
+//template <class T> inline void 
+//ObjectProperty<T>::writeToXMLElement
+//    (SimTK::Xml::Element& propertyElement) const 
+//{
+//    for (int i=0; i < objects.size(); ++i)
+//        (objects[i])->updateXMLNode(propertyElement);
+//}
 
 
 template <class T> inline void 

@@ -44,14 +44,14 @@ FunctionAdapter::FunctionAdapter(const OpenSim::Function& aFunction) : _function
 //=============================================================================
 // SimTK::Function METHODS
 //=============================================================================
-double FunctionAdapter::calcValue(const Vector& x) const {
+osim_double_adouble FunctionAdapter::calcValue(const Vector& x) const {
     return _function.calcValue(x);
 }
-double FunctionAdapter::calcDerivative(const std::vector<int>& derivComponents, const Vector& x) const {
+osim_double_adouble FunctionAdapter::calcDerivative(const std::vector<int>& derivComponents, const Vector& x) const {
     return _function.calcDerivative(derivComponents, x);
 }
 
-double FunctionAdapter::calcDerivative(const SimTK::Array_<int>& derivComponents, const SimTK::Vector& x) const{
+osim_double_adouble FunctionAdapter::calcDerivative(const SimTK::Array_<int>& derivComponents, const SimTK::Vector& x) const{
     std::vector<int> dcs(derivComponents.begin(), derivComponents.end());
     return _function.calcDerivative(dcs, x);
 }

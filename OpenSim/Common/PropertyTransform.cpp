@@ -47,7 +47,7 @@ using namespace std;
 PropertyTransform::
 PropertyTransform(const string &aName,
     const SimTK::Transform& aTransform) :
-PropertyDblArray(aName, OpenSim::Array<double>(0., 6)),
+PropertyDblArray(aName, OpenSim::Array<osim_double_adouble>(0., 6)),
     _transform(aTransform)
 {
     setType(Transform);
@@ -60,7 +60,7 @@ PropertyDblArray(aName, OpenSim::Array<double>(0., 6)),
  */
 PropertyTransform::
 PropertyTransform(const string &aName,
-    const Array<double> &aArray) :
+    const Array<osim_double_adouble> &aArray) :
 PropertyDblArray(aName, aArray)
 {
     setType(Transform);
@@ -75,7 +75,7 @@ PropertyDblArray(aName, aArray)
  */
 PropertyTransform::
 PropertyTransform() :
-    PropertyDblArray("TransformPropertyName", OpenSim::Array<double>(0., 6))
+    PropertyDblArray("TransformPropertyName", OpenSim::Array<osim_double_adouble>(0., 6))
 {
     setType(Transform);
     setAllowableListSize(6);
@@ -175,7 +175,7 @@ setValue(const SimTK::Transform &aTransform)
     getRotationsAndTranslationsAsArray6(&_array[0]);
 }
 void PropertyTransform::
-setValue(int aSize,const double aArray[])
+setValue(int aSize,const osim_double_adouble aArray[])
 {
     assert(aSize==6);
     PropertyDblArray::setValue(aSize, aArray);
@@ -202,10 +202,10 @@ getValueTransform()
  */
 const SimTK::Transform& PropertyTransform::
 getValueTransform() const
-{
+{	
     return(_transform);
 }
-void PropertyTransform::getRotationsAndTranslationsAsArray6(double aArray[]) const
+void PropertyTransform::getRotationsAndTranslationsAsArray6(osim_double_adouble aArray[]) const
 {
     SimTK::Vec3 translations = _transform.p();
     SimTK::Vec3 rotations = _transform.R().convertRotationToBodyFixedXYZ();
@@ -226,7 +226,7 @@ toString() const
 {
     string str = "(";
     char pad[256];
-    double rawData[6];
+    osim_double_adouble rawData[6];
     getRotationsAndTranslationsAsArray6(rawData);
     sprintf(pad, "%g %g %g %g %g %g", rawData[0], rawData[1], rawData[2], rawData[3], rawData[4], rawData[5]);
     str += string(pad);

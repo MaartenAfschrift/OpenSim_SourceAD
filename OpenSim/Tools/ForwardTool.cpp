@@ -248,6 +248,7 @@ bool ForwardTool::run()
 
     /*bool externalLoads = */createExternalLoads(_externalLoadsFileName, *_model);
 
+
     // Re create the system with forces above and Realize the topology
     SimTK::State& s = _model->initSystem();
     _model->getMultibodySystem().realize(s, Stage::Position );
@@ -262,16 +263,18 @@ bool ForwardTool::run()
 
     // SETUP SIMULATION
     // Manager (now allocated on the heap so that getManager doesn't return stale pointer on stack
-    Manager manager(*_model);
+    RungeKuttaMersonIntegrator integrator(_model->getMultibodySystem());
+    Manager manager(*_model, integrator);
     setManager( manager );
     manager.setSessionName(getName());
     if (!_printResultFiles){
         manager.setWriteToStorage(false);
     }
-    manager.setIntegratorInternalStepLimit(_maxSteps);
-    manager.setIntegratorMaximumStepSize(_maxDT);
-    manager.setIntegratorMinimumStepSize(_minDT);
-    manager.setIntegratorAccuracy(_errorTolerance);
+    // Initialize integrator
+    integrator.setInternalStepLimit(_maxSteps);
+    integrator.setMaximumStepSize(_maxDT);
+    integrator.setMinimumStepSize(_minDT);
+    integrator.setAccuracy(_errorTolerance);
 
 
     // integ->setFineTolerance(_fineTolerance); No equivalent in SimTK
@@ -304,8 +307,7 @@ bool ForwardTool::run()
 
         cout<<"\n\nIntegrating from "<<_ti<<" to "<<_tf<<endl;
         s.setTime(_ti);
-        manager.initialize(s);
-        manager.integrate(_tf);
+        manager.integrate(s, _tf);
     } catch(const std::exception& x) {
         cout << "ForwardTool::run() caught exception \n";
         cout << x.what() << endl;

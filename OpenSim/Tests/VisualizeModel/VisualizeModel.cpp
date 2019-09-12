@@ -30,9 +30,7 @@
 
 //==============================================================================
 //==============================================================================
-#include <OpenSim/Common/IO.h>
-#include <OpenSim/Simulation/Model/Model.h>
-#include <OpenSim/Common/LoadOpenSimLibrary.h>
+#include <OpenSim/OpenSim.h>
 
 using namespace OpenSim;
 using namespace SimTK;
@@ -43,7 +41,6 @@ using namespace std;
  */
 int main(int argc, char **argv)
 {
-    LoadOpenSimLibrary("osimActuators");
     try {
         // Create an OpenSim model and set its name
         if (argc < 2) {
@@ -63,8 +60,12 @@ int main(int argc, char **argv)
         osimModel.getVisualizer().show(si);
         getchar(); // Keep Visualizer from dying until we inspect the visualization window..
     }
-
-    catch (const std::exception& ex)
+    catch (OpenSim::Exception ex)
+    {
+        std::cout << ex.getMessage() << std::endl;
+        return 1;
+    }
+    catch (std::exception ex)
     {
         std::cout << ex.what() << std::endl;
         return 1;

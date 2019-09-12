@@ -34,9 +34,7 @@ namespace OpenSim {
 //=============================================================================
 //=============================================================================
 /**
- * A tracking task objective that corresponds to a state variable of a Force
- * component (e.g. a Muscle state such as its activation) during a forward
- * dynamics simulation.
+ * A target for a tracking problem that corresponds to a state variable.
  *
  * @author Ayman Habib & Ajay Seth
  * @version 1.0
@@ -85,15 +83,14 @@ public:
 #endif
     virtual double getTaskError(const SimTK::State& s) {
         double val = SimTK::NaN;
-        const auto& forceSet = _model->getForceSet();
         std::string::size_type dix = getName().find(".");
         if(dix != std::string::npos){
             std::string varName = getName();
             varName.replace(dix, 1, "/");
-            val = forceSet.getStateVariableValue(s, varName);
+            val = _model->getStateVariableValue(s, varName);
         }
         else{
-            val = forceSet.getStateVariableValue(s, getName());
+            val = _model->getStateVariableValue(s, getName());
         }
 
         return (_pTrk[0]->calcValue(SimTK::Vector(1,s.getTime()))- val);

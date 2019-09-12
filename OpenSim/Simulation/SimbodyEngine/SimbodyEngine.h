@@ -109,6 +109,13 @@ public:
 #endif
 
     //--------------------------------------------------------------------------
+    // SCALING
+    //--------------------------------------------------------------------------
+#ifndef SWIG
+    virtual bool  scale(SimTK::State& s, const ScaleSet& aScaleSet, osim_double_adouble aFinalMass = -1.0, bool aPreserveMassDist = false);
+#endif
+
+    //--------------------------------------------------------------------------
     // KINEMATICS
     //--------------------------------------------------------------------------
 
@@ -120,27 +127,8 @@ public:
     //--------------------------------------------------------------------------
     // CONSTRAINTS
     //--------------------------------------------------------------------------
-    /**
-    * From a potentially partial specification of the generalized coordinates,
-    * form a complete storage of the generalized coordinates (q's) and
-    * generalized speeds (u's) in radians and radians/s respectively.
-    *
-    * @param s Used as working memory.
-    * @param aQIn Storage containing the q's or a subset of the q's.
-    * @param rQComplete Storage containing all the q's.  If q's were not
-    * in aQIn, the values are set to 0.0.  When a q is constrained, its value
-    * is altered to be consistent with the constraint.  The caller is responsible
-    * for deleting the memory associated with this storage. Units are radians.
-    * @param rUComplete Storage containing all the u's.  The generalized speeds
-    * are obtained by spline fitting the q's and differentiating the splines.
-    * When a u is constrained, its value is altered to be consistent with the
-    * constraint.  The caller is responsible for deleting the memory
-    * associated with this storage. Units are radians/s.
-    */
-    void formCompleteStorages( const SimTK::State& s, 
-        const OpenSim::Storage &aQIn,
-        OpenSim::Storage *&rQComplete,
-        OpenSim::Storage *&rUComplete) const;
+    virtual void formCompleteStorages( const SimTK::State& s, const OpenSim::Storage &aQIn,
+       OpenSim::Storage *&rQComplete,OpenSim::Storage *&rUComplete) const;
 
     //--------------------------------------------------------------------------
     // EQUATIONS OF MOTION
@@ -159,21 +147,21 @@ public:
     void convertRadiansToDegrees(TimeSeriesTable& table) const;
     void convertDegreesToRadians(Storage &rStorage) const;
     void convertDegreesToRadians(TimeSeriesTable& table) const;
-    void convertDegreesToRadians(double *aQDeg, double *rQRad) const;
-    void convertRadiansToDegrees(double *aQRad, double *rQDeg) const;
+    void convertDegreesToRadians(osim_double_adouble *aQDeg, osim_double_adouble *rQRad) const;
+    void convertRadiansToDegrees(osim_double_adouble *aQRad, osim_double_adouble *rQDeg) const;
 
 
-    void convertAnglesToDirectionCosines(double aE1, double aE2, double aE3, double rDirCos[3][3]) const;
-    void convertAnglesToDirectionCosines(double aE1, double aE2, double aE3, double *rDirCos) const;
+    void convertAnglesToDirectionCosines(osim_double_adouble aE1, osim_double_adouble aE2, osim_double_adouble aE3, osim_double_adouble rDirCos[3][3]) const;
+    void convertAnglesToDirectionCosines(osim_double_adouble aE1, osim_double_adouble aE2, osim_double_adouble aE3, osim_double_adouble *rDirCos) const;
 
-    void convertDirectionCosinesToAngles(double aDirCos[3][3], double *rE1, double *rE2, double *rE3) const;
-    void convertDirectionCosinesToAngles(double *aDirCos, double *rE1, double *rE2, double *rE3) const;
+    void convertDirectionCosinesToAngles(osim_double_adouble aDirCos[3][3], osim_double_adouble *rE1, osim_double_adouble *rE2, osim_double_adouble *rE3) const;
+    void convertDirectionCosinesToAngles(osim_double_adouble *aDirCos, osim_double_adouble *rE1, osim_double_adouble *rE2, osim_double_adouble *rE3) const;
 
-    void convertDirectionCosinesToQuaternions(double aDirCos[3][3], double *rQ1, double *rQ2, double *rQ3, double *rQ4) const;
-    void convertDirectionCosinesToQuaternions(double *aDirCos, double *rQ1, double *rQ2, double *rQ3, double *rQ4) const;
+    void convertDirectionCosinesToQuaternions(osim_double_adouble aDirCos[3][3], osim_double_adouble *rQ1, osim_double_adouble *rQ2, osim_double_adouble *rQ3, osim_double_adouble *rQ4) const;
+    void convertDirectionCosinesToQuaternions(osim_double_adouble *aDirCos, osim_double_adouble *rQ1, osim_double_adouble *rQ2, osim_double_adouble *rQ3, osim_double_adouble *rQ4) const;
 
-    void convertQuaternionsToDirectionCosines(double aQ1, double aQ2, double aQ3, double aQ4, double rDirCos[3][3]) const;
-    void convertQuaternionsToDirectionCosines(double aQ1, double aQ2, double aQ3, double aQ4, double *rDirCos) const;
+    void convertQuaternionsToDirectionCosines(osim_double_adouble aQ1, osim_double_adouble aQ2, osim_double_adouble aQ3, osim_double_adouble aQ4, osim_double_adouble rDirCos[3][3]) const;
+    void convertQuaternionsToDirectionCosines(osim_double_adouble aQ1, osim_double_adouble aQ2, osim_double_adouble aQ3, osim_double_adouble aQ4, osim_double_adouble *rDirCos) const;
 
     //-------------------------------------------------------------------------
     // DEPRECATED METHODS
@@ -194,11 +182,11 @@ public:
     
     /** <b>(Deprecated)</b> Use Frame::getTransformInGround().R() instead. */
     DEPRECATED_14("use Frame::getTransformInGround().R() instead")
-    void getDirectionCosines(const SimTK::State& s, const PhysicalFrame &aBody, double rDirCos[3][3]) const;
+    void getDirectionCosines(const SimTK::State& s, const PhysicalFrame &aBody, osim_double_adouble rDirCos[3][3]) const;
     
     /** <b>(Deprecated)</b> Use Frame::getTransformInGround().R() instead. */
     DEPRECATED_14("use Frame::getTransformInGround().R() instead")
-    void getDirectionCosines(const SimTK::State& s, const PhysicalFrame &aBody, double *rDirCos) const;
+    void getDirectionCosines(const SimTK::State& s, const PhysicalFrame &aBody, osim_double_adouble *rDirCos) const;
     
     /** <b>(Deprecated)</b> Use Frame::getVelocityInGround()[0] instead. */
     DEPRECATED_14("use Frame::getVelocityInGround()[0] instead")
@@ -222,7 +210,7 @@ public:
 
     /** <b>(Deprecated)</b> Use Frame::expressVectorInAnotherFrame() instead. */
     DEPRECATED_14("use Frame::expressVectorInAnotherFrame() instead") 
-    void transform(const SimTK::State& s, const PhysicalFrame &aBodyFrom, const double aVec[3], const PhysicalFrame &aBodyTo, double rVec[3]) const;
+    void transform(const SimTK::State& s, const PhysicalFrame &aBodyFrom, const osim_double_adouble aVec[3], const PhysicalFrame &aBodyTo, osim_double_adouble rVec[3]) const;
     
     /** <b>(Deprecated)</b> Use Frame::expressVectorInAnotherFrame() instead. */
     DEPRECATED_14("use Frame::expressVectorInAnotherFrame() instead")
@@ -230,7 +218,7 @@ public:
     
     /** <b>(Deprecated)</b> Use Frame::findStationLocationInAnotherFrame() instead. */
     DEPRECATED_14("use Frame::findStationLocationInAnotherFrame() instead")
-    void transformPosition(const SimTK::State& s, const PhysicalFrame &aBodyFrom, const double aPos[3], const PhysicalFrame &aBodyTo, double rPos[3]) const;
+    void transformPosition(const SimTK::State& s, const PhysicalFrame &aBodyFrom, const osim_double_adouble aPos[3], const PhysicalFrame &aBodyTo, osim_double_adouble rPos[3]) const;
     
     /** <b>(Deprecated)</b> Use Frame::findStationLocationInAnotherFrame() instead. */
     DEPRECATED_14("use Frame::findStationLocationInAnotherFrame() instead")
@@ -238,7 +226,7 @@ public:
     
     /** <b>(Deprecated)</b> Use Frame::findStationLocationInGround() instead. */
     DEPRECATED_14("use Frame::findStationLocationInGround() instead")
-    void transformPosition(const SimTK::State& s, const PhysicalFrame &aBodyFrom, const double aPos[3], double rPos[3]) const;
+    void transformPosition(const SimTK::State& s, const PhysicalFrame &aBodyFrom, const osim_double_adouble aPos[3], osim_double_adouble rPos[3]) const;
     
     /** <b>(Deprecated)</b> Use Frame::findStationLocationInGround() instead. */
     DEPRECATED_14("use Frame::findStationLocationInGround() instead")
@@ -246,17 +234,17 @@ public:
 
     /** <b>(Deprecated)</b> Use Point::calcDistanceBetween() or Frame::findStationLocationInGround() instead */
     DEPRECATED_14("use Point::calcDistanceBetween() or Frame::findStationLocationInGround() instead")
-    double calcDistance(const SimTK::State& s, const PhysicalFrame& aBody1, const SimTK::Vec3& aPoint1, const PhysicalFrame& aBody2, const SimTK::Vec3& aPoint2) const;
+    osim_double_adouble calcDistance(const SimTK::State& s, const PhysicalFrame& aBody1, const SimTK::Vec3& aPoint1, const PhysicalFrame& aBody2, const SimTK::Vec3& aPoint2) const;
     
     /** <b>(Deprecated)</b> Use Point::calcDistanceBetween() or Frame::findStationLocationInGround() instead */
     DEPRECATED_14("use Point::calcDistanceBetween() or Frame::findStationLocationInGround() instead")
-    double calcDistance(const SimTK::State& s, const PhysicalFrame& aBody1, const double aPoint1[3], const PhysicalFrame& aBody2, const double aPoint2[3]) const;
+    osim_double_adouble calcDistance(const SimTK::State& s, const PhysicalFrame& aBody1, const osim_double_adouble aPoint1[3], const PhysicalFrame& aBody2, const osim_double_adouble aPoint2[3]) const;
 
     // @}
 
 private:
-    void scaleRotationalDofColumns(Storage &rStorage, double factor) const;
-    void scaleRotationalDofColumns(TimeSeriesTable& table, double factor) const;
+    void scaleRotationalDofColumns(Storage &rStorage, osim_double_adouble factor) const;
+    void scaleRotationalDofColumns(TimeSeriesTable& table, osim_double_adouble factor) const;
 
 
 private:

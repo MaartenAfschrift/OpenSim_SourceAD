@@ -197,7 +197,8 @@ getModel() const
  * @param aFuncSet Function set.
  * @return Pointer to the previous function set.
  */
-void CMC_TaskSet::setFunctions(FunctionSet &aFuncSet)
+void CMC_TaskSet::
+setFunctions(FunctionSet &aFuncSet)
 {
     // LOOP THROUGH TRACK OBJECTS
     int i,j,iFunc=0;
@@ -235,10 +236,10 @@ void CMC_TaskSet::setFunctions(FunctionSet &aFuncSet)
         iFunc = aFuncSet.getIndex(name,iFunc);
         if (iFunc < 0){
             const Coordinate& coord = _model->getCoordinateSet().get(name);
-            name = coord.getStateVariableNames()[0];
+            name = coord.getJoint().getName() + "/" + name + "/value";
             iFunc = aFuncSet.getIndex(name, iFunc);
             if (iFunc < 0){
-                string msg = "CMC_TaskSet::setFunctions: function for task '";
+                string msg = "CMC_TaskSet::setFunctionsForVelocity: function for task '";
                 msg += name + " not found.";
                 throw Exception(msg);
             }
@@ -312,8 +313,7 @@ setFunctionsForVelocity(FunctionSet &aFuncSet)
         iFunc = aFuncSet.getIndex(coord.getSpeedName(),iFunc);
 
         if (iFunc < 0){
-            const Coordinate& coord = _model->getCoordinateSet().get(name);
-            name = coord.getStateVariableNames()[1]; // index 1 is speed
+            name = coord.getJoint().getName() + "/" + coord.getSpeedName();
             iFunc = aFuncSet.getIndex(name, iFunc);
             if (iFunc < 0){
                 string msg = "CMC_TaskSet::setFunctionsForVelocity: function for task '";
@@ -409,8 +409,7 @@ setFunctionsForAcceleration(FunctionSet &aFuncSet)
         iFunc = aFuncSet.getIndex(coord.getSpeedName(),iFunc);
 
         if (iFunc < 0){
-            const Coordinate& coord = _model->getCoordinateSet().get(name);
-            name = coord.getStateVariableNames()[1];
+            name = coord.getJoint().getName() + "/" + coord.getSpeedName();
             iFunc = aFuncSet.getIndex(name, iFunc);
             if (iFunc < 0){
                 string msg = "CMC_TaskSet::setFunctionsForAcceleration: function for task '";

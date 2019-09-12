@@ -514,9 +514,11 @@ bool RRATool::run()
 
     if(desiredKinFlag) {
         _model->getMultibodySystem().realize(s, Stage::Time );
-        // qStore and uStore returned are in radians
-        _model->getSimbodyEngine().formCompleteStorages(s, *desiredKinStore,
-            qStore, uStore);
+        _model->getSimbodyEngine().formCompleteStorages(s, *desiredKinStore,qStore,uStore);
+        if(qStore->isInDegrees()){
+            _model->getSimbodyEngine().convertDegreesToRadians(*qStore);
+            _model->getSimbodyEngine().convertDegreesToRadians(*uStore);
+        }
     }
 
     // Adjust COM to reduce residuals (formerly RRA pass 1) if requested
@@ -721,10 +723,11 @@ bool RRATool::run()
     // ---- SIMULATION ----
     //
     // Manager
-    Manager manager(*_model);
-    manager.setIntegratorMaximumStepSize(_maxDT);
-    manager.setIntegratorMinimumStepSize(_minDT);
-    manager.setIntegratorAccuracy(_errorTolerance);
+    RungeKuttaMersonIntegrator integrator(_model->getMultibodySystem());
+    integrator.setMaximumStepSize(_maxDT);
+    integrator.setMinimumStepSize(_minDT);
+    integrator.setAccuracy(_errorTolerance);
+    Manager manager(*_model, integrator);
     
     _model->setAllControllersEnabled( true );
 
@@ -811,8 +814,7 @@ bool RRATool::run()
     IO::makeDir(getResultsDir());   // Create directory for output in case it doesn't exist
     manager.getStateStorage().setOutputFileName(getResultsDir() + "/" + getName() + "_states.sto");
     try {
-        manager.initialize(s);
-        manager.integrate(finalTime);
+        manager.integrate(s, finalTime);
     }
     catch(const Exception& x) {
         // TODO: eventually might want to allow writing of partial results
@@ -909,7 +911,8 @@ bool RRATool::run()
 //=============================================================================
 // UTILITY
 //=============================================================================
-void RRATool::writeAdjustedModel() 
+void RRATool::
+writeAdjustedModel() 
 {
     if(_outputModelFile=="") {
         cerr<<"Warning: A name for the output model was not set.\n";
@@ -931,8 +934,6 @@ void RRATool::writeAdjustedModel()
     // So we need to put back the muscles before writing out the adjusted model.
     // NOTE: use operator= so actuator groups are properly copied over
     _model->updForceSet() = _originalForceSet;
-
-    removeExternalLoadsFromModel();
 
     // CMC was added as a model controller, now remove before printing out
     int c = _model->updControllerSet().getIndex("CMC");

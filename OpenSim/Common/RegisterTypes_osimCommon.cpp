@@ -49,8 +49,6 @@
 #include "TableSource.h"
 
 #include "ModelDisplayHints.h"
-#include "ExperimentalSensor.h"
-#include "XsensDataReaderSettings.h"
 
 #include <string>
 #include <iostream>
@@ -82,8 +80,8 @@ OSIMCOMMON_API void RegisterTypes_osimCommon()
     Object::registerType( Sine() );
     Object::registerType( StepFunction() );
     Object::registerType( LinearFunction() );
-    Object::registerType( PiecewiseLinearFunction() );
-    Object::registerType( PiecewiseConstantFunction() );
+    //Object::registerType( PiecewiseLinearFunction() );
+    //Object::registerType( PiecewiseConstantFunction() );
     Object::registerType( MultiplierFunction() );
     Object::registerType( PolynomialFunction() );
 
@@ -91,24 +89,22 @@ OSIMCOMMON_API void RegisterTypes_osimCommon()
 
     Object::registerType( ObjectGroup() );
     
-    Object::registerType( TableSource() );
-    Object::registerType( TableSourceVec3() );
-    Object::registerType( TableReporter() );
-    Object::registerType( TableReporterVec3() );
-    Object::registerType( TableReporterVector() );
-    Object::registerType( ConsoleReporter() );
-    Object::registerType( ConsoleReporterVec3() );
+    //Object::registerType( TableSource() );
+    //Object::registerType( TableSourceVec3() );
+    //Object::registerType( TableReporter() );
+    //Object::registerType( TableReporterVec3() );
+    //Object::registerType( TableReporterVector() );
+    //Object::registerType( ConsoleReporter() );
+    //Object::registerType( ConsoleReporterVec3() );
 
-    Object::registerType(ModelDisplayHints());
-    Object::registerType(ExperimentalSensor());
-    Object::registerType(XsensDataReaderSettings());
+    Object::registerType( ModelDisplayHints());
 
-    // TODO: temporarily map old NaturalCubicSpline (which wasn't a
-    // natural cubic spline) to renamed SimmSpline class. Later we
-    // will replace this with an actual natural cubic spline.
-    Object::renameType("NaturalCubicSpline", "SimmSpline");
-    // To support older type name of "natCubicSpline"
-    Object::renameType("natCubicSpline", "SimmSpline");
+    //// TODO: temporarily map old NaturalCubicSpline (which wasn't a
+    //// natural cubic spline) to renamed SimmSpline class. Later we
+    //// will replace this with an actual natural cubic spline.
+    //Object::renameType("NaturalCubicSpline", "SimmSpline");
+    //// To support older type name of "natCubicSpline"
+    //Object::renameType("natCubicSpline", "SimmSpline");
 
   } catch (const std::exception& e) {
     std::cerr 

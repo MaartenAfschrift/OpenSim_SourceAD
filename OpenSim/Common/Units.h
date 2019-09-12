@@ -27,6 +27,7 @@
 // INCLUDE
 #include <string>
 #include "osimCommonDLL.h"
+#include "osim_adouble.h"
 
 namespace OpenSim {
 
@@ -73,9 +74,9 @@ public:
     Units(const std::string aString);
     Units(UnitType aType);
     virtual ~Units();
-    double convertTo(UnitType aType, double aValue) const;
-    double convertTo(UnitType aType) const;
-    double convertTo(const Units& aUnit) const;
+    osim_double_adouble convertTo(UnitType aType, osim_double_adouble aValue) const;
+    osim_double_adouble convertTo(UnitType aType) const;
+    osim_double_adouble convertTo(const Units& aUnit) const;
     UnitType getType() const { return _type; }
     std::string getLabel() const;
     std::string getAbbreviation() const;

@@ -34,13 +34,13 @@ namespace OpenSim {
 //==============================================================================
 ModelComponent::ModelComponent() : Component() {}
 
-ModelComponent::ModelComponent(const std::string& fileName, bool updFromXMLNode)
-:   Component(fileName, updFromXMLNode)
-{}
+//ModelComponent::ModelComponent(const std::string& fileName, bool updFromXMLNode)
+//:   Component(fileName, updFromXMLNode)
+//{}
 
-ModelComponent::ModelComponent(SimTK::Xml::Element& element) 
-:   Component(element)
-{}
+//ModelComponent::ModelComponent(SimTK::Xml::Element& element) 
+//:   Component(element)
+//{}
 
 const Model& ModelComponent::getModel() const
 {
@@ -61,9 +61,9 @@ Model& ModelComponent::updModel()
 }
 
 
-void ModelComponent::extendFinalizeConnections(Component& root)
+void ModelComponent::extendConnect(Component &root)
 {
-    Super::extendFinalizeConnections(root);
+    Super::extendConnect(root);
     Model* model = dynamic_cast<Model*>(&root);
     // Allow (model) component to include its own subcomponents
     // before calling the base method which automatically invokes
@@ -93,64 +93,38 @@ updDefaultSubsystem()
 {   return updModel().updDefaultSubsystem(); }
 
 
-void ModelComponent::updateFromXMLNode(SimTK::Xml::Element& aNode,
-        int versionNumber) {
-
-    if (versionNumber < XMLDocument::getLatestVersion()) {
-        if (versionNumber < 30506) {
-            // geometry list property removed. Everything that was in this list
-            // should be moved to the components list property.
-            SimTK::Xml::element_iterator geometry = aNode.element_begin("geometry");
-            if (geometry != aNode.element_end()) {
-                // We found a list property of geometry.
-                SimTK::Xml::Element componentsNode;
-                SimTK::Xml::element_iterator componentsIt = aNode.element_begin("components");
-                if (componentsIt == aNode.element_end()) {
-                    // This component does not yet have a list property of
-                    // components, so we'll create one.
-                    componentsNode = SimTK::Xml::Element("components");
-                    aNode.insertNodeBefore(aNode.element_begin(), componentsNode);
-                } else {
-                    componentsNode = *componentsIt;
-                }
-                // Copy each node under <geometry> into <components>.
-                for (auto geomIt = geometry->element_begin();
-                        geomIt != geometry->element_end(); ++geomIt) {
-                    componentsNode.appendNode(geomIt->clone());
-                }
-                // Now that we moved over the geometry, we can delete the
-                // <geometry> element.
-                aNode.eraseNode(geometry);
-            }
-        }
-    }
-    Super::updateFromXMLNode(aNode, versionNumber);
-}
-
-// Base class implementations of virtual methods for scaling.
-void ModelComponent::preScale(const SimTK::State& s, const ScaleSet& scaleSet)
-{   extendPreScale(s, scaleSet); }
-
-void ModelComponent::scale(const SimTK::State& s, const ScaleSet& scaleSet)
-{   extendScale(s, scaleSet); }
-
-void ModelComponent::postScale(const SimTK::State& s, const ScaleSet& scaleSet)
-{   extendPostScale(s, scaleSet); }
-
-// (static) Returned by getScaleFactors() if scale factors not found.
-const SimTK::Vec3 ModelComponent::InvalidScaleFactors = SimTK::Vec3(0);
-
-const SimTK::Vec3& ModelComponent::
-getScaleFactors(const ScaleSet& scaleSet, const Frame& frame) const
-{
-    const std::string& baseFrameName = frame.findBaseFrame().getName();
-
-    for (int i = 0; i < scaleSet.getSize(); ++i)
-        if (scaleSet[i].getSegmentName() == baseFrameName)
-            return scaleSet[i].getScaleFactors();
-
-    // No scale factors found for the base Body.
-    return InvalidScaleFactors;
-}
+//void ModelComponent::updateFromXMLNode(SimTK::Xml::Element& aNode,
+//        int versionNumber) {
+//
+//    if (versionNumber < XMLDocument::getLatestVersion()) {
+//        if (versionNumber < 30506) {
+//            // geometry list property removed. Everything that was in this list
+//            // should be moved to the components list property.
+//            SimTK::Xml::element_iterator geometry = aNode.element_begin("geometry");
+//            if (geometry != aNode.element_end()) {
+//                // We found a list property of geometry.
+//                SimTK::Xml::Element componentsNode;
+//                SimTK::Xml::element_iterator componentsIt = aNode.element_begin("components");
+//                if (componentsIt == aNode.element_end()) {
+//                    // This component does not yet have a list property of
+//                    // components, so we'll create one.
+//                    componentsNode = SimTK::Xml::Element("components");
+//                    aNode.insertNodeBefore(aNode.element_begin(), componentsNode);
+//                } else {
+//                    componentsNode = *componentsIt;
+//                }
+//                // Copy each node under <geometry> into <components>.
+//                for (auto geomIt = geometry->element_begin();
+//                        geomIt != geometry->element_end(); ++geomIt) {
+//                    componentsNode.appendNode(geomIt->clone());
+//                }
+//                // Now that we moved over the geometry, we can delete the
+//                // <geometry> element.
+//                aNode.eraseNode(geometry);
+//            }
+//        }
+//    }
+//    Super::updateFromXMLNode(aNode, versionNumber);
+//}
 
 } // end of namespace OpenSim

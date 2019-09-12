@@ -205,21 +205,24 @@ int main()
         // Compute initial conditions for muscles
         osimModel.equilibrateMuscles(si);
 
+        // Create the integrator, force reporter, and manager for the simulation.
+        // Create the integrator
+        SimTK::RungeKuttaMersonIntegrator integrator(osimModel.getMultibodySystem());
+        integrator.setAccuracy(1.0e-6);
+        
         // Create the force reporter
         ForceReporter* reporter = new ForceReporter(&osimModel);
         osimModel.updAnalysisSet().adoptAndAppend(reporter);
         // Create the manager
-        Manager manager(osimModel);
-        manager.setIntegratorAccuracy(1.0e-6);
+        Manager manager(osimModel, integrator);
 
         // Print out details of the model
         osimModel.printDetailedInfo(si, std::cout);
 
         // Integrate from initial time to final time
         si.setTime(initialTime);
-        manager.initialize(si);
         std::cout<<"\nIntegrating from "<<initialTime<<" to "<<finalTime<<std::endl;
-        manager.integrate(finalTime);
+        manager.integrate(si, finalTime);
 
         //////////////////////////////
         // SAVE THE RESULTS TO FILE //
@@ -239,9 +242,6 @@ int main()
         IO::makeDir("MuscleAnalysisResults");
         muscAnalysis->printResults("fatigue", "MuscleAnalysisResults");
 
-        // To print (serialize) the latest connections of the model, it is 
-        // necessary to finalizeConnections() first.
-        osimModel.finalizeConnections();
         // Save the OpenSim model to a file
         osimModel.print("tugOfWar_fatigue_model.osim");
     }

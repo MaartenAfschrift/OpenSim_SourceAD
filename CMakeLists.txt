@@ -25,7 +25,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 # OpenSim version.
 # ----------------
 set(OPENSIM_MAJOR_VERSION 4)
-set(OPENSIM_MINOR_VERSION 1)
+set(OPENSIM_MINOR_VERSION 0)
 set(OPENSIM_PATCH_VERSION 0)
 
 # Don't include the patch version if it is 0.
@@ -109,6 +109,8 @@ mark_as_advanced(OPENSIM_PYTHON_STANDALONE) # Mainly for packagers; not users.
 option(BUILD_API_ONLY "Build/install only headers, libraries,
 wrapping, tests; not applications (opensim, ik, rra, etc.)." OFF)
 
+option(WITH_ADOLC "Get the Simbody libraries build with ADOL-C" OFF)
+
 
 set(OPENSIM_BUILD_INDIVIDUAL_APPS_DEFAULT OFF)
 if(WIN32)
@@ -167,7 +169,8 @@ if(${OPENSIM_INSTALL_UNIX_FHS})
     set(OPENSIM_INSTALL_JAVAJARDIR "${CMAKE_INSTALL_DATAROOTDIR}/java")
     # Don't want to put source files in share/java.
     set(OPENSIM_INSTALL_JAVASRCDIR "${CMAKE_INSTALL_DATAROOTDIR}/OpenSim/java")
-    set(OPENSIM_INSTALL_APIEXDIR "${CMAKE_INSTALL_DOCDIR}/Code")
+    set(OPENSIM_INSTALL_CPPEXDIR "${CMAKE_INSTALL_DOCDIR}/APIExamples")
+    set(OPENSIM_INSTALL_SCRIPTSDIR "${CMAKE_INSTALL_DOCDIR}/Scripts")
     set(OPENSIM_INSTALL_SIMBODYDIR ".")
 
 else()
@@ -184,17 +187,17 @@ else()
 
     set(OPENSIM_INSTALL_ARCHIVEDIR "${CMAKE_INSTALL_LIBDIR}")
     set(OPENSIM_INSTALL_CMAKEDIR cmake)
-    set(OPENSIM_INSTALL_PYTHONDIR sdk/Python)
+    set(OPENSIM_INSTALL_PYTHONDIR sdk/python)
     set(OPENSIM_INSTALL_JAVAJARDIR sdk/Java)
     set(OPENSIM_INSTALL_JAVASRCDIR sdk/Java)
-    set(OPENSIM_INSTALL_APIEXDIR Resources/Code)
+    set(OPENSIM_INSTALL_CPPEXDIR sdk/APIExamples)
+    set(OPENSIM_INSTALL_SCRIPTSDIR sdk/Scripts)
     set(OPENSIM_INSTALL_SIMBODYDIR sdk/Simbody)
 
 endif()
 
-set(OPENSIM_INSTALL_CPPEXDIR "${OPENSIM_INSTALL_APIEXDIR}/CPP")
-set(OPENSIM_INSTALL_MATLABEXDIR "${OPENSIM_INSTALL_APIEXDIR}/Matlab")
-set(OPENSIM_INSTALL_PYTHONEXDIR "${OPENSIM_INSTALL_APIEXDIR}/Python")
+set(OPENSIM_INSTALL_MATLABEXDIR "${OPENSIM_INSTALL_SCRIPTSDIR}/Matlab")
+set(OPENSIM_INSTALL_PYTHONEXDIR "${OPENSIM_INSTALL_SCRIPTSDIR}/Python")
 
 # Cross-platform location of shared libraries. Used in configureOpenSim.m.
 if(WIN32)
@@ -392,7 +395,7 @@ set(BUILD_JAVA_WRAPPING OFF CACHE BOOL "Build Java wrapping (needed if you're bu
 
 set(BUILD_PYTHON_WRAPPING OFF CACHE BOOL "Build Python wrapping (needed if you're building the Python wrapping; requires that you have SWIG and Python installed on your machine.)")
 
-set(OPENSIM_PYTHON_VERSION 3 CACHE STRING
+set(OPENSIM_PYTHON_VERSION 2 CACHE STRING
     "The major Python version (2 or 3) for which to build the wrapping.")
 # To create a drop-down in the CMake GUI:
 set_property(CACHE OPENSIM_PYTHON_VERSION PROPERTY STRINGS "2" "3")
@@ -404,7 +407,7 @@ if(${BUILD_JAVA_WRAPPING})
     # MAIN_PROGRAM).
     # Also, the mechanism we use to set the java classpath and library path 
     # for MATLAB requires version 7.0 (R14).
-    find_package(Matlab COMPONENTS MAIN_PROGRAM)
+    find_package(Matlab 7.0 COMPONENTS MAIN_PROGRAM)
     # Issue warning if Matlab and OpenSim build architectures differ.
     # That is, one is 64-bit and other is not.
     if(Matlab_FOUND)
@@ -522,7 +525,7 @@ endif()
 
 ## RPATH 
 # If it is necessary to not put RPATHs in the installed binaries, set
-# CMAKE_SKIP_INSTALL_RPATH to ON.
+# CMAKE_SKIP_INSTALL_RPATH to OFF.
 set(OPENSIM_USE_INSTALL_RPATH FALSE)
 if(UNIX) # Linux and macOS
     # CMake 2.8.12 introduced the ability to set RPATH for shared libraries
@@ -628,9 +631,15 @@ endif()
 # Check if Simbody targets were built using same BUILD_TYPE/CONFIGURATION as
 # current OpenSim build. If build/configuration types mismatch, stop the build.
 # ------------------------------------------------------------------------------
-get_property(Simbody_CONFIGURATION
+if (WITH_ADOLC)
+    get_property(Simbody_CONFIGURATION
+    TARGET   SimTKcommon_adolc
+    PROPERTY IMPORTED_CONFIGURATIONS)
+else()
+    get_property(Simbody_CONFIGURATION
     TARGET   SimTKcommon
     PROPERTY IMPORTED_CONFIGURATIONS)
+endif()
 
 string(CONCAT MESSAGE
     "Checking if Simbody was built with same BUILD_TYPE or CONFIGURATION as "
@@ -663,6 +672,24 @@ endif()
 # TODO no longer necessary; Simbody's library targets provide the 
 # include directories.
 include_directories("${Simbody_INCLUDE_DIR}")
+
+if (WITH_ADOLC)
+    set(Simbody_LIBRARIES_TO_USE ${Simbody_ADOLC_LIBRARIES})
+else()
+    set(Simbody_LIBRARIES_TO_USE ${Simbody_LIBRARIES})
+endif()
+
+# ADOL-C
+if (WITH_ADOLC)
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+    # find_package(ADOLC REQUIRED)
+    # include_directories("${ADOLC_INCLUDES}")
+    # OpenSimCopyDependencyDLLsForWin(adolc "${ADOLC_DIR}/bin}")
+    # RECORDER
+    find_package(RECORDER REQUIRED)
+    include_directories("${RECORDER_INCLUDES}")
+    # OpenSimCopyDependencyDLLsForWin(recorder "${RECORDER_DIR}/bin")
+endif()
 
 # Installing dependencies into OpenSim's installation.
 # ----------------------------------------------------
@@ -800,7 +827,7 @@ set(OPENSIM_SYSTEM_INFO ${CMAKE_SYSTEM})
 set(OPENSIM_OS_NAME ${CMAKE_SYSTEM_NAME})
 
 if( WIN32 )
-    if (NOT (MSVC_VERSION LESS 2000))
+    if (${MSVC_VERSION} GREATER 1910)
         message(AUTHOR_WARNING "OpenSim::GetCompilerVersion() "
             "in OpenSim/version.h does not handle this newer version "
             "(v${MSVC_VERSION}) of Microsoft Visual C++. "

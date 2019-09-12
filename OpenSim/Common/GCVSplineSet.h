@@ -57,7 +57,7 @@ public:
     *
     * @param aFileName Name of the file.
     */
-    GCVSplineSet(const char *aFileName);
+    //GCVSplineSet(const char *aFileName);
 
     /**
      * Construct a set of generalized cross-validated splines based on the 
@@ -80,7 +80,7 @@ public:
      * @see Storage
      * @see GCVSpline
      */
-    GCVSplineSet(int aDegree,const Storage *aStore,double aErrorVariance=0.0);
+    GCVSplineSet(int aDegree,const Storage *aStore,osim_double_adouble aErrorVariance=0.0);
 
     /**
      * Construct a set of generalized cross-validated splines based on the 
@@ -106,7 +106,7 @@ public:
     GCVSplineSet(const TimeSeriesTable& table,
                  const std::vector<std::string>& labels = {},
                  int degree                             = 5,
-                 double errorVariance                   = 0.0);
+                 osim_double_adouble errorVariance                   = 0.0);
     virtual ~GCVSplineSet();
 
 private:
@@ -123,7 +123,7 @@ private:
      * @param aStore Storage object.
      * @param aErrorVariance Error variance for the data.
      */
-    void construct(int aDegree,const Storage *aStore,double aErrorVariance);
+    void construct(int aDegree,const Storage *aStore,osim_double_adouble aErrorVariance);
 
 public:
     /**
@@ -134,8 +134,8 @@ public:
      *         returned.
      */
     GCVSpline* getGCVSpline(int aIndex) const;
-    double getMinX() const;
-    double getMaxX() const;
+    osim_double_adouble getMinX() const;
+    osim_double_adouble getMaxX() const;
 
     /**
      * Construct a storage object (see Storage) for this spline set or for 
@@ -152,7 +152,7 @@ public:
      * NULL is returned.
      * @see Storage
      */
-    Storage* constructStorage(int aDerivOrder,double aDX=-1);
+    Storage* constructStorage(int aDerivOrder,osim_double_adouble aDX=-1);
 
 };  // END class GCVSplineSet
 

@@ -45,7 +45,7 @@ public:
 //==============================================================================
 // PROPERTIES
 //==============================================================================
-    OpenSim_DECLARE_LIST_PROPERTY_SIZE(range, double, 2,
+    OpenSim_DECLARE_LIST_PROPERTY_SIZE(range, osim_double_adouble, 2,
         "The minimum and maximum values that the coordinate can range between, "
         "for which the PathPoint is active. Angular coordinates in radians.");
 
@@ -65,8 +65,8 @@ public:
 public:
     ConditionalPathPoint();
     virtual ~ConditionalPathPoint();
-    void setRangeMin(double minVal);
-    void setRangeMax(double maxVal);
+    void setRangeMin(osim_double_adouble minVal);
+    void setRangeMax(osim_double_adouble maxVal);
     void setCoordinate(const Coordinate& coordinate);
 
     bool hasCoordinate() const;
@@ -77,7 +77,7 @@ public:
 
 private:
     void constructProperties();
-    void updateFromXMLNode(SimTK::Xml::Element& node, int versionNumber) override;
+    //void updateFromXMLNode(SimTK::Xml::Element& node, int versionNumber) override;
 //=============================================================================
 };  // END of class ConditionalPathPoint
 //=============================================================================

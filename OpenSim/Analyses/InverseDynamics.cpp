@@ -344,11 +344,10 @@ record(const SimTK::State& s)
         const Coordinate& coord = *coordinates[_accelerationIndices[i]];
         int ind = _statesStore->getStateIndex(coord.getSpeedName(), 0);
         if (ind < 0){
-            // get the full coordinate speed state variable path name
-            string fullname = coord.getStateVariableNames()[1];
+            string fullname = coord.getJoint().getName() + "/" + coord.getSpeedName();
             ind = _statesStore->getStateIndex(fullname, 0);
             if (ind < 0){
-                string msg = "InverseDynamics::record(): \n";
+                string msg = "StaticOptimizationTarget::computeConstraintVector: \n";
                 msg += "target motion for coordinate '";
                 msg += coord.getName() + "' not found.";
                 throw Exception(msg);
@@ -397,7 +396,8 @@ record(const SimTK::State& s)
  *
  * @return -1 on error, 0 otherwise.
  */
-int InverseDynamics::begin(const SimTK::State& s )
+int InverseDynamics::
+begin(SimTK::State& s )
 {
     if(!proceed()) return(0);
 
@@ -420,6 +420,8 @@ int InverseDynamics::begin(const SimTK::State& s )
     delete _modelWorkingCopy;
     _modelWorkingCopy = _model->clone();
     _modelWorkingCopy->updAnalysisSet().setSize(0);
+    //_modelWorkingCopy = _model->clone();
+    //_modelWorkingCopy = new Model(*_model);
 
     // Replace model force set with only generalized forces
     if(_model) {
@@ -456,7 +458,7 @@ int InverseDynamics::begin(const SimTK::State& s )
         for(size_t i=0u; i<coordinates.size(); ++i) {
             const Coordinate& coord = *coordinates[i];
             if(!coord.isConstrained(sWorkingCopy)) {
-                _accelerationIndices.append(static_cast<int>(i));
+                _accelerationIndices.append(i);
             }
         }
 
@@ -549,13 +551,13 @@ step(const SimTK::State& s, int stepNumber )
  * @return -1 on error, 0 otherwise.
  */
 int InverseDynamics::
-end(const SimTK::State&s )
+end(SimTK::State& s )
 {
     if(!proceed()) return(0);
 
     record(s);
 
-    _model->overrideAllActuators(*const_cast<SimTK::State*>(&s), false );
+    _model->overrideAllActuators( s, false );
 
     return(0);
 }

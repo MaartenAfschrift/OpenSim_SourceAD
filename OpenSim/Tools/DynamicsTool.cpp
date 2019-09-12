@@ -218,111 +218,87 @@ void DynamicsTool::disableModelForces(Model &model, SimTK::State &s, const Array
     }
 }
 
-
-// NOTE: The implementation here should be verbatim that of AbstractTool::
-// createExternalLoads to ensure consistent behavior of Tools in the GUI
-// TODO: Unify the code bases.
-bool DynamicsTool::createExternalLoads( const string& aExternalLoadsFileName,
-                                        Model& aModel)
+bool DynamicsTool::createExternalLoads( const string& aExternalLoadsFileName, Model& aModel, const Storage *loadKinematics)
 {
     if(aExternalLoadsFileName==""||aExternalLoadsFileName=="Unassigned") {
         cout<<"No external loads will be applied (external loads file not specified)."<<endl;
         return false;
     }
 
-    Model copyModel = aModel;
-    // speedup realize position calculations by removing all force elements
-    // including muscles whose path calculations are most intensive
-    copyModel.updForceSet().clearAndDestroy();
-    copyModel.updControllerSet().clearAndDestroy();
-
+    // This is required so that the references to other files inside ExternalLoads file are interpreted 
+    // as relative paths
+    std::string savedCwd = IO::getCwd();
+    IO::chDir(IO::getParentDirectory(aExternalLoadsFileName));
     // Create external forces
-    ExternalLoads* externalLoads = nullptr;
     try {
-        externalLoads = new ExternalLoads(aExternalLoadsFileName, true);
-        copyModel.addModelComponent(externalLoads);
+        _externalLoads = ExternalLoads(aModel, aExternalLoadsFileName);
+        aModel.finalizeFromProperties();
     }
-    catch (const Exception &ex) {
+     catch (const Exception& ex) {
         // Important to catch exceptions here so we can restore current working directory...
         // And then we can re-throw the exception
-        cout << "Error: failed to construct ExternalLoads from file " << aExternalLoadsFileName;
-        cout << ". Please make sure the file exists and that it contains an ExternalLoads";
-        cout << "object or create a fresh one." << endl;
+         cout << "Error: failed to construct ExternalLoads from file " << aExternalLoadsFileName
+             << ". Please make sure the file exists and that it contains an ExternalLoads object or create a fresh one." << endl;
+        if(getDocument()) IO::chDir(savedCwd);
         throw(ex);
     }
+    _externalLoads.setMemoryOwner(false);
+    _externalLoads.invokeConnectToModel(aModel);
 
-    string loadKinematicsFileName =
-        externalLoads->getExternalLoadsModelKinematicsFileName();
+    string loadKinematicsFileName = _externalLoads.getExternalLoadsModelKinematicsFileName();
     
-    const Storage *loadKinematicsForPointTransformation = nullptr;
-
-    IO::TrimLeadingWhitespace(loadKinematicsFileName);
-    Storage *temp = NULL;
-    // fine if there are no kinematics as long as it was not assigned
-    if (!(loadKinematicsFileName == "") && !(loadKinematicsFileName == "Unassigned")) {
-        if (IO::FileExists(loadKinematicsFileName)) {
+    const Storage *loadKinematicsForPointTransformation = NULL;
+    
+    //If the Tool is already loading the storage allow it to pass it in for use rather than reloading and processing
+    if(loadKinematics && loadKinematics->getName() == loadKinematicsFileName){
+        loadKinematicsForPointTransformation = loadKinematics;
+    }
+    else{
+        IO::TrimLeadingWhitespace(loadKinematicsFileName);
+        Storage *temp = NULL;
+        // fine if there are no kinematics as long as it was not assigned
+        if(!(loadKinematicsFileName == "") && !(loadKinematicsFileName == "Unassigned")){
             temp = new Storage(loadKinematicsFileName);
-        }
-        else {
-            // attempt to find the file local to the external loads XML file
-            std::string savedCwd = IO::getCwd();
-            IO::chDir(IO::getParentDirectory(aExternalLoadsFileName));
-            if (IO::FileExists(loadKinematicsFileName)) {
-                temp = new Storage(loadKinematicsFileName);
+            if(!temp){
                 IO::chDir(savedCwd);
-            }
-            else {
-                IO::chDir(savedCwd);
-                throw Exception("DynamicsTool: could not find external loads kinematics file '"
-                    + loadKinematicsFileName + "'.");
+                throw Exception("DynamicsTool: could not find external loads kinematics file '"+loadKinematicsFileName+"'."); 
             }
         }
         // if loading the data, do whatever filtering operations are also specified
-        if (temp && externalLoads->getLowpassCutoffFrequencyForLoadKinematics() >= 0) {
-            cout << "\n\nLow-pass filtering coordinates data with a cutoff frequency of "
-                << _externalLoads.getLowpassCutoffFrequencyForLoadKinematics() << "." << endl;
-            temp->pad(temp->getSize() / 2);
-            temp->lowpassIIR(externalLoads->getLowpassCutoffFrequencyForLoadKinematics());
+        if(temp && _externalLoads.getLowpassCutoffFrequencyForLoadKinematics() >= 0) {
+            cout<<"\n\nLow-pass filtering coordinates data with a cutoff frequency of "<<_externalLoads.getLowpassCutoffFrequencyForLoadKinematics()<<"."<<endl;
+            temp->pad(temp->getSize()/2);
+            temp->lowpassIIR(_externalLoads.getLowpassCutoffFrequencyForLoadKinematics());
         }
         loadKinematicsForPointTransformation = temp;
     }
-
-
+    
     // if load kinematics for performing re-expressing the point of application is provided
     // then perform the transformations
     if(loadKinematicsForPointTransformation){
-        SimTK::State& s = copyModel.initSystem();
-
+        SimTK::State& s = aModel.initSystem();
+        
         // Form complete storage so that the kinematics match the state labels/ordering
         Storage *qStore=NULL;
         Storage *uStore=NULL;
-        // qStore and uStore returned are in radians
-        copyModel.getSimbodyEngine().formCompleteStorages(s,
-            *loadKinematicsForPointTransformation,
-            qStore, uStore);
-
-        externalLoads->transformPointsExpressedInGroundToAppliedBodies(*qStore, _timeRange[0], _timeRange[1]);
+        aModel.getSimbodyEngine().formCompleteStorages(s, *loadKinematicsForPointTransformation,qStore,uStore);
+        // qStore should be in radians
+        if (qStore->isInDegrees()){
+            aModel.getSimbodyEngine().convertDegreesToRadians(*qStore);
+        }
+        _externalLoads.transformPointsExpressedInGroundToAppliedBodies(*qStore, _timeRange[0], _timeRange[1]);
         delete qStore;
         delete uStore;
     }
-
-    //Now add the ExternalLoads (transformed or not) to the Model to be analyzed
-    ExternalLoads* exLoadsClone = externalLoads->clone();
-    aModel.addModelComponent(exLoadsClone);
-
-    // copy over created external loads to the external loads owned by the tool
-    _externalLoads = *externalLoads;
-    // tool holds on to a reference of the external loads in the model so it can
-    // be removed afterwards
-    _modelExternalLoads = exLoadsClone;
-
-    return true;
-}
-
-void DynamicsTool::removeExternalLoadsFromModel()
-{
-    // If ExternalLoads were added to the model by the Tool, then remove them
-    if (modelHasExternalLoads()) {
-        _model->updMiscModelComponentSet().remove(_modelExternalLoads.release());
+    
+    // Add external loads to the set of all model forces
+    for(int i=0; i<_externalLoads.getSize(); ++i){
+        aModel.updForceSet().adoptAndAppend(&_externalLoads[i]);
     }
+
+    if(!loadKinematics)
+        delete loadKinematics;
+
+    IO::chDir(savedCwd);
+    return(true);
 }

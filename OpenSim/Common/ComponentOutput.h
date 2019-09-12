@@ -43,7 +43,6 @@
 namespace OpenSim {
 
 class Component;
-class AbstractInput;
 
 /** One of the values of an Output. */
 class AbstractChannel {
@@ -247,12 +246,9 @@ public:
             throw Exception("Channel name cannot be empty.");
         _channels[channelName] = Channel(this, channelName);
     }
-
-    /** For a single-value output, name must be empty or must be the output's
-     * name. */
+    
     const AbstractChannel& getChannel(const std::string& name) const override {
         try {
-            if (!isListOutput() && name == getName()) return _channels.at("");
             return _channels.at(name);
         } catch (const std::out_of_range&) {
             OPENSIM_THROW(Exception, "Output '" + getName() + "' does not have "
@@ -354,7 +350,7 @@ public:
         return getOutput().getName() + ":" + _channelName;
     }
     std::string getPathName() const override {
-        return getOutput().getOwner().getAbsolutePathString() + "|" + getName();
+        return getOutput().getOwner().getAbsolutePathName() + "|" + getName();
     }
 private:
     mutable T _result;
@@ -493,7 +489,7 @@ private:
     /** Available at stage SimTK::Stage::Model.                          */ \
     /** This output was generated with the                               */ \
     /** #OpenSim_DECLARE_OUTPUT_FOR_STATE_VARIABLE macro.                */ \
-    OpenSim_DOXYGEN_Q_PROPERTY(double, oname)                               \
+    OpenSim_DOXYGEN_Q_PROPERTY(osim_double_adouble, oname)                               \
     /** @}                                                               */ \
     /** @cond                                                            */ \
     bool _has_output_##oname { constructOutputForStateVariable(#oname) };   \

@@ -164,10 +164,10 @@ void createStateStorageFile() {
     model.addController(controller);
 
     auto& initState = model.initSystem();
-    Manager manager(model);
+    SimTK::RungeKuttaMersonIntegrator integrator(model.getSystem());
+    Manager manager(model, integrator);
     initState.setTime(0.0);
-    manager.initialize(initState);
-    manager.integrate(0.15);
+    manager.integrate(initState, 0.15);
     manager.getStateStorage().print(statesStoFname);
 }
 
@@ -179,13 +179,13 @@ void testFromStatesStorageGivesCorrectStates() {
 
     Storage sto(statesStoFname);
 
-    // Note: we are verifying that we can load a trajectory without
-    // invoking model.initSystem() ourselves.
-    auto states = StatesTrajectory::createFromStatesStorage(model, sto);
+    // This will fail because we have not yet called initSystem() on the model.
+    SimTK_TEST_MUST_THROW_EXC(
+            StatesTrajectory::createFromStatesStorage(model, sto),
+            OpenSim::ModelHasNoSystem);
 
-    // However, we eventually *do* need to call initSystem() to make use of the
-    // trajectory with the model.
     model.initSystem();
+    auto states = StatesTrajectory::createFromStatesStorage(model, sto);
 
     // Test that the states are correct, and also that the iterator works.
     // -------------------------------------------------------------------
@@ -199,36 +199,37 @@ void testFromStatesStorageGivesCorrectStates() {
         // Multibody states.
         for (int ic = 0; ic < model.getCoordinateSet().getSize(); ++ic) {
             const auto& coord = model.getCoordinateSet().get(ic);
-            // get value and speed state names for this coordinate
-            const auto coordStateNames = coord.getStateVariableNames();
-
+            auto coordName = coord.getName();
+            auto jointName = coord.getJoint().getName();
+            auto coordPath = jointName + "/" + coordName;
             // Coordinate.
-            SimTK_TEST_EQ(getStorageEntry(sto, itime, coordStateNames[0]),
+            SimTK_TEST_EQ(getStorageEntry(sto, itime, coordPath + "/value"),
                     coord.getValue(state));
 
             // Speed.
-            SimTK_TEST_EQ(getStorageEntry(sto, itime, coordStateNames[1]),
+            SimTK_TEST_EQ(getStorageEntry(sto, itime, coordPath + "/speed"),
                     coord.getSpeedValue(state));
         }
 
         // Muscle states.
         for (int im = 0; im < model.getMuscles().getSize(); ++im) {
             const auto& muscle = model.getMuscles().get(im);
-            // get the activation and fiber_length state names of the muscles
-            const auto muscleStateNames = muscle.getStateVariableNames();
+            auto muscleName = muscle.getName();
 
             // Activation.
             {
+                std::string stateVarName = muscleName + "/activation";
                 SimTK_TEST_EQ(
-                    getStorageEntry(sto, itime, muscleStateNames[0]),
-                        muscle.getStateVariableValue(state, "activation") );
+                        getStorageEntry(sto, itime, stateVarName),
+                        muscle.getStateVariableValue(state, stateVarName));
             }
 
             // Fiber length.
             {
+                std::string stateVarName = muscleName + "/fiber_length";
                 SimTK_TEST_EQ(
-                    getStorageEntry(sto, itime, muscleStateNames[1]),
-                        muscle.getStateVariableValue(state, "fiber_length") );
+                        getStorageEntry(sto, itime, stateVarName), 
+                        muscle.getStateVariableValue(state, stateVarName));
             }
 
         }
@@ -398,6 +399,7 @@ void testFromStatesStorageInconsistentModel(const std::string &stoFilepath) {
 void testFromStatesStorageUniqueColumnLabels() {
 
     Model model("gait2354_simbody.osim");
+    model.initSystem();
     Storage sto(statesStoFname);
     
     // Edit column labels so that they are not unique.
@@ -437,8 +439,8 @@ void testFromStatesStoragePre40CorrectStates() {
     Storage sto(pre40StoFname);
     // So the test doesn't take so long.
     sto.resampleLinear(0.01);
-    auto states = StatesTrajectory::createFromStatesStorage(model, sto);
     model.initSystem();
+    auto states = StatesTrajectory::createFromStatesStorage(model, sto);
 
     // Test that the states are correct.
     // ---------------------------------
@@ -715,25 +717,18 @@ void tableAndTrajectoryMatch(const Model& model,
 
     const auto& colNames = table.getColumnLabels();
 
-    std::vector<int> stateValueIndices(colNames.size());
-    for (size_t icol = 0; icol < colNames.size(); ++icol) {
-        stateValueIndices[icol] = stateNames.findIndex(colNames[icol]);
-    }
-
-    SimTK::Vector stateValues; // working memory
-
     // Test that the data table has exactly the same numbers.
     for (size_t itime = 0; itime < states.getSize(); ++itime) {
         // Test time.
         SimTK_TEST(table.getIndependentColumn()[itime] ==
                    states[itime].getTime());
 
-        stateValues = model.getStateVariableValues(states[itime]);
-
         // Test state values.
         for (size_t icol = 0; icol < table.getNumColumns(); ++icol) {
-            const auto& valueInStates = stateValues[stateValueIndices[icol]];
+            const auto& stateName = colNames[icol];
 
+            const auto& valueInStates = model.getStateVariableValue(
+                    states[itime], stateName);
             const auto& column = table.getDependentColumnAtIndex(icol);
             const auto& valueInTable = column[static_cast<int>(itime)];
 
@@ -757,12 +752,10 @@ void testExport() {
     }
 
     // Exporting only certain columns.
-    std::vector<std::string> columns{
-        gait.getCoordinateSet().get("knee_angle_l").getStateVariableNames()[0],
-        gait.getCoordinateSet().get("knee_angle_r").getStateVariableNames()[0],
-        gait.getCoordinateSet().get("knee_angle_r").getStateVariableNames()[1]};
-
     {
+        std::vector<std::string> columns {"knee_l/knee_angle_l/value",
+                                          "knee_r/knee_angle_r/value",
+                                          "knee_r/knee_angle_r/speed"};
         auto tableKnee = states.exportToTable(gait, columns);
         tableAndTrajectoryMatch(gait, tableKnee, states, columns);
     }
@@ -777,19 +770,20 @@ void testExport() {
 
     // Exception if given a non-existent column name.
     SimTK_TEST_MUST_THROW_EXC(
-            states.exportToTable(gait, {columns[0],
+            states.exportToTable(gait, {"knee_l/knee_angle_l/value",
                                         "not_an_actual_state",
-                                        columns[2]}),
+                                        "knee_r/knee_angle_r/speed"}),
             OpenSim::Exception);
     SimTK_TEST_MUST_THROW_EXC(
-            states.exportToTable(gait, {columns[0],
+            states.exportToTable(gait, {"knee_l/knee_angle_l/value",
                                         "nor/is/this",
-                                        columns[2]}),
+                                        "knee_r/knee_angle_r/speed"}),
             OpenSim::Exception);
 }
 
 int main() {
     SimTK_START_TEST("testStatesTrajectory");
+
         // actuators library is not loaded automatically (unless using clang).
         #if !defined(__clang__)
             LoadOpenSimLibrary("osimActuators");

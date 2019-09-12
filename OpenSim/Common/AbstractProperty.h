@@ -47,10 +47,11 @@ public:
         const std::string& func,
         const Object& obj,
         const std::string& propertyName,
-        const std::string& errorMsg) :
+        const std::string& errorMsg = "") :
         Exception(file, line, func, obj) {
         std::string msg = "Property '" + propertyName;
-        msg += "' has an invalid value.\n(details: " + errorMsg + ").\n";
+        msg += "' has an invalid value.";
+        msg += (errorMsg.empty()) ? "\n" : ("\n(details: " + errorMsg + ").");
         addMessage(msg);
     }
 };
@@ -97,28 +98,11 @@ public:
     allocated on the heap and it is up to the caller to delete it when done. **/
     virtual AbstractProperty* clone() const = 0;
 
-    /** For relatively simple types, return the current value of this property
-    in a string suitable for displaying to a user in the GUI (i.e., this number
-    may be rounded and not an exact representation of the actual value being
-    used). Objects just return something like "(Object)".
-    For `Property`s, This function calls `toStringForDisplay()` with 
-    `precision = 6`.**/
+    /** For relatively simple types, return the current value of this property 
+    in a string suitable for displaying to a user in the GUI. Objects just
+    return something like "(Object)". **/
+    // TODO: replace this with something more reasonable
     virtual std::string toString() const = 0;
-
-    /** For relatively simple types, return the current value of this property
-    in a string suitable for displaying to a user in the GUI (i.e., this number
-    may be rounded and not an exact representation of the actual value being 
-    used). Objects just return something like "(Object)". This differs from 
-    `toString()` as it has an argument, `precision`, for controlling the number
-    of digits printed to string for floats. If this function is not overridden
-    in a derived class, this function uses `toString()` and the `precision` 
-    argument is ignored. 
-    For `Property`s, in general, this means that floats will
-    be represented with the number of significant digits denoted by the
-    `precision` argument, and the default formatting of `stringstream`
-    determines whether or not exponential notation is used. **/
-    virtual std::string toStringForDisplay(const int precision) const
-    {   return toString(); }
 
     /** This returns a string representation of this property's value type 
     which will be the same as T::getClassName() for Object-derived types T, and
@@ -353,9 +337,9 @@ protected:
     object that has the "file" attribute will read in its contents from that 
     file rather than from the supplied XML document, and the version number
     will be taken from that file rather than the argument supplied here. **/
-    virtual void readFromXMLElement
-       (SimTK::Xml::Element& propertyElement,
-        int                  versionNumber) = 0;
+	/*virtual void readFromXMLElement
+	(SimTK::Xml::Element& propertyElement,
+		int                  versionNumber) {};*/
 
     /** Output a serialized representation of this property by writing its
     value to the given XML property element. If the "use default value" 
@@ -373,8 +357,8 @@ protected:
     @endcode
     and that is the only format produced here since the empty-valued property
     element is supplied (with the property name as its tag). **/
-    virtual void writeToXMLElement
-       (SimTK::Xml::Element& propertyElement) const = 0;
+    /*virtual void writeToXMLElement
+       (SimTK::Xml::Element& propertyElement) const = 0;*/
 
 
     /** How may values are currently stored in this property? If this is an

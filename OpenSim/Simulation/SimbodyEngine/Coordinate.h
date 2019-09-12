@@ -56,15 +56,15 @@ public:
 //==============================================================================
 // PROPERTIES
 //==============================================================================
-    OpenSim_DECLARE_PROPERTY(default_value, double, 
+    OpenSim_DECLARE_PROPERTY(default_value, osim_double_adouble, 
         "The value of this coordinate before any value has been set. "
         "Rotational coordinate value is in radians and Translational in meters.");
 
-    OpenSim_DECLARE_PROPERTY(default_speed_value, double, 
+    OpenSim_DECLARE_PROPERTY(default_speed_value, osim_double_adouble, 
         "The speed value of this coordinate before any value has been set. "
         "Rotational coordinate value is in rad/s and Translational in m/s.");
 
-    OpenSim_DECLARE_LIST_PROPERTY_SIZE(range, double, 2,
+    OpenSim_DECLARE_LIST_PROPERTY_SIZE(range, osim_double_adouble, 2,
         "The minimum and maximum values that the coordinate can range between. "
         "Rotational coordinate range in radians and Translational in meters." );
 
@@ -96,9 +96,9 @@ public:
 //==============================================================================
 // OUTPUTS
 //==============================================================================
-    OpenSim_DECLARE_OUTPUT(value, double, getValue, SimTK::Stage::Model);
-    OpenSim_DECLARE_OUTPUT(speed, double, getSpeedValue, SimTK::Stage::Model);
-    OpenSim_DECLARE_OUTPUT(acceleration, double, getAccelerationValue,
+    OpenSim_DECLARE_OUTPUT(value, osim_double_adouble, getValue, SimTK::Stage::Model);
+    OpenSim_DECLARE_OUTPUT(speed, osim_double_adouble, getSpeedValue, SimTK::Stage::Model);
+    OpenSim_DECLARE_OUTPUT(acceleration, osim_double_adouble, getAccelerationValue,
             SimTK::Stage::Acceleration);
 
     /** Motion type that describes the motion dictated by the coordinate.
@@ -131,43 +131,34 @@ public:
     MotionType getMotionType() const;
 
     /** get the value of the Coordinate from the state */
-    double getValue(const SimTK::State& s) const;
-    /** Set the value of the Coordinate on to the state.
-        Optional flag to enforce the constraints immediately (true by default),
-        which can adjust all coordinate values in the state to satisfy model
-        constraints. Use getValue(s) to see if/how the value was adjusted to
-        satisfy the kinematic constraints. If setting multiple Coordinate values
-        consecutively, e.g. in a loop, set the flag to false and then call
-        Model::assemble(state) once all Coordinate values have been set.
-        Alternatively, use Model::setStateVariableValues() to set all coordinate
-        values and their speeds at once followed by Model::assemble(state).
-      
-        The provided value will be clamped to the coordinate's range if
-        the coordinate is clamped and enforceConstraints is true.
-        */
-    void setValue(SimTK::State& s, double aValue, bool enforceContraints=true) const;
+    osim_double_adouble getValue(const SimTK::State& s) const;
+    /** set the value of the Coordinate on to the state.
+        optional flag to enforce the constraints immediately, which may 
+        adjust its value in the state. Use getValue(s) to see if/how the
+        value was adjusted to satisfy the kinematic constraints. */
+    void setValue(SimTK::State& s, osim_double_adouble aValue, bool aEnforceContraints=true) const;
 
     /** get the speed value of the Coordinate from the state */
-    double getSpeedValue(const SimTK::State& s) const;
-    void setSpeedValue(SimTK::State& s, double aValue) const;
+    osim_double_adouble getSpeedValue(const SimTK::State& s) const;
+    void setSpeedValue(SimTK::State& s, osim_double_adouble aValue) const;
     /** return the name (label) used to identify the Coordinate's speed
         state variable. Returns the string "<coordinate_name>/speed" */
     const std::string& getSpeedName() const;
 
     /** get the default value for this coordinate. This is the value 
         used if no value has been set prior to a simulation. */
-    double getDefaultValue() const { return get_default_value(); }
-    void setDefaultValue(double aDefaultValue);
+    osim_double_adouble getDefaultValue() const { return get_default_value(); }
+    void setDefaultValue(osim_double_adouble aDefaultValue);
 
     /** get the default speed value for this coordinate. This is the value 
         used if no value has been set prior to a simulation. */
-    double getDefaultSpeedValue() const { return get_default_speed_value(); }
-    void setDefaultSpeedValue(double aDefaultSpeedValue) 
+    osim_double_adouble getDefaultSpeedValue() const { return get_default_speed_value(); }
+    void setDefaultSpeedValue(osim_double_adouble aDefaultSpeedValue) 
         { upd_default_speed_value() = aDefaultSpeedValue; }
 
     /** get acceleration of the coordinate is dependent on having 
         realized the model and state to the acceleration stage */
-    double getAccelerationValue(const SimTK::State& s) const;
+    osim_double_adouble getAccelerationValue(const SimTK::State& s) const;
 
     /** determine or set whether or not the Coordinate is 
         "clamped" between a range of values. */
@@ -178,13 +169,13 @@ public:
     void setDefaultClamped(bool aClamped ) { upd_clamped() = aClamped; }
 
     /** get the value for the Coordinate's range of motion */ 
-    double getRangeMin() const {return get_range(0); }
-    double getRangeMax() const {return get_range(1); }
+    osim_double_adouble getRangeMin() const {return get_range(0); }
+    osim_double_adouble getRangeMax() const {return get_range(1); }
     /** set the range with a double array of length 2 in order of
         minimum and maximum coordinate values */
-    void setRange(double aRange[2]);
-    void setRangeMin(double aMin);
-    void setRangeMax(double aMax);
+    void setRange(osim_double_adouble aRange[2]);
+    void setRangeMin(osim_double_adouble aMin);
+    void setRangeMax(osim_double_adouble aMax);
     
     /** determine or set whether or not the Coordinate is 
         "locked" for a given state of the Model. */
@@ -210,21 +201,16 @@ public:
     /** Return true if coordinate is dependent on other coordinates via a coupler
         constraint OR it has been flagged as free to change when satisfying 
         the model's kinematic constraints in general. */
-    bool isDependent(const SimTK::State& s) const;
+    //bool isDependent(const SimTK::State& s) const;
 
     /** Return true if coordinate is locked, prescribed, or dependent on other coordinates */
-    bool isConstrained(const SimTK::State& s) const; 
+    //bool isConstrained(const SimTK::State& s) const; 
 
     /** @name Advanced Access to underlying Simbody system resources */
     /**@{**/
     int getMobilizerQIndex() const { return _mobilizerQIndex; };
     SimTK::MobilizedBodyIndex getBodyIndex() const { return _bodyIndex; };
     /**@}**/
-
-    /* For internal consistency checking. Returns the user-specified MotionType
-       serialized with pre-4.0 model files if one is provided, otherwise
-        returns MotionType::Undefined. */
-    const MotionType& getUserSpecifiedMotionTypePriorTo40() const;
 
     //--------------------------------------------------------------------------
     // CONSTRUCTION
@@ -234,7 +220,7 @@ public:
 
     /** Convenience constructor */  
     Coordinate(const std::string &aName, MotionType aMotionType, 
-        double defaultValue, double aRangeMin, double aRangeMax);   
+        osim_double_adouble defaultValue, osim_double_adouble aRangeMin, osim_double_adouble aRangeMax);   
     
     // Uses default (compiler-generated) destructor, copy constructor and copy 
     // assignment operator.
@@ -253,11 +239,6 @@ protected:
     // of Coordinate
     void setJoint(const Joint& aOwningJoint);
 
-    // Override to account for version updates in the XML format.
-    void updateFromXMLNode(SimTK::Xml::Element& aNode,
-        int versionNumber = -1) override;
-
-
 //=============================================================================
 // MODEL DATA
 //=============================================================================
@@ -274,10 +255,10 @@ private:
                     StateVariable(name, owner, subSysIndex, index, false) {}
 
         //override StateVariable virtual methods
-        double getValue(const SimTK::State& state) const override;
-        void setValue(SimTK::State& state, double value) const override;
-        double getDerivative(const SimTK::State& state) const override;
-        void setDerivative(const SimTK::State& state, double deriv) const override;
+        osim_double_adouble getValue(const SimTK::State& state) const override;
+        void setValue(SimTK::State& state, osim_double_adouble value) const override;
+        osim_double_adouble getDerivative(const SimTK::State& state) const override;
+        void setDerivative(const SimTK::State& state, osim_double_adouble deriv) const override;
     };
 
     // Class for handling state variable added (allocated) by this Component
@@ -292,10 +273,10 @@ private:
                     StateVariable(name, owner, subSysIndex, index, false) {}
 
         //override StateVariable virtual methods
-        double getValue(const SimTK::State& state) const override;
-        void setValue(SimTK::State& state, double value) const override;
-        double getDerivative(const SimTK::State& state) const override;
-        void setDerivative(const SimTK::State& state, double deriv) const override;
+        osim_double_adouble getValue(const SimTK::State& state) const override;
+        void setValue(SimTK::State& state, osim_double_adouble value) const override;
+        osim_double_adouble getDerivative(const SimTK::State& state) const override;
+        void setDerivative(const SimTK::State& state, osim_double_adouble deriv) const override;
     };
 
     // All coordinates (Simbody mobility) have associated constraints that
@@ -328,9 +309,6 @@ private:
 
     /* The OpenSim::Joint that owns this coordinate. */
     SimTK::ReferencePtr<const Joint> _joint;
-
-    /* User set MotionType from versions of OpenSim that predate 4.0 */
-    MotionType _userSpecifiedMotionTypePriorTo40{ Undefined };
 
     mutable bool _lockedWarningGiven;
 

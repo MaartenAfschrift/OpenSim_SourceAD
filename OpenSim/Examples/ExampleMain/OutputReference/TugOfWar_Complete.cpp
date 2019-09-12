@@ -285,9 +285,6 @@ int main()
         muscle2->setDefaultFiberLength(optimalFiberLength);
         muscle1->setDefaultFiberLength(optimalFiberLength);
 
-        // To print (serialize) the latest connections of the model, it is
-        // necessary to finalizeConnections() first.
-        osimModel.finalizeConnections();
         // Save the model to a file
         osimModel.print("tugOfWar_model.osim");
 
@@ -317,18 +314,20 @@ int main()
         ForceReporter* reporter = new ForceReporter(&osimModel);
         osimModel.addAnalysis(reporter);
 
+        // Create the integrator for integrating system dynamics
+        SimTK::RungeKuttaMersonIntegrator integrator(osimModel.getMultibodySystem());
+        integrator.setAccuracy(1.0e-6);
+        
         // Create the manager managing the forward integration and its outputs
-        Manager manager(osimModel);
-        manager.setIntegratorAccuracy(1.0e-6);
+        Manager manager(osimModel,  integrator);
 
         // Print out details of the model
         osimModel.printDetailedInfo(si, cout);
 
         // Integrate from initial time to final time
         si.setTime(initialTime);
-        manager.initialize(si);
         cout<<"\nIntegrating from "<<initialTime<<" to "<<finalTime<<endl;
-        manager.integrate(finalTime);
+        manager.integrate(si, finalTime);
 
         //////////////////////////////
         // SAVE THE RESULTS TO FILE //

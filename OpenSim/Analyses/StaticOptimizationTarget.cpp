@@ -78,7 +78,7 @@ StaticOptimizationTarget(const SimTK::State& s, Model *aModel,int aNP,int aNC, b
     for (size_t i = 0u; i < coordinates.size(); ++i) {
         const Coordinate& coord = *coordinates[i];
         if(!coord.isConstrained(s)) {
-            _accelerationIndices.append(static_cast<int>(i));
+            _accelerationIndices.append(i);
         }
     }
 }
@@ -315,7 +315,7 @@ printPerformance(const SimTK::State& s, double *parameters)
     SimTK::Vector constraints(getNumConstraints());
     constraintFunc(SimTK::Vector(getNumParameters(),parameters,true),true,constraints);
     cout << endl;
-    cout << "time = " << s.getTime() <<" Performance = " << p << 
+    cout << "time = " << s.getTime() <<" Performance =" << p << 
     " Constraint violation = " << sqrt(~constraints*constraints) << endl;
 }
 
@@ -590,8 +590,7 @@ computeConstraintVector(SimTK::State& s, const Vector &parameters,Vector &constr
         const Coordinate& coord = *coordinates[_accelerationIndices[i]];
         int ind = _statesStore->getStateIndex(coord.getSpeedName(), 0);
         if (ind < 0){
-            // get the full coordinate speed state variable path name
-            string fullname = coord.getStateVariableNames()[1];
+            string fullname = coord.getJoint().getName() + "/" + coord.getSpeedName();
             ind = _statesStore->getStateIndex(fullname, 0);
             if (ind < 0){
                 string msg = "StaticOptimizationTarget::computeConstraintVector: \n";

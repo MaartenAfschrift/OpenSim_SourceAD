@@ -29,7 +29,7 @@
 
 namespace OpenSim {
 
-class WrapObject;
+//class WrapObject;
 
 //=============================================================================
 //=============================================================================
@@ -74,7 +74,9 @@ public:
     DEPRECATED_14("Use getParentFrame().getName() instead.")
     const std::string& getBodyName() const;
 
-    virtual const WrapObject* getWrapObject() const { return nullptr; }
+    virtual void scale(const SimTK::Vec3& scaleFactors) = 0;
+
+    //virtual const WrapObject* getWrapObject() const { return nullptr; }
 
     virtual bool isActive(const SimTK::State& s) const { return true; }
 
@@ -91,7 +93,7 @@ public:
         PhysicalFrame. 
         @note If overriding updateFromXMLNode of derived classes, do not
         forget to invoke Super::updateFromXMLNode to include this update.*/
-    void updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber) override;
+    //void updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber) override;
 
 //=============================================================================
 };  // END of class AbstractPathPoint

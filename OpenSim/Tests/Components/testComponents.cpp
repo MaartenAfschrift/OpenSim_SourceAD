@@ -180,9 +180,6 @@ void testComponent(const Component& instanceToTest)
     // ------------------------------
     // This will find issues with de/serialization.
     cout << "Serializing and deserializing component." << endl;
-    // Give Component opportunity to validate properties that could 
-    // be junk from randomizer
-    instance->finalizeFromProperties();
     testSerialization(instance);
 
     const size_t instanceSize = getCurrentRSS();
@@ -243,15 +240,10 @@ void testComponent(const Component& instanceToTest)
             if (dependency) {
                 //give it some random values including a name
                 randomize(dependency.get());
+                socket.setConnecteeName(dependency->getName());
 
                 // add the dependency 
-                const Object* depRawPtr = dependency.get();
                 addObjectAsComponentToModel(dependency.release(), model);
-
-                // Connect the socket. This should come after adding the
-                // dependency to the model, otherwise the connectee path may
-                // be incorrect.
-                socket.connect(*depRawPtr);
             }
         }
         
@@ -273,7 +265,7 @@ void testComponent(const Component& instanceToTest)
             // Special case: Geometry cannot have both its input and socket
             // connected.
             if (dynamic_cast<Geometry*>(&sub) && inputName == "transform") {
-                input.setConnecteePath("");
+                input.setConnecteeName("");
                 continue;
             }
             
@@ -286,7 +278,7 @@ void testComponent(const Component& instanceToTest)
             for (const auto& ito : outputGen->getOutputs()) {
                 const AbstractOutput* output = ito.second.get();
                 if (dependencyTypeName == output->getTypeName()) {
-                    input.setConnecteePath(output->getChannel("").getPathName());
+                    input.setConnecteeName(output->getChannel("").getPathName());
                     foundAnOutput = true;
                 }
             }

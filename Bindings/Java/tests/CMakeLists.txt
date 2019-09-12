@@ -63,10 +63,6 @@ macro(OpenSimAddJavaTest TESTNAME)
     file(COPY ${FILETOCOPY}
          DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/TestC3DFileAdapter")
     string(CONCAT FILETOCOPY
-          "${CMAKE_SOURCE_DIR}/OpenSim/Tests/shared/IMUData/Xsens/MT_012005D6_031-000_00B421AF.txt")
-    file(COPY ${FILETOCOPY}
-         DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/TestXsensDataReader")
-    string(CONCAT FILETOCOPY
            "${CMAKE_SOURCE_DIR}/Bindings/Java/Matlab/examples/testData/"
            "Subject01/IKSetup/subject01_Setup_IK_generic.xml")
     file(COPY ${FILETOCOPY}
@@ -90,8 +86,6 @@ macro(OpenSimAddJavaTest TESTNAME)
                  DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/TestVisualization")
     file(COPY "${OPENSIM_SHARED_TEST_FILES_DIR}/gait10dof18musc_subject01.osim"
                  DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/TestEditProperties")
-    file(COPY "${OPENSIM_SHARED_TEST_FILES_DIR}/gait10dof18musc_subject01.osim"
-                 DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/TestEditMarkers")
     if(WIN32)
         # On Windows, CMake cannot use RPATH to hard code the location of libraries
         # in the binary directory (DLL's don't have RPATH), so we must set PATH to
@@ -132,19 +126,17 @@ set_target_properties(RunJavaTests PROPERTIES
 # -----------------------
 # Test name must be the name of a java file in this directory.
 # Leave out the ".java" extension.
-OpenSimAddJavaTest(TestVectors)
 OpenSimAddJavaTest(TestBasics)
 OpenSimAddJavaTest(TestIterators)
 OpenSimAddJavaTest(TestVisualization)
 OpenSimAddJavaTest(TestEditProperties)
 OpenSimAddJavaTest(TestTables)
 OpenSimAddJavaTest(TestModelBuilding)
-OpenSimAddJavaTest(TestEditMarkers)
 if(WITH_BTK)
     OpenSimAddJavaTest(TestC3DFileAdapter)
 endif()
 OpenSimAddJavaTest(TestReporter)
-OpenSimAddJavaTest(TestXsensDataReader)
+
 
 
 # This line must appear after all tests are added.

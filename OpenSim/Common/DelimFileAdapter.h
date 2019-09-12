@@ -24,10 +24,8 @@
 
 #include "SimTKcommon.h"
 
-#include "About.h"
 #include "FileAdapter.h"
 #include "TimeSeriesTable.h"
-#include "OpenSim/Common/IO.h"
 
 #include <string>
 #include <fstream>
@@ -81,7 +79,7 @@ Header in the file is assumed to end with string "endheader" occupying a full
 line.                                                                         */
 template<typename T>
 class DelimFileAdapter : public FileAdapter {
-    static_assert(std::is_same<T, double           >::value ||
+    static_assert(std::is_same<T, osim_double_adouble           >::value ||
                   is_SimTK_Vec<T                   >::value ||
                   std::is_same<T, SimTK::UnitVec3  >::value ||
                   std::is_same<T, SimTK::Quaternion>::value ||  
@@ -111,7 +109,7 @@ public:
     DelimFileAdapter* clone() const override;
 
     /** Key used for table associative array returned/accepted by write/read. */
-    static const std::string tableString();
+    static inline const std::string tableString();
 
     /** Name of the data type T (template parameter).                         */
     static inline std::string dataTypeName();
@@ -137,7 +135,7 @@ protected:
 
 private:
     /** Following overloads implement dataTypeName().                         */
-    static inline std::string dataTypeName_impl(double);
+    static inline std::string dataTypeName_impl(osim_double_adouble);
     static inline std::string dataTypeName_impl(SimTK::UnitVec3);
     static inline std::string dataTypeName_impl(SimTK::Quaternion);
     static inline std::string dataTypeName_impl(SimTK::SpatialVec);
@@ -145,9 +143,9 @@ private:
     static inline std::string dataTypeName_impl(SimTK::Vec<M>);
 
     /** Following overloads implement readElems().                            */
-    inline SimTK::RowVector_<double>
+    inline SimTK::RowVector_<osim_double_adouble>
     readElems_impl(const std::vector<std::string>& tokens,
-                   double) const;
+                   osim_double_adouble) const;
     inline SimTK::RowVector_<SimTK::UnitVec3>
     readElems_impl(const std::vector<std::string>& tokens,
                    SimTK::UnitVec3) const;
@@ -164,7 +162,7 @@ private:
 
     /** Following overloads implement writeElem().                            */
     inline void writeElem_impl(std::ostream& stream,
-                               const double& elem,
+                               const osim_double_adouble& elem,
                                const unsigned& prec) const;
     inline void writeElem_impl(std::ostream& stream,
                                const SimTK::SpatialVec& elem,
@@ -194,8 +192,6 @@ private:
     static const std::string _dataTypeString;
     /** Key used to read/write file version number.                           */
     static const std::string _versionString;
-    /** Key used to read/write OpenSim version number.                        */
-    static const std::string _opensimVersionString;
     /** File version number.                                                  */
     static const std::string _versionNumber;
 };
@@ -219,7 +215,7 @@ DelimFileAdapter<T>::dataTypeName() {
 
 template<typename T>
 std::string
-DelimFileAdapter<T>::dataTypeName_impl(double) {
+DelimFileAdapter<T>::dataTypeName_impl(osim_double_adouble) {
     return "double";
 }
 
@@ -262,11 +258,7 @@ DelimFileAdapter<T>::_versionString = "version";
 
 template<typename T>
 const std::string
-DelimFileAdapter<T>::_versionNumber = "3";
-
-template<typename T>
-const std::string
-DelimFileAdapter<T>::_opensimVersionString = "OpenSimVersion";
+DelimFileAdapter<T>::_versionNumber = "2";
 
 template<typename T>
 std::string
@@ -319,13 +311,14 @@ DelimFileAdapter<T>::extendRead(const std::string& fileName) const {
                      FileIsEmpty,
                      fileName);
 
+    auto table = std::make_shared<TimeSeriesTable_<T>>();
+
     size_t line_num{};
     // All the lines until "endheader" is header.
     std::regex endheader{R"([ \t]*)" + _endHeaderString + R"([ \t]*)"};
     std::regex keyvalue{R"((.*)=(.*))"};
     std::string header{};
     std::string line{};
-    ValueArrayDictionary keyValuePairs;
     while(std::getline(in_stream, line)) {
         ++line_num;
 
@@ -345,24 +338,21 @@ DelimFileAdapter<T>::extendRead(const std::string& fileName) const {
             auto key = matchRes[1].str();
             auto value = matchRes[2].str();
             if(!key.empty() && !value.empty()) {
-                const auto trimmed_key = trim(key);
-                if(trimmed_key == _dataTypeString) {
-                    // Discard key-value pair specifying datatype. Datatype is
-                    // known at this point.
+              const auto trimmed_key = trim(key);
+              if(trimmed_key == _dataTypeString) {
+                // Discard key-value pair specifying datatype. Datatype is 
+                // known at this point.
                     OPENSIM_THROW_IF(value != dataTypeName(),
                                      DataTypeMismatch,
                                      dataTypeName(),
                                      value);
-                } else if(trimmed_key == _versionString) {
-                    // Discard STO version number. Version number is added
-                    // during writing.
-                } else if(trimmed_key == _opensimVersionString) {
-                    // Discard OpenSim version number. Version number is added
-                    // during writing.
-                } else {
-                    keyValuePairs.setValueForKey(key, value);
-                }
-                continue;
+              } else if(trimmed_key == _versionString) {
+                // Discard version number. Version number is added during
+                // writing. 
+              } else {
+                table->updTableMetaData().setValueForKey(key, value);
+              }
+              continue;
             }
         }
 
@@ -371,7 +361,7 @@ DelimFileAdapter<T>::extendRead(const std::string& fileName) const {
         else
             header += "\n" + line;
     }
-    keyValuePairs.setValueForKey("header", header);
+    table->updTableMetaData().setValueForKey("header", header);
 
     // Callable to get the next line in form of vector of tokens.
     auto nextLine = [&] {
@@ -380,17 +370,10 @@ DelimFileAdapter<T>::extendRead(const std::string& fileName) const {
 
     // Read the line containing column labels and fill up the column labels
     // container.
-    std::vector<std::string> column_labels{};
-    while (column_labels.size() == 0) { // keep going down rows to find labels
-        column_labels = nextLine();
-        // for labels we never expect empty elements, so remove them
-        IO::eraseEmptyElements(column_labels);
-        ++line_num;
-    }
-
+    auto column_labels = nextLine();
     OPENSIM_THROW_IF(column_labels.size() == 0, Exception,
                      "No column labels detected in file '" + fileName + "'.");
-    
+    ++line_num;
     // Column 0 is the time column. Check and get rid of it. The data in this
     // column is maintained separately from rest of the data.
     OPENSIM_THROW_IF(column_labels[0] != _timeColumnLabel,
@@ -399,61 +382,38 @@ DelimFileAdapter<T>::extendRead(const std::string& fileName) const {
                      _timeColumnLabel,
                      column_labels[0]);
     column_labels.erase(column_labels.begin());
+    // Set the column labels as metadata.
+    ValueArray<std::string> value_array{};
+    for(const auto& cl : column_labels)
+        value_array.upd().push_back(SimTK::Value<std::string>{cl});
+    typename TimeSeriesTable_<T>::DependentsMetaData dep_metadata{};
+    dep_metadata.setValueArrayForKey("labels", value_array);
+    table->setDependentsMetaData(dep_metadata);
 
     // Read the rows one at a time and fill up the time column container and
-    // the data container. Start with a reasonable initial capacity for
-    // tradeoff between a small file and larger files. 100 worked well for
-    // a 50 MB file with ~80000 lines.
-    std::vector<double> timeVec;
-    int initCapacity = 100;
-    int ncol = static_cast<int>(column_labels.size());
-    timeVec.reserve(initCapacity);
-    SimTK::Matrix_<T> matrix(initCapacity, ncol);
-    
-    // Initialize current row and capacity
-    int curCapacity = initCapacity;
-    int curRow = 0;
-
-    // Start looping through each line
+    // the data container.
     auto row = nextLine();
-    while (!row.empty()) {
+    while(!row.empty()) {
         ++line_num;
-        
-        // Double capacity if we reach the end of the containers.
-        // This is necessary until Simbody issue #401 is addressed.
-        if (curRow+1 > curCapacity) {
-            curCapacity *= 2;
-            timeVec.reserve(curCapacity);
-            matrix.resizeKeep(curCapacity, ncol);
-        }
 
         // Time is column 0.
-        timeVec.push_back(std::stod(row.front()));
+        osim_double_adouble time = std::stod(row.front());
         row.erase(row.begin());
 
         auto row_vector = readElems(row);
 
         OPENSIM_THROW_IF(row_vector.size() != column_labels.size(),
-            RowLengthMismatch,
-            fileName,
-            line_num,
-            column_labels.size(),
-            static_cast<size_t>(row_vector.size()));
-        
-        matrix.updRow(curRow) = std::move(row_vector);
+                         RowLengthMismatch,
+                         fileName,
+                         line_num,
+                         column_labels.size(),
+                         static_cast<size_t>(row_vector.size()));
+
+        // Column 1 is time.
+        table->appendRow(time, std::move(row_vector));
 
         row = nextLine();
-        ++curRow;
     }
-
-    // Resize the matrix down to the correct number of rows.
-    // This is necessary until Simbody issue #401 is addressed.
-    matrix.resizeKeep(curRow, ncol);
-
-    // Create the table and update other metadata from above
-    auto table = 
-        std::make_shared<TimeSeriesTable_<T>>(timeVec, matrix, column_labels);
-    table->updTableMetaData() = keyValuePairs;
 
     OutputTables output_tables{};
     output_tables.emplace(tableString(), table);
@@ -468,10 +428,10 @@ DelimFileAdapter<T>::readElems(const std::vector<std::string>& tokens) const {
 }
 
 template<typename T>
-SimTK::RowVector_<double>
+SimTK::RowVector_<osim_double_adouble>
 DelimFileAdapter<T>::readElems_impl(const std::vector<std::string>& tokens,
-                                    double) const {
-    SimTK::RowVector_<double> elems{static_cast<int>(tokens.size())};
+                                    osim_double_adouble) const {
+    SimTK::RowVector_<osim_double_adouble> elems{static_cast<int>(tokens.size())};
     for(auto i = 0u; i < tokens.size(); ++i)
         elems[static_cast<int>(i)] = std::stod(tokens[i]);
 
@@ -581,11 +541,13 @@ DelimFileAdapter<T>::extendWrite(const InputTables& absTables,
     std::ofstream out_stream{fileName};
 
     // First line of the stream is the header.
-    if (table->getTableMetaData().hasKey("header")) {
+    try {
         out_stream << table->
                       getTableMetaData().
                       getValueForKey("header").
                       template getValue<std::string>() << "\n";
+    } catch(KeyNotFound&) {
+        // No operation. Continue with other keys in table metadata.
     }
     // Write rest of the key-value pairs and end the header.
     for(const auto& key : table->getTableMetaDataKeys()) {
@@ -601,7 +563,6 @@ DelimFileAdapter<T>::extendWrite(const InputTables& absTables,
     out_stream << _dataTypeString << "=" << dataTypeName() << "\n";
     // Write version number.
     out_stream << _versionString << "=" << _versionNumber << "\n";
-    out_stream << _opensimVersionString << "=" << GetVersion() << "\n";
     out_stream << _endHeaderString << "\n";
 
     // Line containing column labels.
@@ -616,7 +577,7 @@ DelimFileAdapter<T>::extendWrite(const InputTables& absTables,
 
     // Data rows.
     for(unsigned row = 0; row < table->getNumRows(); ++row) {
-        constexpr auto prec = std::numeric_limits<double>::digits10 + 1;
+        constexpr auto prec = std::numeric_limits<osim_double_adouble>::digits10 + 1;
         out_stream << std::setprecision(prec)
                    << table->getIndependentColumn()[row];
         const auto& row_r = table->getRowAtIndex(row);
@@ -640,7 +601,7 @@ DelimFileAdapter<T>::writeElem(std::ostream& stream,
 template<typename T>
 void
 DelimFileAdapter<T>::writeElem_impl(std::ostream& stream,
-                                    const double& elem,
+                                    const osim_double_adouble& elem,
                                     const unsigned& prec) const {
     stream << std::setprecision(prec) << elem;
 }

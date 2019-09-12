@@ -56,7 +56,7 @@ private:
     SimTK::Vec3 _direction;
     /** Optional parameter to scale the force that results from a scalar 
         (tension) multiplies the direction */
-    double _scale;
+    osim_double_adouble _scale;
 //=============================================================================
 // METHODS
 //=============================================================================
@@ -68,7 +68,7 @@ public:
     /** Default constructor takes the point, body, direction and scale
         as arguments */
     PointForceDirection(SimTK::Vec3 point, const PhysicalFrame &frame, 
-        SimTK::Vec3 direction, double scale=1):
+        SimTK::Vec3 direction, osim_double_adouble scale=1):
             _point(point), _frame(frame), _direction(direction), _scale(scale)
     {}
 
@@ -79,7 +79,7 @@ public:
     /** get direction of the force at the point defined in ground */
     SimTK::Vec3 direction() {return _direction; }
     /** get the scale factor on the force */
-    double scale() {return _scale; }
+    osim_double_adouble scale() {return _scale; }
 
     /** replace the current direction with the resultant with a new direction */
     void addToDirection(SimTK::Vec3 newDirection) {_direction+=newDirection;}

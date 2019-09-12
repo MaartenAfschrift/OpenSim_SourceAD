@@ -30,6 +30,7 @@
 #include "PathPointSet.h"
 #include <OpenSim/Simulation/Wrap/PathWrapSet.h>
 #include <OpenSim/Simulation/MomentArmSolver.h>
+#include <OpenSim/Simulation/Model/PathPoint.h>
 
 
 #ifdef SWIG
@@ -44,8 +45,8 @@ namespace OpenSim {
 class Coordinate;
 class PointForceDirection;
 class ScaleSet;
-class WrapResult;
-class WrapObject;
+//class WrapResult;
+//class WrapObject;
 
 //=============================================================================
 //=============================================================================
@@ -60,27 +61,27 @@ OpenSim_DECLARE_CONCRETE_OBJECT(GeometryPath, ModelComponent);
     //=============================================================================
     // OUTPUTS
     //=============================================================================
-    OpenSim_DECLARE_OUTPUT(length, double, getLength, SimTK::Stage::Position);
+    OpenSim_DECLARE_OUTPUT(length, osim_double_adouble, getLength, SimTK::Stage::Position);
     // 
-    OpenSim_DECLARE_OUTPUT(lengthening_speed, double, getLengtheningSpeed,
+    OpenSim_DECLARE_OUTPUT(lengthening_speed, osim_double_adouble, getLengtheningSpeed,
         SimTK::Stage::Velocity);
 
 //=============================================================================
 // DATA
 //=============================================================================
 public:
-    OpenSim_DECLARE_UNNAMED_PROPERTY(Appearance,
-        "Default appearance attributes for this GeometryPath");
+    //OpenSim_DECLARE_UNNAMED_PROPERTY(Appearance,
+    //    "Default appearance attributes for this GeometryPath");
 
 private:
     OpenSim_DECLARE_UNNAMED_PROPERTY(PathPointSet,
         "The set of points defining the path");
 
-    OpenSim_DECLARE_UNNAMED_PROPERTY(PathWrapSet,
-        "The wrap objects that are associated with this path");
+    //OpenSim_DECLARE_UNNAMED_PROPERTY(PathWrapSet,
+    //    "The wrap objects that are associated with this path");
 
     // used for scaling tendon and fiber lengths
-    double _preScaleLength;
+    osim_double_adouble _preScaleLength;
 
     // Solver used to compute moment-arms. The GeometryPath owns this object,
     // but we cannot simply use a unique_ptr because we want the pointer to be
@@ -99,24 +100,24 @@ public:
 
     const PathPointSet& getPathPointSet() const { return get_PathPointSet(); }
     PathPointSet& updPathPointSet() { return upd_PathPointSet(); }
-    const PathWrapSet& getWrapSet() const { return get_PathWrapSet(); }
-    void addPathWrap(WrapObject& aWrapObject);
+    //const PathWrapSet& getWrapSet() const { return get_PathWrapSet(); }
+    //void addPathWrap(WrapObject& aWrapObject);
 
     //--------------------------------------------------------------------------
     // UTILITY
     //--------------------------------------------------------------------------
     AbstractPathPoint* addPathPoint(const SimTK::State& s, int index,
-        const PhysicalFrame& frame);
+        PhysicalFrame& frame);
     AbstractPathPoint* appendNewPathPoint(const std::string& proposedName, 
-        const PhysicalFrame& frame, const SimTK::Vec3& locationOnFrame);
+        PhysicalFrame& frame, const SimTK::Vec3& locationOnFrame);
     bool canDeletePathPoint( int index);
     bool deletePathPoint(const SimTK::State& s, int index);
     
-    void moveUpPathWrap(const SimTK::State& s, int index);
-    void moveDownPathWrap(const SimTK::State& s, int index);
-    void deletePathWrap(const SimTK::State& s, int index);
-    bool replacePathPoint(const SimTK::State& s, AbstractPathPoint* oldPathPoint,
-        AbstractPathPoint* newPathPoint); 
+    //void moveUpPathWrap(const SimTK::State& s, int index);
+    //void moveDownPathWrap(const SimTK::State& s, int index);
+    //void deletePathWrap(const SimTK::State& s, int index);
+    //bool replacePathPoint(const SimTK::State& s, AbstractPathPoint* oldPathPoint,
+    //    AbstractPathPoint* newPathPoint); 
 
     //--------------------------------------------------------------------------
     // GET
@@ -125,21 +126,21 @@ public:
     /** If you call this prior to extendAddToSystem() it will be used to initialize
     the color cache variable. Otherwise %GeometryPath will choose its own
     default which varies depending on owner. **/
-    void setDefaultColor(const SimTK::Vec3& color) {
-        updProperty_Appearance().setValueIsDefault(false);
-        upd_Appearance().set_color(color); 
-    };
+    //void setDefaultColor(const SimTK::Vec3& color) {
+    //    updProperty_Appearance().setValueIsDefault(false);
+    //    upd_Appearance().set_color(color); 
+    //};
     /** Returns the color that will be used to initialize the color cache
     at the next extendAddToSystem() call. The actual color used to draw the path
     will be taken from the cache variable, so may have changed. **/
-    const SimTK::Vec3& getDefaultColor() const { return get_Appearance().get_color(); }
+    //const SimTK::Vec3& getDefaultColor() const { return get_Appearance().get_color(); }
 
     /** %Set the value of the color cache variable owned by this %GeometryPath
     object, in the cache of the given state. The value of this variable is used
     as the color when the path is drawn, which occurs with the state realized 
     to Stage::Dynamics. So you must call this method during realizeDynamics() or 
     earlier in order for it to have any effect. **/
-    void setColor(const SimTK::State& s, const SimTK::Vec3& color) const;
+    //void setColor(const SimTK::State& s, const SimTK::Vec3& color) const;
 
     /** Get the current value of the color cache entry owned by this
     %GeometryPath object in the given state. You can access this value any time
@@ -147,16 +148,16 @@ public:
     the default color value specified in a call to setDefaultColor() earlier,
     or it will have the default color value chosen by %GeometryPath.
     @see setDefaultColor() **/
-    SimTK::Vec3 getColor(const SimTK::State& s) const;
+    //SimTK::Vec3 getColor(const SimTK::State& s) const;
 
-    double getLength( const SimTK::State& s) const;
-    void setLength( const SimTK::State& s, double length) const;
-    double getPreScaleLength( const SimTK::State& s) const;
-    void setPreScaleLength( const SimTK::State& s, double preScaleLength);
+    osim_double_adouble getLength( const SimTK::State& s) const;
+    void setLength( const SimTK::State& s, osim_double_adouble length) const;
+    osim_double_adouble getPreScaleLength( const SimTK::State& s) const;
+    void setPreScaleLength( const SimTK::State& s, osim_double_adouble preScaleLength);
     const Array<AbstractPathPoint*>& getCurrentPath( const SimTK::State& s) const;
 
-    double getLengtheningSpeed(const SimTK::State& s) const;
-    void setLengtheningSpeed( const SimTK::State& s, double speed ) const;
+    osim_double_adouble getLengtheningSpeed(const SimTK::State& s) const;
+    void setLengtheningSpeed( const SimTK::State& s, osim_double_adouble speed ) const;
 
     /** get the path as PointForceDirections directions, which can be used
         to apply tension to bodies the points are connected to.*/
@@ -171,7 +172,7 @@ public:
     @param[in,out] mobilityForces  Vector of generalized forces, one per mobility   
     */
     void addInEquivalentForces(const SimTK::State& state,
-                               const double& tension, 
+                               const osim_double_adouble& tension,
                                SimTK::Vector_<SimTK::SpatialVec>& bodyForces,
                                SimTK::Vector& mobilityForces) const;
 
@@ -179,20 +180,14 @@ public:
     //--------------------------------------------------------------------------
     // COMPUTATIONS
     //--------------------------------------------------------------------------
-    virtual double computeMomentArm(const SimTK::State& s, const Coordinate& aCoord) const;
+    virtual osim_double_adouble computeMomentArm(const SimTK::State& s, const Coordinate& aCoord) const;
 
     //--------------------------------------------------------------------------
     // SCALING
     //--------------------------------------------------------------------------
-
-    /** Calculate the path length in the current body position and store it for
-        use after the Model has been scaled. */
-    void extendPreScale(const SimTK::State& s,
-                        const ScaleSet& scaleSet) override;
-
-    /** Recalculate the path after the Model has been scaled. */
-    void extendPostScale(const SimTK::State& s,
-                         const ScaleSet& scaleSet) override;
+    void preScale(const SimTK::State& s, const ScaleSet& aScaleSet);
+    void scale(const SimTK::State& s, const ScaleSet& aScaleSet);
+    void postScale(const SimTK::State& s, const ScaleSet& aScaleSet);
 
     //--------------------------------------------------------------------------
     // Visualization Support
@@ -208,12 +203,12 @@ protected:
     void extendAddToSystem(SimTK::MultibodySystem& system) const override;
 
     // Visual support GeometryPath drawing in SimTK visualizer.
-    void generateDecorations(
-            bool                                        fixed,
-            const ModelDisplayHints&                    hints,
-            const SimTK::State&                         state,
-            SimTK::Array_<SimTK::DecorativeGeometry>&   appendToThis) const
-            override;
+    //void generateDecorations(
+    //        bool                                        fixed,
+    //        const ModelDisplayHints&                    hints,
+    //        const SimTK::State&                         state,
+    //        SimTK::Array_<SimTK::DecorativeGeometry>&   appendToThis) const
+    //        override;
 
     void extendFinalizeFromProperties() override;
 
@@ -221,22 +216,22 @@ private:
 
     void computePath(const SimTK::State& s ) const;
     void computeLengtheningSpeed(const SimTK::State& s) const;
-    void applyWrapObjects(const SimTK::State& s, Array<AbstractPathPoint*>& path ) const;
-    double calcPathLengthChange(const SimTK::State& s, const WrapObject& wo, 
-                                const WrapResult& wr, 
-                                const Array<AbstractPathPoint*>& path) const; 
-    double calcLengthAfterPathComputation
+    //void applyWrapObjects(const SimTK::State& s, Array<AbstractPathPoint*>& path ) const;
+    //osim_double_adouble calcPathLengthChange(const SimTK::State& s, const WrapObject& wo, 
+    //                            const WrapResult& wr, 
+    //                            const Array<AbstractPathPoint*>& path) const; 
+    osim_double_adouble calcLengthAfterPathComputation
        (const SimTK::State& s, const Array<AbstractPathPoint*>& currentPath) const;
 
     void constructProperties();
     void namePathPoints(int aStartingIndex);
-    void placeNewPathPoint(const SimTK::State& s, SimTK::Vec3& aOffset, 
-                           int index, const PhysicalFrame& frame);
+    //void placeNewPathPoint(const SimTK::State& s, SimTK::Vec3& aOffset, 
+    //                       int index, const PhysicalFrame& frame);
     //--------------------------------------------------------------------------
     // Implement Object interface.
     //--------------------------------------------------------------------------
     /** Override of the default implementation to account for versioning. */
-    void updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber = -1) override;
+    /*void updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber = -1) override;*/
 
 //=============================================================================
 };  // END of class GeometryPath

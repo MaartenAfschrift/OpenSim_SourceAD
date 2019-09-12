@@ -159,9 +159,9 @@ arm.equilibrateMuscles(state)
 # ---------------------------------------------------------------------------
 
 manager = osim.Manager(arm)
-state.setTime(0)
-manager.initialize(state)
-state = manager.integrate(10.0)
+manager.setInitialTime(0)
+manager.setFinalTime(10.0)
+manager.integrate(state)
 
 # ---------------------------------------------------------------------------
 # Print/save model file

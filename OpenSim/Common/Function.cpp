@@ -159,18 +159,18 @@ evaluateTotalSecondDerivative(double aX,double aDxdt,double aD2xdt2)
     return evaluate(1,aX) * aD2xdt2 + evaluate(2,aX) * aDxdt * aDxdt;
 }
 */
-double Function::calcValue(const Vector& x) const
+osim_double_adouble Function::calcValue(const Vector& x) const
 {
     if (_function == NULL)
         _function = createSimTKFunction();
-    return _function->calcValue(x);
+    return _function->calcValue(x).value();
 }
 
-double Function::calcDerivative(const std::vector<int>& derivComponents, const Vector& x) const
+osim_double_adouble Function::calcDerivative(const std::vector<int>& derivComponents, const Vector& x) const
 {
     if (_function == NULL)
         _function = createSimTKFunction();
-    return _function->calcDerivative(derivComponents, x);
+    return _function->calcDerivative(derivComponents, x).value();
 }
 
 int Function::getArgumentSize() const

@@ -7,8 +7,3 @@ OpenSimAddTests(
     DATAFILES ${TEST_FILES}
     LINKLIBS osimTools
     )
-
-if(BUILD_TESTING)
-    file(COPY "UsingRelativePaths"
-        DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
-endif()

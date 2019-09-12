@@ -61,7 +61,7 @@ StepFunction::StepFunction() :
 //_____________________________________________________________________________
 /**
  */
-StepFunction::StepFunction(double startTime, double endTime, double startValue, double endValue) :
+StepFunction::StepFunction(osim_double_adouble startTime, osim_double_adouble endTime, osim_double_adouble startValue, osim_double_adouble endValue) :
     _startTime(_startTimeProp.getValueDbl()), 
     _endTime(_endTimeProp.getValueDbl()),
     _startValue(_startValueProp.getValueDbl()),

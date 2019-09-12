@@ -535,9 +535,12 @@ void simulateMuscle(
     // 4. SIMULATION Integration
     //==========================================================================
 
+    // Create the integrator
+    SimTK::RungeKuttaMersonIntegrator integrator(model.getMultibodySystem());
+    integrator.setAccuracy(integrationAccuracy);
+
     // Create the manager
-    Manager manager(model);
-    manager.setIntegratorAccuracy(integrationAccuracy);
+    Manager manager(model, integrator);
 
     // Integrate from initial time to final time
     si.setTime(initialTime);
@@ -546,8 +549,7 @@ void simulateMuscle(
     // Start timing the simulation
     const clock_t start = clock();
     // simulate
-    manager.initialize(si);
-    manager.integrate(finalTime);
+    manager.integrate(si, finalTime);
 
     // how long did it take?
     double comp_time = (double)(clock() - start) / CLOCKS_PER_SEC;

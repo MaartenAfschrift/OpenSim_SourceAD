@@ -61,7 +61,7 @@ using namespace std;
  * @return 0 on success, and -1 on failure.
  */
 int Signal::
-SmoothSpline(int degree,double T,double fc,int N,double *times,double *sig,double *sigf)
+SmoothSpline(int degree,osim_double_adouble T,osim_double_adouble fc,int N,osim_double_adouble *times,osim_double_adouble *sig,osim_double_adouble *sigf)
 {
     /* Background for choice of smoothing parameter (by Ton van den Bogert):
 
@@ -157,12 +157,12 @@ SmoothSpline(int degree,double T,double fc,int N,double *times,double *sig,doubl
  * @return 0 on success, and -1 on failure.
  */
 int Signal::
-LowpassIIR(double T,double fc,int N,double *sig,double *sigf)
+LowpassIIR(osim_double_adouble T,osim_double_adouble fc,int N,osim_double_adouble *sig,osim_double_adouble *sigf)
 {
 int i,j;
-double fs/*,ws*/,wc,wa,wa2,wa3;
-double a[4],b[4],denom;
-double *sigr;
+osim_double_adouble fs/*,ws*/,wc,wa,wa2,wa3;
+osim_double_adouble a[4],b[4],denom;
+osim_double_adouble *sigr;
 
     // ERROR CHECK
     if(T==0) return(-1);
@@ -200,7 +200,7 @@ double *sigr;
     b[3] = (wa - 1) * (wa2 - wa + 1) / denom;
 
     // ALLOCATE MEMORY FOR sigr[]
-    sigr = new double[N];
+    sigr = new osim_double_adouble[N];
     if(sigr==NULL) {
         printf("\nSignal.lowpassIIR: ERROR- Not enough memory.\n");
         return(-1);
@@ -260,10 +260,10 @@ double *sigr;
  * @return 0 on success, and -1 on failure.
  */
 int Signal::
-LowpassFIR(int M,double T,double f,int N,double *sig,double *sigf)
+LowpassFIR(int M,osim_double_adouble T,osim_double_adouble f,int N,osim_double_adouble *sig,osim_double_adouble *sigf)
 {
     int n,k;
-    double w,x;
+    osim_double_adouble w,x;
 
     // CHECK THAT M IS NOT TOO LARGE RELATIVE TO N
     if((M+M)>N) {
@@ -273,19 +273,19 @@ LowpassFIR(int M,double T,double f,int N,double *sig,double *sigf)
     }
 
     // PAD THE SIGNAL SO FILTERING CAN BEGIN AT THE FIRST DATA POINT
-    double *s = Pad(M,N,sig);
+    osim_double_adouble *s = Pad(M,N,sig);
     if(s==NULL) return(-1);
 
     // CALCULATE THE ANGULAR CUTOFF FREQUENCY
     w = 2.0*SimTK_PI*f;
 
     // FILTER THE DATA
-    double sum_coef,coef;
+    osim_double_adouble sum_coef,coef;
     for(n=0;n<N;n++) {
         sum_coef = 0.0;
         sigf[n] = 0.0;
         for(k=-M;k<=M;k++) {   
-            x = (double)k*w*T; // k*T = time (seconds) and w scales sinc input argument using filter cutoff
+            x = (osim_double_adouble)k*w*T; // k*T = time (seconds) and w scales sinc input argument using filter cutoff
             coef = (sinc(x)*T*w/SimTK_PI)*hamming(k,M); // scale lowpass sinc amplitude by 2*f*T = T*w/pi
             sigf[n] = sigf[n] + coef*s[M+n-k]; 
             sum_coef = sum_coef + coef;
@@ -338,14 +338,14 @@ LowpassFIR(int M,double T,double f,int N,double *sig,double *sigf)
  * @return 0 on success, and -1 on failure.
  */
 int Signal::
-BandpassFIR(int M,double T,double f1,double f2,int N,double *sig,
-    double *sigf)
+BandpassFIR(int M,osim_double_adouble T,osim_double_adouble f1,osim_double_adouble f2,int N,osim_double_adouble *sig,
+    osim_double_adouble *sigf)
 {
 size_t size;
 int i,j;
 int n,k;
-double w1,w2,x1,x2;
-double *s;
+osim_double_adouble w1,w2,x1,x2;
+osim_double_adouble *s;
 
 
     // CHECK THAT M IS NOT TOO LARGE RELATIVE TO N
@@ -357,7 +357,7 @@ double *s;
 
     // ALLOCATE MEMORY FOR s
     size = N + M + M;
-    s = (double *) calloc(size,sizeof(double));
+    s = (osim_double_adouble *) calloc(size,sizeof(osim_double_adouble));
     if (s == NULL) {
         printf("\n\nlowpass() -> Not enough memory to process your sampled data.");
         return(-1);
@@ -374,13 +374,13 @@ double *s;
   
 
     // FILTER THE DATA
-    double sum_coef,coef;
+    osim_double_adouble sum_coef,coef;
     for (n=0;n<N;n++) {
         sum_coef = 0.0;
         sigf[n] = 0.0;
         for (k=-M;k<=M;k++) {   
-            x1 = (double)k*w1*T;  // k*T = time (seconds) and w scales sinc input argument using filter cutoff
-            x2 = (double)k*w2*T;  // k*T = time (seconds) and w scales sinc input argument using filter cutoff
+            x1 = (osim_double_adouble)k*w1*T;  // k*T = time (seconds) and w scales sinc input argument using filter cutoff
+            x2 = (osim_double_adouble)k*w2*T;  // k*T = time (seconds) and w scales sinc input argument using filter cutoff
             coef = (sinc(x2)*T*w2/SimTK_PI - sinc(x1)*T*w1/SimTK_PI)*hamming(k,M); // scale lowpass sinc amplitude by 2*f*T = T*w/pi
             sigf[n] = sigf[n] + coef*s[M+n-k];
             sum_coef = sum_coef + coef;
@@ -410,8 +410,8 @@ double *s;
  * on an error.  The caller is responsible for deleting the returned
  * array.
  */
-double* Signal::
-Pad(int aPad,int aN,const double aSignal[])
+osim_double_adouble* Signal::
+Pad(int aPad,int aN,const osim_double_adouble aSignal[])
 {
     if(aPad<=0) return(NULL);
 
@@ -423,7 +423,7 @@ Pad(int aPad,int aN,const double aSignal[])
     }
 
     // ALLOCATE
-    double *s = new double[size];
+    osim_double_adouble *s = new osim_double_adouble[size];
     if (s == NULL) {
         printf("\n\nSignal.Pad: Failed to allocate memory.\n");
         return(NULL);
@@ -456,7 +456,7 @@ Pad(int aPad,int aN,const double aSignal[])
  *  @param rSignal Signal to be padded.
  */
 void Signal::
-Pad(int aPad,Array<double> &rSignal)
+Pad(int aPad,Array<osim_double_adouble> &rSignal)
 {
     if(aPad<=0) return;
 
@@ -477,7 +477,7 @@ Pad(int aPad,Array<double> &rSignal)
     }
 
     // ALLOCATE
-    Array<double> s(0.0,newSize);
+    Array<osim_double_adouble> s(0.0,newSize);
 
     // PREPEND
     int i,j;
@@ -512,8 +512,8 @@ Pad(int aPad,Array<double> &rSignal)
  * @return Number of points removed.
  */
 int Signal::
-ReduceNumberOfPoints(double aDistance,
-                            Array<double> &rTime,Array<double> &rSignal)
+ReduceNumberOfPoints(osim_double_adouble aDistance,
+                            Array<osim_double_adouble> &rTime,Array<osim_double_adouble> &rSignal)
 {
     // CHECK SIZES
     int size = rTime.getSize();
@@ -528,7 +528,7 @@ ReduceNumberOfPoints(double aDistance,
     if(aDistance<SimTK::Zero) aDistance = SimTK::Zero;
 
     // APPEND FIRST POINT
-    Array<double> t(0.0,0,size),s(0.0,0,size);
+    Array<osim_double_adouble> t(0.0,0,size),s(0.0,0,size);
     t.append(rSignal[0]);
     s.append(rSignal[0]);
     int iLast=0;
@@ -541,7 +541,7 @@ ReduceNumberOfPoints(double aDistance,
     SimTK::Vec3 v1(0.0,0.0,0.0);
     SimTK::Vec3 v2(0.0,0.0,0.0);
 
-    double tmid,mv1,mv2,cos,dsq;
+    osim_double_adouble tmid,mv1,mv2,cos,dsq;
     for(i=1;i<(size-1);i++) {
 
         // FIRST POINT
@@ -602,8 +602,8 @@ ReduceNumberOfPoints(double aDistance,
  *
  * @return sin(x)/x.
  */
-double Signal::
-sinc(double x)
+osim_double_adouble Signal::
+sinc(osim_double_adouble x)
 {
   if ((x<1.0e-8) && (x>-1.0e-8)) return(1.0);
   return(sin(x)/x);
@@ -612,11 +612,11 @@ sinc(double x)
 /**
  * Hamming Window- dampens Gibbs phenomenon in filtering functions.
  */
-double Signal::
+osim_double_adouble Signal::
 hamming(int k,int M)
 {
-  double x = (double)k * SimTK_PI / (double)M;
-  double d = 0.54 + 0.46*cos(x);
+  osim_double_adouble x = (osim_double_adouble)k * SimTK_PI / (osim_double_adouble)M;
+  osim_double_adouble d = 0.54 + 0.46*cos(x);
   return(d); 
 }
 

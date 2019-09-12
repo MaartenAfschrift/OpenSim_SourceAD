@@ -59,29 +59,29 @@ void Force::constructProperties()
     constructProperty_appliesForce(true);
 }
 
-void
-Force::updateFromXMLNode(SimTK::Xml::Element& node, int versionNumber) {
-    if(versionNumber < XMLDocument::getLatestVersion()) {
-        if (versionNumber < 30509) {
-            // Rename property 'isDisabled' to 'appliesForce' and
-            // negate the contained value.
-            std::string oldName{ "isDisabled" };
-            std::string newName{ "appliesForce" };
-            if (node.hasElement(oldName)) {
-                auto elem = node.getRequiredElement(oldName);
-                bool isDisabled = false;
-                elem.getValue().tryConvertToBool(isDisabled);
-
-                // now update tag name to 'appliesForce'
-                elem.setElementTag(newName);
-                // update its value to be the opposite of 'isDisabled'
-                elem.setValue(SimTK::String(!isDisabled));
-            }
-        }
-    }
-
-    Super::updateFromXMLNode(node, versionNumber);
-}
+//void
+//Force::updateFromXMLNode(SimTK::Xml::Element& node, int versionNumber) {
+//    if(versionNumber < XMLDocument::getLatestVersion()) {
+//        if (versionNumber < 30509) {
+//            // Rename property 'isDisabled' to 'appliesForce' and
+//            // negate the contained value.
+//            std::string oldName{ "isDisabled" };
+//            std::string newName{ "appliesForce" };
+//            if (node.hasElement(oldName)) {
+//                auto elem = node.getRequiredElement(oldName);
+//                bool isDisabled = false;
+//                elem.getValue().tryConvertToBool(isDisabled);
+//
+//                // now update tag name to 'appliesForce'
+//                elem.setElementTag(newName);
+//                // update its value to be the opposite of 'isDisabled'
+//                elem.setValue(SimTK::String(!isDisabled));
+//            }
+//        }
+//    }
+//
+//    Super::updateFromXMLNode(node, versionNumber);
+//}
 
 // Create an underlying SimTK::Force to represent the OpenSim::Force in the 
 // computational system.  Create a SimTK::Force::Custom by default.
@@ -152,7 +152,7 @@ bool Force::appliesForce(const SimTK::State& s) const
 // ABSTRACT METHODS
 //-----------------------------------------------------------------------------
 //_____________________________________________________________________________
-double Force::computePotentialEnergy(const SimTK::State& state) const
+osim_double_adouble Force::computePotentialEnergy(const SimTK::State& state) const
 {
     return 0.0;
 }
@@ -180,7 +180,7 @@ void Force::applyTorque(const SimTK::State &s, const PhysicalFrame& frame,
 }
 
 void Force::applyGeneralizedForce(const SimTK::State &s, const Coordinate &coord, 
-                                        double force, Vector &mobilityForces) const
+                                        osim_double_adouble force, Vector &mobilityForces) const
 {
     _model->getMatterSubsystem().addInMobilityForce(s, 
                                  SimTK::MobilizedBodyIndex(coord.getBodyIndex()), 

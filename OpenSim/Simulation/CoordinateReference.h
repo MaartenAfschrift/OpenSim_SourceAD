@@ -41,8 +41,8 @@ namespace OpenSim {
  * @author Ajay Seth
  * @version 1.0
  */
-class OSIMSIMULATION_API CoordinateReference : public Reference_<double> {
-OpenSim_DECLARE_CONCRETE_OBJECT(CoordinateReference, Reference_<double>);
+class OSIMSIMULATION_API CoordinateReference : public Reference_<osim_double_adouble> {
+OpenSim_DECLARE_CONCRETE_OBJECT(CoordinateReference, Reference_<osim_double_adouble>);
 
 //=============================================================================
 // MEMBER VARIABLES
@@ -56,7 +56,7 @@ protected:
 
     /** Specify the default weight for this coordinate reference.  */
     PropertyDbl _defaultWeightProp;
-    double &_defaultWeight;
+    osim_double_adouble &_defaultWeight;
 
     SimTK::Array_<std::string> _names;
 
@@ -90,24 +90,24 @@ public:
     /** get the name(s) of the reference or its referettes */
     const SimTK::Array_<std::string>& getNames() const override;
     /** get the value of the Reference as a function of the state */
-    void getValues(const SimTK::State &s, SimTK::Array_<double> &values) const override;
+    void getValues(const SimTK::State &s, SimTK::Array_<osim_double_adouble> &values) const override;
     /** get the weighting (importance) of meeting this Reference */
-    void getWeights(const SimTK::State &s, SimTK::Array_<double>& weights) const override;
+    void getWeights(const SimTK::State &s, SimTK::Array_<osim_double_adouble>& weights) const override;
 
 
     //--------------------------------------------------------------------------
     // Convenience double interface
     //--------------------------------------------------------------------------
     /** get the value of the CoordinateReference */
-    virtual double getValue(const SimTK::State &s) const;
+    virtual osim_double_adouble getValue(const SimTK::State &s) const;
     /** get the speed value of the CoordinateReference */
-    virtual double getSpeedValue(const SimTK::State &s) const;
+    virtual osim_double_adouble getSpeedValue(const SimTK::State &s) const;
     /** get the speed value of the CoordinateReference */
-    virtual double getAccelerationValue(const SimTK::State &s) const;
+    virtual osim_double_adouble getAccelerationValue(const SimTK::State &s) const;
     /** get the weighting (importance) of meeting this CoordinateReference */
-    virtual double getWeight(const SimTK::State &s) const;
+    virtual osim_double_adouble getWeight(const SimTK::State &s) const;
     /** set the weighting (importance) of meeting this CoordinateReference */
-    void setWeight(double weight);
+    void setWeight(osim_double_adouble weight);
 
     /** %Set the coordinate value as a function of time. */
     void setValueFunction(const OpenSim::Function& function)

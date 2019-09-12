@@ -49,17 +49,11 @@ using namespace SimTK;
 // None.
 
 
-%pythonappend OpenSim::ModelScaler::addScale %{
-    aScale._markAdopted()
-%}
-
-%pythonappend OpenSim::ModelScaler::addMeasurement %{
-    aMeasurement._markAdopted()
-%}
 // Include all the OpenSim code.
 // =============================
 %include <Bindings/preliminaries.i>
 %include <Bindings/tools.i>
+
 
 // Memory management
 // =================

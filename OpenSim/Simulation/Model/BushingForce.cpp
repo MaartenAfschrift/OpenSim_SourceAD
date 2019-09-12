@@ -47,39 +47,16 @@ BushingForce::BushingForce() : TwoFrameLinker<Force, PhysicalFrame>()
     constructProperties();
 }
 
-BushingForce::BushingForce(const std::string& name,
-                           const PhysicalFrame& frame1,
-                           const PhysicalFrame& frame2)
-    : Super(name, frame1, frame2)
-{
-    setNull();
-    constructProperties();
-}
-
 BushingForce::BushingForce( const std::string& name,
                             const std::string& frame1Name,
                             const std::string& frame2Name)
-    : Super(name, frame1Name, frame2Name)
+    : TwoFrameLinker<Force, PhysicalFrame>(name, frame1Name, frame2Name)
 {
     setNull();
     constructProperties();
 }
 
-BushingForce::BushingForce(const std::string& name,
-                           const PhysicalFrame& frame1,
-                           const PhysicalFrame& frame2,
-                           const SimTK::Vec3& transStiffness,
-                           const SimTK::Vec3& rotStiffness,
-                           const SimTK::Vec3& transDamping,
-                           const SimTK::Vec3& rotDamping)
-        : BushingForce(name, frame1, frame2)
-{
-    set_rotational_stiffness(rotStiffness);
-    set_translational_stiffness(transStiffness);
-    set_rotational_damping(rotDamping);
-    set_translational_damping(transDamping);
-}
-
+/* Convenience construction with BushingForce's material properties */
 BushingForce::BushingForce( const std::string &name,
                             const std::string& frame1Name,
                             const std::string& frame2Name,
@@ -95,23 +72,6 @@ BushingForce::BushingForce( const std::string &name,
     set_translational_damping(transDamping);
 }
 
-BushingForce::BushingForce(const std::string& name, const PhysicalFrame& frame1,
-                           const SimTK::Transform& transformInFrame1,
-                           const PhysicalFrame& frame2,
-                           const SimTK::Transform& transformInFrame2,
-                           const SimTK::Vec3& transStiffness,
-                           const SimTK::Vec3& rotStiffness,
-                           const SimTK::Vec3& transDamping,
-                           const SimTK::Vec3& rotDamping)
-    : Super(name, frame1, transformInFrame1, frame2, transformInFrame2)
-{
-    setNull();
-    constructProperties();
-    set_rotational_stiffness(rotStiffness);
-    set_translational_stiffness(transStiffness);
-    set_rotational_damping(rotDamping);
-    set_translational_damping(transDamping);
-}
 
 BushingForce::BushingForce(const std::string& name,
     const std::string& frame1Name, const SimTK::Transform& transformInFrame1,
@@ -120,7 +80,8 @@ BushingForce::BushingForce(const std::string& name,
     const SimTK::Vec3& rotStiffness,
     const SimTK::Vec3& transDamping,
     const SimTK::Vec3& rotDamping)
-    : Super(name,frame1Name, transformInFrame1, frame2Name, transformInFrame2)
+    : TwoFrameLinker<Force, PhysicalFrame>(name,
+        frame1Name, transformInFrame1, frame2Name, transformInFrame2)
 {
     setNull();
     constructProperties();
@@ -213,7 +174,7 @@ void BushingForce::
 
 
 /* Potential energy is computed by underlying SimTK::Force. */
-double BushingForce::computePotentialEnergy(const SimTK::State& s) const
+osim_double_adouble BushingForce::computePotentialEnergy(const SimTK::State& s) const
 {
     return _model->getForceSubsystem().getForce(_index)
                                       .calcPotentialEnergyContribution(s);
@@ -250,7 +211,7 @@ OpenSim::Array<std::string> BushingForce::getRecordLabels() const
 /*
  * Provide the value(s) to be reported that correspond to the labels
  */
-OpenSim::Array<double> BushingForce::
+OpenSim::Array<osim_double_adouble> BushingForce::
 getRecordValues(const SimTK::State& state) const 
 {
     const PhysicalFrame& frame1 = getFrame1();
@@ -259,7 +220,7 @@ getRecordValues(const SimTK::State& state) const
     //const string& frame1Name = frame1.getName();
     //const string& frame2Name = frame2.getName();
     
-    OpenSim::Array<double> values(1);
+    OpenSim::Array<osim_double_adouble> values(1);
 
     const SimTK::Force::LinearBushing &simtkSpring = 
         (SimTK::Force::LinearBushing &)(_model->getForceSubsystem().getForce(_index));
@@ -274,7 +235,7 @@ getRecordValues(const SimTK::State& state) const
     SimTK::Vec3 torques = bodyForces[frame1.getMobilizedBodyIndex()][0];
     values.append(3, &forces[0]);
     values.append(3, &torques[0]);
-
+	
     forces = bodyForces[frame2.getMobilizedBodyIndex()][1];
     torques = bodyForces[frame2.getMobilizedBodyIndex()][0];
 

@@ -548,9 +548,11 @@ bool CMCTool::run()
 
     if(desiredKinFlag) {
         _model->getMultibodySystem().realize(s, Stage::Time );
-        // qStore and uStore returned are in radians
-        _model->getSimbodyEngine().formCompleteStorages(s, *desiredKinStore,
-            qStore, uStore);
+        _model->getSimbodyEngine().formCompleteStorages(s, *desiredKinStore,qStore,uStore);
+        if(qStore->isInDegrees()){
+            _model->getSimbodyEngine().convertDegreesToRadians(*qStore);
+            _model->getSimbodyEngine().convertDegreesToRadians(*uStore);
+        }
     }
 
     // Spline
@@ -614,6 +616,7 @@ bool CMCTool::run()
         GCVSplineSet* stateFuntcions = new GCVSplineSet(3, &stateStorage);
         for (int i=0; i< stateFuntcions->getSize(); i++)
             qAndPosSet->cloneAndAppend(stateFuntcions->get(i));
+
     }
 
     taskSet.setFunctions(*qAndPosSet);
@@ -735,10 +738,11 @@ bool CMCTool::run()
     // ---- SIMULATION ----
     //
     // Manager
-    Manager manager(*_model);
-    manager.setIntegratorMaximumStepSize(_maxDT);
-    manager.setIntegratorMinimumStepSize(_minDT);
-    manager.setIntegratorAccuracy(_errorTolerance);
+    RungeKuttaMersonIntegrator integrator(_model->getMultibodySystem());
+    integrator.setMaximumStepSize(_maxDT);
+    integrator.setMinimumStepSize(_minDT);
+    integrator.setAccuracy(_errorTolerance);
+    Manager manager(*_model, integrator);
     
     _model->setAllControllersEnabled( true );
 
@@ -825,8 +829,7 @@ bool CMCTool::run()
     IO::makeDir(getResultsDir());   // Create directory for output in case it doesn't exist
     manager.getStateStorage().setOutputFileName(getResultsDir() + "/" + getName() + "_states.sto");
     try {
-        manager.initialize(s);
-        manager.integrate(finalTime);
+        manager.integrate(s, finalTime);
     }
     catch(const Exception& x) {
         // TODO: eventually might want to allow writing of partial results

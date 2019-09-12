@@ -43,6 +43,9 @@ using namespace std;
 using namespace OpenSim;
 using namespace SimTK;
 
+static std::string SimbodyGroundName = "ground";
+
+
 //=============================================================================
 // EXCEPTIONS
 //=============================================================================
@@ -83,12 +86,12 @@ SimbodyEngine::SimbodyEngine() :
 /**
  * Constructor from an XML Document
  */
-SimbodyEngine::SimbodyEngine(const string &aFileName) :
-    Object(aFileName, false)
-{
-    setNull();
-    connectSimbodyEngineToModel(*_model);
-}
+//SimbodyEngine::SimbodyEngine(const string &aFileName) :
+//    Object(aFileName, false)
+//{
+//    setNull();
+//    connectSimbodyEngineToModel(*_model);
+//}
 
 
 //_____________________________________________________________________________
@@ -263,7 +266,7 @@ void SimbodyEngine::getAcceleration(const SimTK::State& s,
  * @param rDirCos Orientation of the body with respect to the ground frame.
  */
 void SimbodyEngine::getDirectionCosines(const SimTK::State& s,
-        const PhysicalFrame& aBody, double rDirCos[3][3]) const
+        const PhysicalFrame& aBody, osim_double_adouble rDirCos[3][3]) const
 {
     OPENSIM_THROW_IF_FRMOBJ(
         dynamic_cast<const PhysicalOffsetFrame*>(&aBody),
@@ -281,7 +284,7 @@ void SimbodyEngine::getDirectionCosines(const SimTK::State& s,
  * @param rDirCos Orientation of the body with respect to the ground frame.
  */
 void SimbodyEngine::getDirectionCosines(const SimTK::State& s,
-        const PhysicalFrame& aBody, double *rDirCos) const
+        const PhysicalFrame& aBody, osim_double_adouble *rDirCos) const
 {
     OPENSIM_THROW_IF_FRMOBJ(
         dynamic_cast<const PhysicalOffsetFrame*>(&aBody),
@@ -445,7 +448,7 @@ void SimbodyEngine::computeReactions(const SimTK::State& s, Vector_<Vec3>& rForc
  * @param aBodyTo the body the vector will be transformed into
  * @param rPos the vector in the aBodyTo frame is returned here
  */
-void SimbodyEngine::transform(const SimTK::State& s, const PhysicalFrame &aBodyFrom, const double aVec[3], const PhysicalFrame &aBodyTo, double rVec[3]) const
+void SimbodyEngine::transform(const SimTK::State& s, const PhysicalFrame &aBodyFrom, const osim_double_adouble aVec[3], const PhysicalFrame &aBodyTo, osim_double_adouble rVec[3]) const
 {
     OPENSIM_THROW_IF_FRMOBJ(
         dynamic_cast<const PhysicalOffsetFrame*>(&aBodyFrom),
@@ -501,7 +504,7 @@ void SimbodyEngine::transform(const SimTK::State& s, const PhysicalFrame &aBodyF
  */
 void SimbodyEngine::
 transformPosition(const SimTK::State& s, const PhysicalFrame &aBodyFrom, const
-        double aPos[3], const PhysicalFrame &aBodyTo, double rPos[3]) const
+        osim_double_adouble aPos[3], const PhysicalFrame &aBodyTo, osim_double_adouble rPos[3]) const
 {
     OPENSIM_THROW_IF_FRMOBJ(
         dynamic_cast<const PhysicalOffsetFrame*>(&aBodyFrom),
@@ -563,7 +566,7 @@ transformPosition(const SimTK::State& s, const PhysicalFrame &aBodyFrom, const
  * @param aPos the XYZ coordinates of the point
  * @param rPos the XYZ coordinates of the point in the ground frame are returned here
  */
-void SimbodyEngine::transformPosition(const SimTK::State& s, const PhysicalFrame &aBodyFrom, const double aPos[3], double rPos[3]) const
+void SimbodyEngine::transformPosition(const SimTK::State& s, const PhysicalFrame &aBodyFrom, const osim_double_adouble aPos[3], osim_double_adouble rPos[3]) const
 {
     OPENSIM_THROW_IF_FRMOBJ(
         dynamic_cast<const PhysicalOffsetFrame*>(&aBodyFrom),
@@ -608,7 +611,7 @@ transformPosition(const SimTK::State& s, const PhysicalFrame& aBodyFrom,
  * @param aPoint2 the XYZ coordinates of the second point
  * @return the distance between aPoint1 and aPoint2
  */
-double SimbodyEngine::
+osim_double_adouble SimbodyEngine::
 calcDistance(const SimTK::State& s, const PhysicalFrame& aBody1,
 const Vec3& aPoint1, const PhysicalFrame& aBody2, const Vec3& aPoint2)
     const
@@ -635,9 +638,9 @@ const Vec3& aPoint1, const PhysicalFrame& aBody2, const Vec3& aPoint2)
  * @param aPoint2 the XYZ coordinates of the second point
  * @return the distance between aPoint1 and aPoint2
  */
-double SimbodyEngine::calcDistance(const SimTK::State& s, const PhysicalFrame&
-        aBody1, const double aPoint1[3], const PhysicalFrame& aBody2, const
-        double aPoint2[3]) const
+osim_double_adouble SimbodyEngine::calcDistance(const SimTK::State& s, const PhysicalFrame&
+        aBody1, const osim_double_adouble aPoint1[3], const PhysicalFrame& aBody2, const
+        osim_double_adouble aPoint2[3]) const
 {
     OPENSIM_THROW_IF_FRMOBJ(
         dynamic_cast<const PhysicalOffsetFrame*>(&aBody1),
@@ -660,7 +663,7 @@ double SimbodyEngine::calcDistance(const SimTK::State& s, const PhysicalFrame&
  * @param aE3 3rd Euler angle.
  * @param rDirCos Vector of direction cosines.
  */
-void SimbodyEngine::convertAnglesToDirectionCosines(double aE1, double aE2, double aE3, double rDirCos[3][3]) const
+void SimbodyEngine::convertAnglesToDirectionCosines(osim_double_adouble aE1, osim_double_adouble aE2, osim_double_adouble aE3, osim_double_adouble rDirCos[3][3]) const
 {
     Vec3 angs(aE1, aE2, aE3);
     Rotation aRot; 
@@ -676,7 +679,7 @@ void SimbodyEngine::convertAnglesToDirectionCosines(double aE1, double aE2, doub
  * @param aE3 3rd Euler angle.
  * @param rDirCos Vector of direction cosines.
  */
-void SimbodyEngine::convertAnglesToDirectionCosines(double aE1, double aE2, double aE3, double *rDirCos) const
+void SimbodyEngine::convertAnglesToDirectionCosines(osim_double_adouble aE1, osim_double_adouble aE2, osim_double_adouble aE3, osim_double_adouble *rDirCos) const
 {
     if(rDirCos==NULL) return;
     
@@ -694,7 +697,7 @@ void SimbodyEngine::convertAnglesToDirectionCosines(double aE1, double aE2, doub
  * @param rE2 2nd Euler angle.
  * @param rE3 3rd Euler angle.
  */
-void SimbodyEngine::convertDirectionCosinesToAngles(double aDirCos[3][3], double *rE1, double *rE2, double *rE3) const
+void SimbodyEngine::convertDirectionCosinesToAngles(osim_double_adouble aDirCos[3][3], osim_double_adouble *rE1, osim_double_adouble *rE2, osim_double_adouble *rE3) const
 {
     Vec3 ang = Rotation(Rotation::getAs(&aDirCos[0][0])).convertRotationToBodyFixedXYZ();
     *rE1 = ang[0];
@@ -710,7 +713,7 @@ void SimbodyEngine::convertDirectionCosinesToAngles(double aDirCos[3][3], double
  * @param rE2 2nd Euler angle.
  * @param rE3 3rd Euler angle.
  */
-void SimbodyEngine::convertDirectionCosinesToAngles(double *aDirCos, double *rE1, double *rE2, double *rE3) const
+void SimbodyEngine::convertDirectionCosinesToAngles(osim_double_adouble *aDirCos, osim_double_adouble *rE1, osim_double_adouble *rE2, osim_double_adouble *rE3) const
 {
     if(!aDirCos) return;
     Vec3 ang = Rotation(Rotation::getAs(aDirCos)).convertRotationToBodyFixedXYZ();
@@ -728,7 +731,7 @@ void SimbodyEngine::convertDirectionCosinesToAngles(double *aDirCos, double *rE1
  * @param rQ3 3rd Quaternion.
  * @param rQ4 4th Quaternion.
  */
-void SimbodyEngine::convertDirectionCosinesToQuaternions(double aDirCos[3][3], double *rQ1, double *rQ2, double *rQ3, double *rQ4) const
+void SimbodyEngine::convertDirectionCosinesToQuaternions(osim_double_adouble aDirCos[3][3], osim_double_adouble *rQ1, osim_double_adouble *rQ2, osim_double_adouble *rQ3, osim_double_adouble *rQ4) const
 {
     Quaternion quat = Rotation(Rotation::getAs(&aDirCos[0][0])).convertRotationToQuaternion();
     *rQ1 = quat[0];
@@ -746,7 +749,7 @@ void SimbodyEngine::convertDirectionCosinesToQuaternions(double aDirCos[3][3], d
  * @param rQ3 3rd Quaternion.
  * @param rQ4 4th Quaternion.
  */
-void SimbodyEngine::convertDirectionCosinesToQuaternions(double *aDirCos, double *rQ1, double *rQ2, double *rQ3, double *rQ4) const
+void SimbodyEngine::convertDirectionCosinesToQuaternions(osim_double_adouble *aDirCos, osim_double_adouble *rQ1, osim_double_adouble *rQ2, osim_double_adouble *rQ3, osim_double_adouble *rQ4) const
 {
     if(aDirCos==NULL) return;
     Quaternion quat = Rotation(Rotation::getAs(aDirCos)).convertRotationToQuaternion();
@@ -765,7 +768,7 @@ void SimbodyEngine::convertDirectionCosinesToQuaternions(double *aDirCos, double
  * @param aQ4 4th Quaternion.
  * @param rDirCos Vector of direction cosines.
  */
-void SimbodyEngine::convertQuaternionsToDirectionCosines(double aQ1, double aQ2, double aQ3, double aQ4, double rDirCos[3][3]) const
+void SimbodyEngine::convertQuaternionsToDirectionCosines(osim_double_adouble aQ1, osim_double_adouble aQ2, osim_double_adouble aQ3, osim_double_adouble aQ4, osim_double_adouble rDirCos[3][3]) const
 {
     Rotation R;
     R.setRotationFromQuaternion(Quaternion(Vec4(aQ1, aQ2, aQ3, aQ4)));
@@ -782,7 +785,7 @@ void SimbodyEngine::convertQuaternionsToDirectionCosines(double aQ1, double aQ2,
  * @param aQ4 4th Quaternion.
  * @param rDirCos Vector of direction cosines.
  */
-void SimbodyEngine::convertQuaternionsToDirectionCosines(double aQ1, double aQ2, double aQ3, double aQ4, double *rDirCos) const
+void SimbodyEngine::convertQuaternionsToDirectionCosines(osim_double_adouble aQ1, osim_double_adouble aQ2, osim_double_adouble aQ3, osim_double_adouble aQ4, osim_double_adouble *rDirCos) const
 {
     if(rDirCos==NULL) return;
     Rotation R;
@@ -795,9 +798,89 @@ void SimbodyEngine::convertQuaternionsToDirectionCosines(double aQ1, double aQ2,
 //--- Private Utility Methods Below Here ---
 
 
+//_____________________________________________________________________________
+/**
+ * Scale the dynamics engine
+ *
+ * @param aScaleSet the set of XYZ scale factors for the bodies
+ * @param aFinalMass the mass that the scaled model should have
+ * @param aPreserveMassDist whether or not the masses of the
+ *        individual bodies should be scaled with the body scale factors.
+ * @return Whether or not scaling was successful.
+ */
+bool SimbodyEngine::scale(SimTK::State& s, const ScaleSet& aScaleSet, osim_double_adouble aFinalMass, bool aPreserveMassDist)
+{
+    // second argument is a flag to scale the masses of the bodies along with their
+    // geometry. If preserve mass distribution is true then the masses are not scaled.
+    _model->updBodySet().scale(aScaleSet, !aPreserveMassDist);
+
+    // When bodies are scaled, the properties of the model are changed.
+    // The general rule is that you MUST recreate and initialize the system 
+    // when properties of the model change. We must do that here or
+    // we will be querying a stale system (e.g. wrong body properties!).
+    s = _model->initSystem();
+
+    // Now that the masses of the individual bodies have
+    // been scaled (if aPreserveMassDist == false), get the
+    // total mass and compare it to aFinalMass in order to
+    // determine how much to scale the body masses again,
+    // so that the total model mass comes out to aFinalMass.
+    if (aFinalMass > 0.0)
+    {
+        osim_double_adouble mass = _model->getTotalMass(s);
+        if (mass > 0.0)
+        {
+            osim_double_adouble factor = aFinalMass / mass;
+            for (int i = 0; i < _model->getBodySet().getSize(); i++){
+                _model->getBodySet().get(i).scaleMass(factor);
+            }
+            
+            // recreate system and update state after updating masses
+            s = _model->initSystem();
+
+            osim_double_adouble newMass = _model->getTotalMass(s);
+            osim_double_adouble normDiffMass = fabs(aFinalMass - newMass) / aFinalMass;
+
+            // check if the difference in after scale mass and the specified 
+            // subject (target) mass is significant
+            if (normDiffMass > SimTK::SignificantReal) {
+                throw Exception("Model::scale() scaled model mass does not match specified subject mass.");
+            }
+        }
+    }
+    
+    // Now scale the joints.
+    _model->updJointSet().scale(aScaleSet);
+
+    // Now scale translational coupled coordinate constraints.
+    //_model->updConstraintSet().scale(aScaleSet);
+
+    // Now scale the markers.
+    //_model->updMarkerSet().scale(aScaleSet);
+
+    return true;
+}
+
 //=============================================================================
 // CONFIGURATION
 //=============================================================================
+/**
+ * From a potentially partial specification of the generalized coordinates,
+ * form a complete storage of the generalized coordinates (q's) and
+ * generalized speeds (u's).
+ *
+ * @param aQIn Storage containing the q's or a subset of the q's.  Rotational
+ * q's should be in degrees.
+ * @param rQComplete Storage containing all the q's.  If q's were not
+ * in aQIn, the values are set to 0.0.  When a q is constrained, its value
+ * is altered to be consistent with the constraint.  The caller is responsible
+ * for deleting the memory associated with this storage.
+ * @param rUComplete Storage containing all the u's.  The generalized speeds
+ * are obtained by spline fitting the q's and differentiating the splines.
+ * When a u is constrained, its value is altered to be consistent with the
+ * constraint.  The caller is responsible for deleting the memory
+ * associated with this storage.
+ */
 void SimbodyEngine::
 formCompleteStorages( const SimTK::State& s, const OpenSim::Storage &aQIn,
     OpenSim::Storage *&rQComplete,OpenSim::Storage *&rUComplete) const
@@ -816,9 +899,10 @@ formCompleteStorages( const SimTK::State& s, const OpenSim::Storage &aQIn,
     int sizeCoordSet = coordinateSet.getSize();
     for(i=0;i<sizeCoordSet;i++) {
         Coordinate& coord = coordinateSet.get(i);
+        string prefix = coord.getJoint().getName() + "/" + coord.getName() + "/";
         coordStateNames = coord.getStateVariableNames();
-        columnLabels.append(coordStateNames[0]);
-        speedLabels.append(coordStateNames[1]);
+        columnLabels.append(prefix+coordStateNames[0]);
+        speedLabels.append(prefix+coordStateNames[1]);
         int fix = aQIn.getStateIndex(coord.getName());
         if (fix < 0) {
             fix = aQIn.getStateIndex(columnLabels[i+1]);
@@ -834,9 +918,9 @@ formCompleteStorages( const SimTK::State& s, const OpenSim::Storage &aQIn,
     }
 
     // Extract Coordinates
-    double time;
-    Array<double> data(0.0);
-    Array<double> q(0.0,nq);
+    osim_double_adouble time;
+    Array<osim_double_adouble> data(0.0);
+    Array<osim_double_adouble> q(0.0,nq);
     Storage *qStore = new Storage();
     qStore->setInDegrees(aQIn.isInDegrees());
     qStore->setName("GeneralizedCoordinates");
@@ -862,12 +946,13 @@ formCompleteStorages( const SimTK::State& s, const OpenSim::Storage &aQIn,
     if (aQIn.isInDegrees())
         convertDegreesToRadians(*qStore);
 
+
     // Compute generalized speeds
     GCVSplineSet tempQset(5,qStore);
     std::unique_ptr<Storage> uStore{tempQset.constructStorage(1)};
 
     // Compute constraints
-    Array<double> qu(0.0,nq+nu);
+    Array<osim_double_adouble> qu(0.0,nq+nu);
     rQComplete = new Storage();
     rUComplete = new Storage();
     State constrainedState = s;
@@ -893,9 +978,13 @@ formCompleteStorages( const SimTK::State& s, const OpenSim::Storage &aQIn,
     
     delete qStore;
     
-    // Set column labels before returning
+    // Compute storage object for simulation
+    // Need to set column labels before converting rad->deg
     rQComplete->setColumnLabels(columnLabels);
     rUComplete->setColumnLabels(speedLabels);
+    // Convert back to degrees
+    convertRadiansToDegrees(*rQComplete);
+    convertRadiansToDegrees(*rUComplete);
 }
 
 //=============================================================================
@@ -904,7 +993,7 @@ formCompleteStorages( const SimTK::State& s, const OpenSim::Storage &aQIn,
 //_____________________________________________________________________________
 /**
  */
-void SimbodyEngine::scaleRotationalDofColumns(Storage &rStorage, double factor) const
+void SimbodyEngine::scaleRotationalDofColumns(Storage &rStorage, osim_double_adouble factor) const
 {
     const Array<std::string>& columnLabels = rStorage.getColumnLabels();
     int ncols = columnLabels.getSize();
@@ -948,8 +1037,8 @@ void SimbodyEngine::scaleRotationalDofColumns(Storage &rStorage, double factor) 
 }
 
 void SimbodyEngine::scaleRotationalDofColumns(TimeSeriesTable& table,
-                                              double factor) const {
-    size_t ncols = table.getNumColumns();
+                                              osim_double_adouble factor) const {
+    int ncols = table.getNumColumns();
     if(ncols == 0)
         throw Exception("SimbodyEngine.scaleRotationalDofColumns: ERROR- storage has no labels, can't determine coordinate types for deg<->rad conversion",
                              __FILE__,__LINE__);
@@ -963,7 +1052,7 @@ void SimbodyEngine::scaleRotationalDofColumns(TimeSeriesTable& table,
     const CoordinateSet& coordinateSet = _model->getCoordinateSet();
     
     // first column is time, so skip
-    for (size_t i = 0; i < ncols; i++) {
+    for (int i = 0; i < ncols; i++) {
         const std::string& name = table.getColumnLabel(i);
         index = coordinateSet.getIndex(name);
         if (index < 0){
@@ -1018,33 +1107,23 @@ void SimbodyEngine::convertRadiansToDegrees(Storage &rStorage) const
 }
 
 void SimbodyEngine::convertRadiansToDegrees(TimeSeriesTable& table) const {
-    if (table.hasTableMetaDataKey("inDegrees")) {
-        OPENSIM_THROW_IF(
-            table.getTableMetaData<std::string>("inDegrees") == "yes",
-            Exception,
-            "Columns of the table provided are already in degrees.");
-        table.removeTableMetaDataKey("inDegrees");
-    }
+    OPENSIM_THROW_IF(table.getTableMetaData<std::string>("inDegrees") == "yes",
+                     Exception,
+                     "Columns of the table provided are already in degrees.");
 
     scaleRotationalDofColumns(table, SimTK_RADIAN_TO_DEGREE);
+    table.removeTableMetaDataKey("inDegrees");
     table.addTableMetaData("inDegrees", std::string{"yes"});
 }
 
 void SimbodyEngine::convertDegreesToRadians(TimeSeriesTable& table) const {
-    if (table.hasTableMetaDataKey("inDegrees")) {
-        OPENSIM_THROW_IF(
-            table.getTableMetaData<std::string>("inDegrees") == "no",
-            Exception,
-            "Columns of the table provided are already in radians.");
-        table.removeTableMetaDataKey("inDegrees");
-        scaleRotationalDofColumns(table, SimTK_DEGREE_TO_RADIAN);
-        table.addTableMetaData("inDegrees", std::string{ "no" });
-    }
-    else {
-        OPENSIM_THROW(Exception,
-            "Table provided does not specify rotations to be in degrees.\n"
-            "No conversion can be applied.");
-    }
+    OPENSIM_THROW_IF(table.getTableMetaData<std::string>("inDegrees") == "no",
+                     Exception,
+                     "Columns of the table provided are already in radians.");
+
+    scaleRotationalDofColumns(table, SimTK_DEGREE_TO_RADIAN);
+    table.removeTableMetaDataKey("inDegrees");
+    table.addTableMetaData("inDegrees", std::string{"no"});
 }
 
 //_____________________________________________________________________________
@@ -1055,7 +1134,7 @@ void SimbodyEngine::convertDegreesToRadians(TimeSeriesTable& table) const {
  * @param aQDeg Array of values, in degrees
  * @param rQRad Array of values, in radians
  */
-void SimbodyEngine::convertDegreesToRadians(double *aQDeg, double *rQRad) const
+void SimbodyEngine::convertDegreesToRadians(osim_double_adouble *aQDeg, osim_double_adouble *rQRad) const
 {
     const CoordinateSet& coordinateSet = _model->getCoordinateSet();
 
@@ -1078,7 +1157,7 @@ void SimbodyEngine::convertDegreesToRadians(double *aQDeg, double *rQRad) const
  * @param aQRad Array of values, in radians
  * @param rQDeg Array of values, in degrees
  */
-void SimbodyEngine::convertRadiansToDegrees(double *aQRad, double *rQDeg) const
+void SimbodyEngine::convertRadiansToDegrees(osim_double_adouble *aQRad, osim_double_adouble *rQDeg) const
 {
     const CoordinateSet& coordinateSet = _model->getCoordinateSet();
 

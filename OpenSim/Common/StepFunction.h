@@ -53,16 +53,16 @@ OpenSim_DECLARE_CONCRETE_OBJECT(StepFunction, Function);
 //=============================================================================
 protected:
     PropertyDbl _startTimeProp;
-    double &_startTime;
+    osim_double_adouble &_startTime;
 
     PropertyDbl _endTimeProp;
-    double &_endTime;
+    osim_double_adouble &_endTime;
 
     PropertyDbl _startValueProp;
-    double &_startValue;
+    osim_double_adouble &_startValue;
 
     PropertyDbl _endValueProp;
-    double &_endValue;
+    osim_double_adouble &_endValue;
 
 //=============================================================================
 // METHODS
@@ -72,7 +72,7 @@ public:
     // CONSTRUCTION
     //--------------------------------------------------------------------------
     StepFunction();
-    StepFunction(double startTime, double endTime, double startValue=0.0, double endValue=1.0);
+    StepFunction(osim_double_adouble startTime, osim_double_adouble endTime, osim_double_adouble startValue=0.0, osim_double_adouble endValue=1.0);
     StepFunction(const StepFunction &aSpline);
     virtual ~StepFunction();
 
@@ -94,31 +94,31 @@ public:
     //--------------------------------------------------------------------------
 public:
     /** %Set step transition start time */
-    void setStartTime(double time)
+    void setStartTime(osim_double_adouble time)
         { _startTime = time; };
     /** Get step transition time */
-    double getStartTime() const
+    osim_double_adouble getStartTime() const
         { return _startTime; };
 
     /** %Set step transition end time */
-    void setEndTime(double time)
+    void setEndTime(osim_double_adouble time)
         { _endTime = time; };
     /** Get step transition time */
-    double getEndTime() const
+    osim_double_adouble getEndTime() const
         { return _endTime; };
 
     /** %Set start value before step */
-    void setStartValue(double start)
+    void setStartValue(osim_double_adouble start)
         { _startValue = start; };
     /** Get start value before step */
-    double getStartValue() const
+    osim_double_adouble getStartValue() const
         { return _startValue; };
 
     /** %Set end value before step */
-    void setEndValue(double end)
+    void setEndValue(osim_double_adouble end)
         { _endValue = end; };
     /** Get end value before step */
-    double getEndValue() const
+    osim_double_adouble getEndValue() const
         { return _endValue; };
 
     //--------------------------------------------------------------------------

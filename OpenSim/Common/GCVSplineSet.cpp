@@ -36,13 +36,13 @@ GCVSplineSet::GCVSplineSet() {
     setNull();
 }
 
-GCVSplineSet::GCVSplineSet(const char *aFileName) :
-    FunctionSet(aFileName) {
-    setNull();
-}
+//GCVSplineSet::GCVSplineSet(const char *aFileName) :
+//    FunctionSet(aFileName) {
+//    setNull();
+//}
 GCVSplineSet::GCVSplineSet(int aDegree,
                            const Storage *aStore,
-                           double aErrorVariance) {
+                           osim_double_adouble aErrorVariance) {
     setNull();
     if(aStore==NULL) return;
     setName(aStore->getName());
@@ -59,7 +59,7 @@ GCVSplineSet::GCVSplineSet(int aDegree,
 GCVSplineSet::GCVSplineSet(const TimeSeriesTable& table,
                            const std::vector<std::string>& labels,
                            int degree,
-                           double errorVariance) {
+                           osim_double_adouble errorVariance) {
     const auto& time = table.getIndependentColumn();
     auto labelsToUse = labels;
     if (labelsToUse.empty()) labelsToUse = table.getColumnLabels();
@@ -76,7 +76,7 @@ void GCVSplineSet::setNull() {
 
 void GCVSplineSet::construct(int aDegree,
                              const Storage *aStore,
-                             double aErrorVariance) {
+                             osim_double_adouble aErrorVariance) {
     if(aStore==NULL) return;
 
     // DESCRIPTION
@@ -89,7 +89,7 @@ void GCVSplineSet::construct(int aDegree,
 
     // LOOP THROUGH THE STATES
     int nTime=1,nData=1;
-    double *times=NULL,*data=NULL;
+    osim_double_adouble *times=NULL,*data=NULL;
     GCVSpline *spline;
     //printf("GCVSplineSet.construct:  constructing splines...\n");
     for(int i=0;nData>0;i++) {
@@ -137,7 +137,7 @@ GCVSpline* GCVSplineSet::getGCVSpline(int aIndex) const {
     return(&func);
 }
 
-Storage* GCVSplineSet::constructStorage(int aDerivOrder,double aDX) {
+Storage* GCVSplineSet::constructStorage(int aDerivOrder,osim_double_adouble aDX) {
     if(aDerivOrder<0) return(NULL);
     if(getSize()<=0) return(NULL);
 
@@ -151,12 +151,12 @@ Storage* GCVSplineSet::constructStorage(int aDerivOrder,double aDX) {
     if(spl==NULL) return(NULL);
 
     // HOW MANY X STEPS
-    double xRange = getMaxX() - getMinX();
+    osim_double_adouble xRange = getMaxX() - getMinX();
     int nSteps;
     if(aDX<=0.0) {
         nSteps = spl->getSize();
     } else {
-        nSteps = 10 + (int)(xRange/aDX);
+        nSteps = 10 + (int)(xRange/aDX).value();
     }
 
     // CONSTRUCT STORAGE OBJECT
@@ -190,12 +190,12 @@ Storage* GCVSplineSet::constructStorage(int aDerivOrder,double aDX) {
     store->setColumnLabels(labels);
 
     // SET STATES
-    Array<double> y(0.0,n);
+    Array<osim_double_adouble> y(0.0,n);
 
     // LOOP THROUGH THE DATA
     // constant increments
     if(aDX>0.0) {
-        for(double x=getMinX(); x<=getMaxX(); x+=aDX) {
+        for(osim_double_adouble x=getMinX(); x<=getMaxX(); x+=aDX) {
             evaluate(y,aDerivOrder,x);
             store->append(x,n,&y[0]);
         }
@@ -203,7 +203,7 @@ Storage* GCVSplineSet::constructStorage(int aDerivOrder,double aDX) {
     // original independent variable increments
     } else {
 
-        const Array<double> &xOrig = spl->getX();
+        const Array<osim_double_adouble> &xOrig = spl->getX();
         for(int ix=0;ix<nSteps;ix++) {
 
             // ONLY WITHIN BOUNDS OF THE SET
@@ -218,9 +218,9 @@ Storage* GCVSplineSet::constructStorage(int aDerivOrder,double aDX) {
     return(store);
 }
 
-double GCVSplineSet::getMinX() const
+osim_double_adouble GCVSplineSet::getMinX() const
 {
-    double min = SimTK::Infinity;
+    osim_double_adouble min = SimTK::Infinity;
 
     for (int i=0; i<getSize(); i++) {
         const GCVSpline* spl = getGCVSpline(i);
@@ -231,9 +231,9 @@ double GCVSplineSet::getMinX() const
     return min;
 }
 
-double GCVSplineSet::getMaxX() const
+osim_double_adouble GCVSplineSet::getMaxX() const
 {
-    double max = -SimTK::Infinity;
+    osim_double_adouble max = -SimTK::Infinity;
 
     for (int i=0; i<getSize(); i++) {
         const GCVSpline* spl = getGCVSpline(i);

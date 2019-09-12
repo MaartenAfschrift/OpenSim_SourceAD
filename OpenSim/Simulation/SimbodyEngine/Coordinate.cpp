@@ -97,7 +97,7 @@ Coordinate::Coordinate()
  * Constructor.
  */
 Coordinate::Coordinate(const std::string &aName, MotionType aMotionType,
-        double defaultValue, double aRangeMin, double aRangeMax) :
+        osim_double_adouble defaultValue, osim_double_adouble aRangeMin, osim_double_adouble aRangeMax) :
     Coordinate()
 {
     setName(aName);
@@ -118,7 +118,7 @@ void Coordinate::constructProperties(void)
     constructProperty_default_value(0.0);
     constructProperty_default_speed_value(0.0);
 
-    Array<double> defaultRange(-10.0, 2); //two values in range
+    Array<osim_double_adouble> defaultRange(-10.0, 2); //two values in range
     defaultRange[1] = 10.0; // second value in range is 10.0
     constructProperty_range(defaultRange);
 
@@ -141,7 +141,7 @@ void Coordinate::extendFinalizeFromProperties()
 {
     Super::extendFinalizeFromProperties();
 
-    string prefix = "Coordinate("+getName()+")::extendFinalizeFromProperties:";
+    string prefix = "Coordinate("+getName()+")::extendFinalizeFromProperties: ";
 
     // Make sure the default value is within the range when clamped
     if (get_clamped()){
@@ -149,7 +149,7 @@ void Coordinate::extendFinalizeFromProperties()
         SimTK_ERRCHK_ALWAYS(get_range(0) <= get_range(1), prefix.c_str(),
             "Maximum coordinate range less than minimum.");
 
-        double dv = get_default_value();
+        osim_double_adouble dv = get_default_value();
         SimTK_ERRCHK2_ALWAYS(dv > (get_range(0) - SimTK::SqrtEps), prefix.c_str(),
             "Default coordinate value is less than range minimum.\n" 
             "Default value = %g  < min = %g.", dv,  get_range(0));
@@ -305,7 +305,7 @@ Coordinate::MotionType Coordinate::getMotionType() const
  *
  * @return The current value of the coordinate.
  */
-double Coordinate::getValue(const SimTK::State& s) const
+osim_double_adouble Coordinate::getValue(const SimTK::State& s) const
 {
     return _model->getMatterSubsystem().getMobilizedBody(_bodyIndex).getOneQ(s,_mobilizerQIndex);
 }
@@ -315,10 +315,10 @@ double Coordinate::getValue(const SimTK::State& s) const
  *
  * @param aValue value to change to.
  */
-void Coordinate::setValue(SimTK::State& s, double aValue , bool enforceConstraints) const
+void Coordinate::setValue(SimTK::State& s, osim_double_adouble aValue , bool enforceConstraints) const
 {
-    // If enforceConstraints is true and coordinate is clamped, clamp aValue into range
-    if (enforceConstraints && getClamped(s)) {
+    // If the coordinate is clamped, pull aValue into range.
+    if (getClamped(s)) {
         if (aValue < get_range(0))
             aValue = get_range(0);
         else if (aValue > get_range(1))
@@ -340,26 +340,26 @@ void Coordinate::setValue(SimTK::State& s, double aValue , bool enforceConstrain
     // You want to do this even if the coordinate is locked and its value hasn't changed, because this may be
     // the last setValue() call in a string of them (e.g., to set a model pose), in which case you only try to
     // enforce constraints during the last call.
-    if (enforceConstraints) {
-        if (_model->getConstraintSet().getSize()>0 || isConstrained(s)){
-            // if this coordinate is set up to be dependent on other coordinates
-            // its value should be dictated by the other coordinates and not its present value
-            double weight = isDependent(s) ? 0.0  : 10;
-            // assemble model so that states satisfy ALL constraints
-            _model->assemble(s, this, weight);
-        }
-        else
-            _model->getMultibodySystem().realize(s, Stage::Position );
-    }
+    //if (enforceConstraints) {
+    //    if (_model->getConstraintSet().getSize()>0 || isConstrained(s)){
+    //        // if this coordinate is set up to be dependent on other coordinates
+    //        // its value should be dictated by the other coordinates and not its present value
+    //        osim_double_adouble weight = isDependent(s) ? 0.0  : 10;
+    //        // assemble model so that states satisfy ALL constraints
+    //        _model->assemble(s, this, weight);
+    //    }
+    //    else
+    //        _model->getMultibodySystem().realize(s, Stage::Position );
+    //}
 }
 
-double Coordinate::getSpeedValue(const SimTK::State& s) const
+osim_double_adouble Coordinate::getSpeedValue(const SimTK::State& s) const
 {
     return _model->getMatterSubsystem().getMobilizedBody(_bodyIndex).getOneU(s,_mobilizerQIndex);
 }
 
 
-void Coordinate::setSpeedValue(SimTK::State& s, double aValue) const
+void Coordinate::setSpeedValue(SimTK::State& s, osim_double_adouble aValue) const
 {
     _model->updMatterSubsystem().getMobilizedBody(_bodyIndex).setOneU(s,_mobilizerQIndex,aValue);
 }
@@ -369,7 +369,7 @@ const std::string&  Coordinate::getSpeedName() const
     return _speedName;
 }
 
-double Coordinate::getAccelerationValue(const SimTK::State& s) const
+osim_double_adouble Coordinate::getAccelerationValue(const SimTK::State& s) const
 {
     return getModel().getMatterSubsystem().getMobilizedBody(_bodyIndex).getOneUDot(s, _mobilizerQIndex);
 }
@@ -382,7 +382,7 @@ double Coordinate::getAccelerationValue(const SimTK::State& s) const
  * @param aRange range min and man to change to.
  * @return Whether or not the range was changed.
  */
-void Coordinate::setRange(double aRange[2])
+void Coordinate::setRange(osim_double_adouble aRange[2])
 {
     if (aRange[1] >= aRange[0]) {
         upd_range(0) = aRange[0];
@@ -400,7 +400,7 @@ void Coordinate::setRange(double aRange[2])
  * @param aRange range min to change to.
  * @return Whether or not the range min was changed.
  */
-void Coordinate::setRangeMin(double aMin)
+void Coordinate::setRangeMin(osim_double_adouble aMin)
 {
     upd_range(0) = aMin;
 }
@@ -412,7 +412,7 @@ void Coordinate::setRangeMin(double aMin)
  * @param aRange range max to change to.
  * @return Whether or not the range max was changed.
  */
-void Coordinate::setRangeMax(double aMax)
+void Coordinate::setRangeMax(osim_double_adouble aMax)
 {
     upd_range(1) = aMax;
 }
@@ -423,7 +423,7 @@ void Coordinate::setRangeMax(double aMax)
  *
  * @param aDefaultValue new default value to change to.
  */
-void Coordinate::setDefaultValue(double aDefaultValue)
+void Coordinate::setDefaultValue(osim_double_adouble aDefaultValue)
 {
     upd_default_value() = aDefaultValue;
 }
@@ -458,32 +458,32 @@ void Coordinate::setPrescribedFunction(const OpenSim::Function& function)
  * TODO: note that this will fail to detect any other kind of constraint that
  * might couple coordinates together.
  */
- bool Coordinate::isDependent(const SimTK::State& s) const
-{
-    if(get_is_free_to_satisfy_constraints())
-        return true;
-
-    for(int i=0; i<_model->getConstraintSet().getSize(); i++){
-        Constraint& constraint = _model->getConstraintSet().get(i);
-        CoordinateCouplerConstraint* couplerp = 
-            dynamic_cast<CoordinateCouplerConstraint*>(&constraint);
-        if(couplerp) {
-            if (couplerp->getDependentCoordinateName() == getName())
-                return couplerp->isEnforced(s);
-        }
-    }
-    return false;
-}
+// bool Coordinate::isDependent(const SimTK::State& s) const
+//{
+//    if(get_is_free_to_satisfy_constraints())
+//        return true;
+//
+//    for(int i=0; i<_model->getConstraintSet().getSize(); i++){
+//        Constraint& constraint = _model->getConstraintSet().get(i);
+//        CoordinateCouplerConstraint* couplerp = 
+//            dynamic_cast<CoordinateCouplerConstraint*>(&constraint);
+//        if(couplerp) {
+//            if (couplerp->getDependentCoordinateName() == getName())
+//                return couplerp->isEnforced(s);
+//        }
+//    }
+//    return false;
+//}
 //_____________________________________________________________________________
 /**
  *  Determine if the coordinate is constrained or not.
  *  Specifically, is locked, prescribed, or completely dependent on other coordinates?
  *  If so return true, false otherwise.
  */
-bool Coordinate::isConstrained(const SimTK::State& s) const
-{
-    return (getLocked(s) || isPrescribed(s) || isDependent(s));
-}
+//bool Coordinate::isConstrained(const SimTK::State& s) const
+//{
+//    return (getLocked(s) || isPrescribed(s) || isDependent(s));
+//}
 
 
 //-----------------------------------------------------------------------------
@@ -614,19 +614,19 @@ void Coordinate::setClamped(SimTK::State& s, bool aLocked) const
 //-----------------------------------------------------------------------------
 // Coordinate::CoordinateStateVariable
 //-----------------------------------------------------------------------------
-double Coordinate::CoordinateStateVariable::
+osim_double_adouble Coordinate::CoordinateStateVariable::
     getValue(const SimTK::State& state) const
 {
     return ((Coordinate *)&getOwner())->getValue(state);
 }
 
 void Coordinate::CoordinateStateVariable::
-    setValue(SimTK::State& state, double value) const
+    setValue(SimTK::State& state, osim_double_adouble value) const
 {
-    ((Coordinate *)&getOwner())->setValue(state, value, false);
+    ((Coordinate *)&getOwner())->setValue(state, value);
 }
 
-double Coordinate::CoordinateStateVariable::
+osim_double_adouble Coordinate::CoordinateStateVariable::
     getDerivative(const SimTK::State& state) const
 {
     //TODO: update to get qdot value from the mobilized body
@@ -635,7 +635,7 @@ double Coordinate::CoordinateStateVariable::
 
 
 void Coordinate::CoordinateStateVariable::
-    setDerivative(const SimTK::State& state, double deriv) const
+    setDerivative(const SimTK::State& state, osim_double_adouble deriv) const
 {
     string msg = "CoordinateStateVariable::setDerivative() - ERROR \n";
     msg +=  "Coordinate derivative (qdot) is computed by the Multibody system.";
@@ -646,7 +646,7 @@ void Coordinate::CoordinateStateVariable::
 //-----------------------------------------------------------------------------
 // Coordinate::SpeedStateVariable
 //-----------------------------------------------------------------------------
-double Coordinate::SpeedStateVariable::
+osim_double_adouble Coordinate::SpeedStateVariable::
     getValue(const SimTK::State& state) const
 {
     //TODO: update to get qdot value from the mobilized body
@@ -654,13 +654,13 @@ double Coordinate::SpeedStateVariable::
 }
 
 void Coordinate::SpeedStateVariable::
-    setValue(SimTK::State& state, double deriv) const
+    setValue(SimTK::State& state, osim_double_adouble deriv) const
 {
     //TODO: update to set qdot value from the mobilized body
     ((Coordinate *)&getOwner())->setSpeedValue(state, deriv);
 }
 
-double Coordinate::SpeedStateVariable::
+osim_double_adouble Coordinate::SpeedStateVariable::
     getDerivative(const SimTK::State& state) const
 {
     const Coordinate& owner = *((Coordinate *)&getOwner());
@@ -671,42 +671,9 @@ double Coordinate::SpeedStateVariable::
 }
 
 void Coordinate::SpeedStateVariable::
-    setDerivative(const SimTK::State& state, double deriv) const
+    setDerivative(const SimTK::State& state, osim_double_adouble deriv) const
 {
     string msg = "SpeedStateVariable::setDerivative() - ERROR \n";
     msg +=  "Generalized speed derivative (udot) can only be set by the Multibody system.";
     throw Exception(msg);
-}
-
-//=============================================================================
-// XML Deserialization
-//=============================================================================
-void Coordinate::updateFromXMLNode(SimTK::Xml::Element& aNode,
-    int versionNumber)
-{
-    if (versionNumber < XMLDocument::getLatestVersion()) {
-        if (versionNumber < 30514) {
-            SimTK::Xml::element_iterator iter = aNode.element_begin("motion_type");
-            if (iter != aNode.element_end()) {
-                SimTK::Xml::Element motionTypeElm = 
-                    SimTK::Xml::Element::getAs(aNode.removeNode(iter));
-                std::string typeName = motionTypeElm.getValue();
-
-                if ((IO::Lowercase(typeName) == "rotational"))
-                    _userSpecifiedMotionTypePriorTo40 = Rotational;
-                else if (IO::Lowercase(typeName) == "translational")
-                    _userSpecifiedMotionTypePriorTo40 = Translational;
-                else if (IO::Lowercase(typeName) == "coupled")
-                    _userSpecifiedMotionTypePriorTo40 = Coupled;
-                else
-                    _userSpecifiedMotionTypePriorTo40 = Undefined;
-            }
-        }
-    }
-    Super::updateFromXMLNode(aNode, versionNumber);
-}
-
-const Coordinate::MotionType& Coordinate::getUserSpecifiedMotionTypePriorTo40() const
-{
-    return _userSpecifiedMotionTypePriorTo40;
 }

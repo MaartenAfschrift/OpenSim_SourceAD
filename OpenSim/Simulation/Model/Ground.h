@@ -47,8 +47,7 @@ public:
 
 protected:
     /** Extending the Component interface. */
-    void extendFinalizeFromProperties() override final;
-    void extendAddToSystem(SimTK::MultibodySystem& system) const override final;
+    void extendAddToSystem(SimTK::MultibodySystem& system) const override;
 
 private:
     /** The transform X_GF is the identity transform since this frame is Ground.*/
@@ -62,8 +61,6 @@ private:
     /** The spatial acceleration {alpha; a} = {0; 0} for ground */
     SimTK::SpatialVec
         calcAccelerationInGround(const SimTK::State& state) const override final;
-
-    static const char* GroundNameString;
 
 };  // END of class Ground
 

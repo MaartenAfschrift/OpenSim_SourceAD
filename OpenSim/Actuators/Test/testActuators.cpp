@@ -23,11 +23,11 @@
 //========================  Actuators Tested ==================================
 //
 //  Tests Include:
-//    1. testTorqueActuator()
+//      1.  testTorqueActuator()
 //    2. testBodyActuator()
-//    3. testClutchedPathSpring()
-//    4. testMcKibbenActuator()
-//    5. testActuatorsCombination()
+//      2.  testClutchedPathSpring()
+//      3.  testMcKibbenActuator()
+//    4. testActuatorsCombination()
 //      
 //     Add tests here as Actuators are added to OpenSim
 //
@@ -89,6 +89,81 @@ int main()
     cout << "Done, testActuators passed." << endl;
 }
 
+void testMcKibbenActuator()
+{
+
+    double pressure = 5 * 10e5; // 5 bars
+    double num_turns = 1.5;     // 1.5 turns
+    double B = 277.1 * 10e-4;  // 277.1 mm
+
+    using namespace SimTK;
+    std::clock_t startTime = std::clock();
+
+    double mass = 1;
+    double ball_radius = 10e-6;
+
+    Model *model = new Model;
+    model->setGravity(Vec3(0));
+
+    Ground& ground = model->updGround();
+
+    McKibbenActuator *actuator = new McKibbenActuator("mckibben", num_turns, B);
+    
+    OpenSim::Body* ball = new OpenSim::Body("ball", mass ,Vec3(0),  mass*SimTK::Inertia::sphere(0.1));
+    ball->scale(Vec3(ball_radius), false);
+
+    actuator->addNewPathPoint("mck_ground", ground, Vec3(0));
+    actuator->addNewPathPoint("mck_ball", *ball, Vec3(ball_radius));
+
+    Vec3 locationInParent(0, ball_radius, 0), orientationInParent(0), locationInBody(0), orientationInBody(0);
+    SliderJoint *ballToGround = new SliderJoint("ballToGround", ground, locationInParent, orientationInParent, *ball, locationInBody, orientationInBody);
+
+    ballToGround->updCoordinate().setName("ball_d");
+    ballToGround->updCoordinate().setPrescribedFunction(LinearFunction(20 * 10e-4, 0.5 * 264.1 * 10e-4));
+    ballToGround->updCoordinate().set_prescribed(true);
+
+    model->addBody(ball);
+    model->addJoint(ballToGround);
+    model->addForce(actuator);
+
+    PrescribedController* controller =  new PrescribedController();
+    controller->addActuator(*actuator);
+    controller->prescribeControlForActuator("mckibben", new Constant(pressure));
+
+    model->addController(controller);
+
+    ForceReporter* reporter = new ForceReporter(model);
+    model->addAnalysis(reporter);
+    
+    SimTK::State& si = model->initSystem();
+
+    model->getMultibodySystem().realize(si, Stage::Position);
+
+    double final_t = 10.0;
+    double nsteps = 10;
+    double dt = final_t / nsteps;
+
+    RungeKuttaMersonIntegrator integrator(model->getMultibodySystem());
+    integrator.setAccuracy(1e-7);
+    Manager manager(*model, integrator);
+    si.setTime(0.0);
+
+    for (int i = 1; i <= nsteps; i++){
+        manager.integrate(si, dt*i);
+        model->getMultibodySystem().realize(si, Stage::Velocity);
+        Vec3 pos = ball->findStationLocationInGround(si, Vec3(0));
+
+        double applied = actuator->computeActuation(si);;
+
+        double theoretical = (pressure / (4* pow(num_turns,2) * SimTK::Pi)) * (3*pow(pos(0), 2) - pow(B, 2));
+
+        ASSERT_EQUAL(applied, theoretical, 10.0);
+    }
+
+
+    std::cout << " ******** Test McKibbenActuator time = ********" <<
+        1.e3*(std::clock() - startTime) / CLOCKS_PER_SEC << "ms\n" << endl;
+}
 
 //==============================================================================
 // Test Cases
@@ -139,8 +214,6 @@ void testTorqueActuator()
     double torqueMag = 2.1234567890;
     Vec3 torqueAxis(1/sqrt(2.0), 0, 1/sqrt(2.0));
     Vec3 torqueInG = torqueMag*torqueAxis;
-
-    model->print("testTorqueActuator.osim");
 
     State state = model->initSystem();
 
@@ -209,7 +282,6 @@ void testTorqueActuator()
 
     //model->addProbe(powerProbe);
 
-    model->finalizeConnections();
     model->print("TestTorqueActuatorModel.osim");
     model->setUseVisualizer(false);
 
@@ -232,14 +304,14 @@ void testTorqueActuator()
     // determine the initial kinetic energy of the system
     /*double iKE = */model->getMatterSubsystem().calcKineticEnergy(state);
 
-    Manager manager(*model);
-    manager.setIntegratorAccuracy(integ_accuracy);
+    RungeKuttaMersonIntegrator integrator(model->getMultibodySystem());
+    integrator.setAccuracy(integ_accuracy);
+    Manager manager(*model,  integrator);
 
     state.setTime(0.0);
-    manager.initialize(state);
 
     double final_t = 1.00;
-    state = manager.integrate(final_t);
+    manager.integrate(state, final_t);
 
     model->computeStateVariableDerivatives(state);
 
@@ -356,7 +428,6 @@ void testClutchedPathSpring()
     controller->prescribeControlForActuator("clutch_spring", controlfunc);
     model->addController(controller);
 
-    model->finalizeConnections();
     model->print("ClutchedPathSpringModel.osim");
 
     //Test deserialization
@@ -376,15 +447,16 @@ void testClutchedPathSpring()
 
     //==========================================================================
     // Compute the force and torque at the specified times.
-    Manager manager(*model);
-    manager.setIntegratorAccuracy(integ_accuracy);
+
+    RungeKuttaMersonIntegrator integrator(model->getMultibodySystem() );
+    integrator.setAccuracy(integ_accuracy);
+    Manager manager(*model,  integrator);
     manager.setWriteToStorage(true);
 
     state.setTime(0.0);
-    manager.initialize(state);
 
     double final_t = 4.99999;
-    state = manager.integrate(final_t);
+    manager.integrate(state, final_t);
 
     // tension is dynamics dependent because controls must be computed
     model->getMultibodySystem().realize(state, Stage::Dynamics);
@@ -405,7 +477,7 @@ void testClutchedPathSpring()
 
     // unclamp and continue integrating
     final_t = 5.99999;
-    state = manager.integrate(final_t);
+    manager.integrate(state, final_t);
 
     // tension is dynamics dependent because controls must be computed
     model->getMultibodySystem().realize(state, Stage::Dynamics);
@@ -419,7 +491,7 @@ void testClutchedPathSpring()
 
     // spring is reclamped at 7s so keep integrating
     final_t = 10.0;
-    state = manager.integrate(final_t);
+    manager.integrate(state, final_t);
 
     // tension is dynamics dependent because controls must be computed
     model->getMultibodySystem().realize(state, Stage::Dynamics);
@@ -450,82 +522,6 @@ void testClutchedPathSpring()
         1.e3*(std::clock()-startTime)/CLOCKS_PER_SEC << "ms\n" << endl;
 }
 
-
-void testMcKibbenActuator()
-{
-
-    double pressure = 5 * 10e5; // 5 bars
-    double num_turns = 1.5;     // 1.5 turns
-    double B = 277.1 * 10e-4;  // 277.1 mm
-
-    using namespace SimTK;
-    std::clock_t startTime = std::clock();
-
-    double mass = 1;
-    double ball_radius = 10e-6;
-
-    Model *model = new Model;
-    model->setGravity(Vec3(0));
-
-    Ground& ground = model->updGround();
-
-    McKibbenActuator *actuator = new McKibbenActuator("mckibben", num_turns, B);
-
-    OpenSim::Body* ball = new OpenSim::Body("ball", mass, Vec3(0), mass*SimTK::Inertia::sphere(0.1));
-    ball->scale(Vec3(ball_radius), false);
-
-    actuator->addNewPathPoint("mck_ground", ground, Vec3(0));
-    actuator->addNewPathPoint("mck_ball", *ball, Vec3(ball_radius));
-
-    Vec3 locationInParent(0, ball_radius, 0), orientationInParent(0), locationInBody(0), orientationInBody(0);
-    SliderJoint *ballToGround = new SliderJoint("ballToGround", ground, locationInParent, orientationInParent, *ball, locationInBody, orientationInBody);
-
-    ballToGround->updCoordinate().setName("ball_d");
-    ballToGround->updCoordinate().setPrescribedFunction(LinearFunction(20 * 10e-4, 0.5 * 264.1 * 10e-4));
-    ballToGround->updCoordinate().set_prescribed(true);
-
-    model->addBody(ball);
-    model->addJoint(ballToGround);
-    model->addForce(actuator);
-
-    PrescribedController* controller = new PrescribedController();
-    controller->addActuator(*actuator);
-    controller->prescribeControlForActuator("mckibben", new Constant(pressure));
-
-    model->addController(controller);
-
-    ForceReporter* reporter = new ForceReporter(model);
-    model->addAnalysis(reporter);
-
-    SimTK::State& si = model->initSystem();
-
-    model->getMultibodySystem().realize(si, Stage::Position);
-
-    double final_t = 10.0;
-    double nsteps = 10;
-    double dt = final_t / nsteps;
-
-    Manager manager(*model);
-    manager.setIntegratorAccuracy(1e-7);
-    si.setTime(0.0);
-    manager.initialize(si);
-
-    for (int i = 1; i <= nsteps; i++) {
-        si = manager.integrate(dt*i);
-        model->getMultibodySystem().realize(si, Stage::Velocity);
-        Vec3 pos = ball->findStationLocationInGround(si, Vec3(0));
-
-        double applied = actuator->computeActuation(si);;
-
-        double theoretical = (pressure / (4 * pow(num_turns, 2) * SimTK::Pi)) * (3 * pow(pos(0), 2) - pow(B, 2));
-
-        ASSERT_EQUAL(applied, theoretical, 10.0);
-    }
-
-
-    std::cout << " ******** Test McKibbenActuator time = ********" <<
-        1.e3*(std::clock() - startTime) / CLOCKS_PER_SEC << "ms\n" << endl;
-}
 
 //====================================================================================
 //                              TEST BODY ACTUATOR
@@ -681,14 +677,14 @@ void testBodyActuator()
         ASSERT_EQUAL(udotMobility[i], udotBodyActuator[i], SimTK::Eps);
     }
 
-    // -------------- Setup manager -------------------
-    Manager manager(*model);
-    manager.setIntegratorAccuracy(integ_accuracy);
+    // -------------- Setup integrator and manager -------------------
+    RungeKuttaMersonIntegrator integrator(model->getMultibodySystem());
+    integrator.setAccuracy(integ_accuracy);
+    Manager manager(*model, integrator);
 
     state1.setTime(0.0);
-    manager.initialize(state1);
     double final_t = 1.00;
-    state1 = manager.integrate(final_t);
+    manager.integrate(state1, final_t);
 
     // ----------------- Test Copying the model -------------------
     // Before exiting lets see if copying the actuator works
@@ -703,6 +699,8 @@ void testBodyActuator()
     std::cout << " ********** Test BodyActuator time = ********** " <<
         1.e3*(std::clock() - startTime) / CLOCKS_PER_SEC << "ms\n" << endl;
 }
+
+
 
 //==================================================================================
 //                         TEST ACTUATORS COMBINATION
@@ -796,7 +794,7 @@ void testActuatorsCombination()
     pointActuator->set_direction(forceUnitAxis);
     pointActuator->set_point(Vec3(0, blockSideLength/2,0));
     model->addForce(pointActuator);
-    model->finalizeConnections(); // Needed so sockets have correct path
+
     // ------ build the model -----
     model->print("TestActuatorCombinationModel.osim");
     model->setUseVisualizer(false);
@@ -905,14 +903,14 @@ void testActuatorsCombination()
         ASSERT_EQUAL(udotOnlyBodyActuator[i], udotActuatorsCombination[i], 1.0e-12);
     }
     
-    // ------------------------ Setup manager -----------------------
-    Manager manager(*model);
-    manager.setIntegratorAccuracy(integ_accuracy);
+    // ------------------------ Setup integrator and manager -----------------------
+    RungeKuttaMersonIntegrator integrator(model->getMultibodySystem());
+    integrator.setAccuracy(integ_accuracy);
+    Manager manager(*model, integrator);
 
     state2.setTime(0.0);
-    manager.initialize(state2);
     double final_t = 1.00;
-    state2 = manager.integrate(final_t);
+    manager.integrate(state2, final_t);
 
 
     std::cout << " ********** Test Actuator Combination time = ********** " <<

@@ -27,6 +27,7 @@
 #include "Units.h"
 #include "SimTKcommon/Constants.h"
 #include "SimTKcommon/Scalar.h"
+#include "osim_adouble.h"
 
 //=============================================================================
 // STATICS
@@ -118,7 +119,7 @@ Units::~Units()
  * @param aValue the number to convert
  * @return The number converted to the new units
  */
-double Units::convertTo(UnitType aType, double aValue) const
+osim_double_adouble Units::convertTo(UnitType aType, osim_double_adouble aValue) const
 {
     return aValue * convertTo(aType);
 }
@@ -131,7 +132,7 @@ double Units::convertTo(UnitType aType, double aValue) const
  * @param aUnit the units to convert to
  * @return The conversion factor
  */
-double Units::convertTo(const Units& aUnit) const
+osim_double_adouble Units::convertTo(const Units& aUnit) const
 {
     return convertTo(aUnit._type);
 }
@@ -144,7 +145,7 @@ double Units::convertTo(const Units& aUnit) const
  * @param aType the units to convert to
  * @return The conversion factor
  */
-double Units::convertTo(UnitType aType) const
+osim_double_adouble Units::convertTo(UnitType aType) const
 {
     if (_type == aType)
         return 1.0;
@@ -154,14 +155,14 @@ double Units::convertTo(UnitType aType) const
         if (aType == Degrees)
             return SimTK_RADIAN_TO_DEGREE;
         else
-            return SimTK::NaN;
+            return SimTK::NaN.value();
     }
     else if (_type == Degrees)
     {
         if (aType == Radians)
             return SimTK_DEGREE_TO_RADIAN;
         else
-            return SimTK::NaN;
+            return SimTK::NaN.value();
     }
     else if (_type == Millimeters)
     {
@@ -170,7 +171,7 @@ double Units::convertTo(UnitType aType) const
         else if (aType == Meters)
             return 0.001;
         else
-            return SimTK::NaN;
+            return SimTK::NaN.value();
     }
     else if (_type == Centimeters)
     {
@@ -179,7 +180,7 @@ double Units::convertTo(UnitType aType) const
         else if (aType == Meters)
             return 0.01;
         else
-            return SimTK::NaN;
+            return SimTK::NaN.value();
     }
     else if (_type == Meters)
     {
@@ -188,24 +189,24 @@ double Units::convertTo(UnitType aType) const
         else if (aType == Centimeters)
             return 100.0;
         else
-            return SimTK::NaN;
+            return SimTK::NaN.value();
     }
     else if (_type == Seconds)
     {
         if (aType == Milliseconds)
             return 1000.0;
         else
-            return SimTK::NaN;
+            return SimTK::NaN.value();
     }
     else if (_type == Milliseconds)
     {
         if (aType == Seconds)
             return 0.001;
         else
-            return SimTK::NaN;
+            return SimTK::NaN.value();
     }
 
-    return SimTK::NaN;
+    return SimTK::NaN.value();
 }
 
 //_____________________________________________________________________________

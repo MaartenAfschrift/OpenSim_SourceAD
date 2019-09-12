@@ -27,7 +27,7 @@ namespace OpenSim {
 /** Struct representing an event extracted from a C3D file.                   */
 struct Event {
     std::string label;
-    double      time;
+    osim_double_adouble      time;
     int         frame;
     std::string description;
 };

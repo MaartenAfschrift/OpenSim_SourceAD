@@ -5,27 +5,6 @@ import os, unittest
 import opensim as osim
 
 class TestDataTable(unittest.TestCase):
-    def test_clone(self):
-        # Make sure the clone() method works (we have to implement this in a
-        # SWIG interface file).
-        dt = osim.DataTable()
-        c = dt.clone()
-        assert c
-        dt = osim.DataTableVec3()
-        c = dt.clone()
-        assert c
-        dt = osim.DataTableUnitVec3()
-        c = dt.clone()
-        assert c
-        dt = osim.DataTableQuaternion()
-        c = dt.clone()
-        assert c
-        dt = osim.DataTableVec6()
-        c = dt.clone()
-        assert c
-        dt = osim.DataTableSpatialVec()
-        c = dt.clone()
-        assert c
     def test_vector_rowvector(self):
         print()
         print('Test transpose RowVector to Vector.')
@@ -41,15 +20,15 @@ class TestDataTable(unittest.TestCase):
                 row_copy[1] == row[1] and
                 row_copy[2] == row[2] and
                 row_copy[3] == row[3])
-        print('Test transpose RowVectorVec3 to VectorVec3.')
-        row = osim.RowVectorVec3([osim.Vec3(1, 2, 3), 
+        print('Test transpose RowVectorOfVec3 to VectorOfVec3.')
+        row = osim.RowVectorOfVec3([osim.Vec3(1, 2, 3), 
                                     osim.Vec3(4, 5, 6),
                                     osim.Vec3(7, 8, 9)])
         col = row.transpose()
         assert (str(col[0]) == str(row[0]) and
                 str(col[1]) == str(row[1]) and
                 str(col[2]) == str(row[2]))
-        print('Test transpose VectorOVec3 to RowVectorVec3.')
+        print('Test transpose VectorOfVec3 to RowVectorOfVec3.')
         row_copy = col.transpose()
         assert (str(row_copy[0]) == str(row[0]) and
                 str(row_copy[1]) == str(row[1]) and
@@ -406,7 +385,7 @@ class TestDataTable(unittest.TestCase):
         table.setColumnLabels(['0', '1', '2'])
         assert table.getColumnLabels() == ('0', '1', '2')
         # Append a row to the table.
-        row = osim.RowVectorVec3([osim.Vec3(1, 2, 3), 
+        row = osim.RowVectorOfVec3([osim.Vec3(1, 2, 3), 
                                     osim.Vec3(4, 5, 6),
                                     osim.Vec3(7, 8, 9)])
         table.appendRow(0.1, row)
@@ -418,7 +397,7 @@ class TestDataTable(unittest.TestCase):
                 str(row0[2]) == str(row[2]))
         print(table)
         # Append another row to the table.
-        row = osim.RowVectorVec3([osim.Vec3( 2,  4,  6), 
+        row = osim.RowVectorOfVec3([osim.Vec3( 2,  4,  6), 
                                     osim.Vec3( 8, 10, 12),
                                     osim.Vec3(14, 16, 18)])
         table.appendRow(0.2, row)
@@ -430,7 +409,7 @@ class TestDataTable(unittest.TestCase):
                 str(row1[2]) == str(row[2]))
         print(table)
         # Append another row to the table.
-        row = osim.RowVectorVec3([osim.Vec3( 4,  8, 12), 
+        row = osim.RowVectorOfVec3([osim.Vec3( 4,  8, 12), 
                                     osim.Vec3(16, 20, 24),
                                     osim.Vec3(28, 32, 36)])
         table.appendRow(0.3, row)
@@ -518,7 +497,7 @@ class TestDataTable(unittest.TestCase):
         table.setColumnLabels(['0', '1', '2'])
         assert table.getColumnLabels() == ('0', '1', '2')
         # Append a row to the table.
-        row = osim.RowVectorVec3([osim.Vec3(1, 2, 3), 
+        row = osim.RowVectorOfVec3([osim.Vec3(1, 2, 3), 
                                     osim.Vec3(4, 5, 6),
                                     osim.Vec3(7, 8, 9)])
         table.appendRow(0.1, row)
@@ -530,7 +509,7 @@ class TestDataTable(unittest.TestCase):
                 str(row0[2]) == str(row[2]))
         print(table)
         # Append another row to the table.
-        row = osim.RowVectorVec3([osim.Vec3( 2,  4,  6), 
+        row = osim.RowVectorOfVec3([osim.Vec3( 2,  4,  6), 
                                     osim.Vec3( 8, 10, 12),
                                     osim.Vec3(14, 16, 18)])
         table.appendRow(0.2, row)

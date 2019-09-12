@@ -207,7 +207,7 @@ int main()
     // test that kinematic loops are broken to form a tree with constraints
     try { ++itc; testAutomaticLoopJointBreaker(); }
     catch (const std::exception& e){
-        cout << e.what() <<endl;
+        cout << e.what() <<endl; 
         failures.push_back("testAutomaticLoopJointBreaker");
     }
 
@@ -250,7 +250,7 @@ int main()
     // Compare previous OpenSim model but with randomized body order in BodySet to test connectBodies
     try { ++itc; testWeldJoint(true); }
     catch (const std::exception& e){
-        cout << e.what() <<endl;
+        cout << e.what() <<endl; 
         failures.push_back("testWeldJoint (random order)");
     }
 
@@ -261,7 +261,7 @@ int main()
     catch (const std::exception& e){
         cout << e.what() <<endl; failures.push_back("testBallJoint");
     }
-    // Compare behavior of a Free hip and pin knee
+    // Compare behavior of a Free hip and pin knee 
     // OpenSim, system restricted to using Euler angles exclusively to support EllipsoidJoint
     // and the fact that coordinates cannot map to/from quaternions
     try { ++itc; testFreeJoint(); }
@@ -372,16 +372,15 @@ void integrateOpenSimModel(Model *osimModel, SimTK::State &osim_state)
 
     // SETUP OpenSim SIMULATION Manager
     osimModel->getMultibodySystem().realize(osim_state, Stage::Velocity);
-    Manager manager(*osimModel);
-    manager.setIntegratorMethod(Manager::IntegratorMethod::RungeKuttaFeldberg);
-    manager.setIntegratorAccuracy(integ_accuracy);
+    RungeKuttaFeldbergIntegrator integrator(osimModel->getMultibodySystem() );
+    integrator.setAccuracy(integ_accuracy);
+    Manager manager(*osimModel, integrator);
 
     // Specify the initial and final times of the simulation.
     // In this case, the initial and final times are set based on
     // the range of times over which the controls are available.
     //Control *control;
     osim_state.setTime(0.0);
-    manager.initialize(osim_state);
 
     // Integrate
     /*const SimbodyMatterSubsystem& matter2 = */osimModel->getMultibodySystem().getMatterSubsystem();
@@ -390,7 +389,7 @@ void integrateOpenSimModel(Model *osimModel, SimTK::State &osim_state)
     //cout << osim_state.getQ()<<endl;
     //cout << "\n\nOpenSim Integration 0.0 to " << duration << endl;
 
-    osim_state = manager.integrate(duration);
+    manager.integrate(osim_state, duration);
 }
 
 void compareSimulationStates(const SimTK::Vector &q_sb, const SimTK::Vector &u_sb, const SimTK::Vector &q_osim, const SimTK::Vector &u_osim, string errorMessagePrefix = "")
@@ -576,7 +575,6 @@ void testCustomVsUniversalPin()
 
     std::cout << osimModel.getCoordinateSet().getSize() << std::endl;
 
-    osimModel.finalizeConnections();
     osimModel.print("testCustomVsUniversalPin.osim");
 
     testEquivalentBodyForceForGenForces(osimModel);
@@ -1345,15 +1343,13 @@ void testPinJoint()
     ASSERT(knee2.numCoordinates() == knee.numCoordinates());
     ASSERT(knee2.get_coordinates(0).getName() == "knee_q");
 
-    auto* thigh_offset = new PhysicalOffsetFrame(
-        "thigh_offset", osim_thigh,
+    PhysicalOffsetFrame thigh_offset("thigh_offset", osim_thigh,
         SimTK::Transform(Rotation(BodyRotationSequence,
             oInP[0], XAxis,
             oInP[1], YAxis,
             oInP[2], ZAxis), kneeInFemur));
 
-    auto* shank_offset = new PhysicalOffsetFrame(
-        "shank_offset", osim_shank,
+    PhysicalOffsetFrame shank_offset("shank_offset", osim_shank,
         SimTK::Transform(Rotation(BodyRotationSequence,
             oInB[0], XAxis,
             oInB[1], YAxis,
@@ -1361,11 +1357,21 @@ void testPinJoint()
 
     // Exercise new convenience constructor with common use case of adding
     // offsets to the body of interest
-    PinJoint knee3("knee", *thigh_offset, *shank_offset);
-    knee3.addFrame(thigh_offset);
-    knee3.addFrame(shank_offset);
+    PinJoint knee3("knee", thigh_offset, shank_offset);
+    knee3.append_frames(thigh_offset);
+    knee3.append_frames(shank_offset);
     // use the same coordinate name
     knee3.upd_coordinates(0).setName("knee_q");
+
+    knee3.finalizeConnections(*osimModel);
+    knee3.printSocketInfo();
+    knee3.printInputInfo();
+    knee3.printSubcomponentInfo();
+
+    knee.finalizeConnections(*osimModel);
+    knee.printSocketInfo();
+    knee.printInputInfo();
+    knee.printSubcomponentInfo();
 
     // once connected the two ways of constructing the knee joint should
     // yield identical definitions
@@ -1971,8 +1977,7 @@ void testEquivalentBodyForceForGenForces(Model& model)
     model.getMultibodySystem().realize(state, SimTK::Stage::Acceleration);
     matter.calcAcceleration(state, genForces, bodyForces, udot1, bodyAccs);
 
-    // Construct the system vector of body forces from a Joint's equivalence to
-    // generalized force calculations
+    // Construct the system vector of body forces from a Joint's  equivalence to generalized force calculations
     for(int j=0; j < model.getJointSet().getSize(); ++j){
         Joint &joint = model.getJointSet()[j];
         const PhysicalFrame& B = joint.getChildFrame();
@@ -2039,7 +2044,7 @@ void testAddedFreeJointForBodyWithoutJoint()
 
     model.initSystem();
 
-    ASSERT_EQUAL(6, model.getNumCoordinates());
+    ASSERT_EQUAL(6, model.getNumCoordinates(), 0);
     model.printBasicInfo();
 }
 
@@ -2141,8 +2146,8 @@ void testAutomaticJointReversal()
     modelConstrained.finalizeFromProperties();
 
     const Ground& cground = modelConstrained.getGround();
-    const Body& cpelvis = modelConstrained.getComponent<Body>("./bodyset/pelvis");
-    const Body& cfoot = modelConstrained.getComponent<Body>("./bodyset/foot");
+    const Body& cpelvis = modelConstrained.getComponent<Body>("pelvis");
+    const Body& cfoot = modelConstrained.getComponent<Body>("foot");
 
     // free the pelvis
     auto pelvisFree = new FreeJoint("pelvisFree", cground, zvec, zvec,
@@ -2162,21 +2167,21 @@ void testAutomaticJointReversal()
                                   cfoot, zvec, zvec, cground, footInGround, zvec);
     modelConstrained.addConstraint(footConstraint);
 
-    auto fcpath = footConstraint->getRelativePathString(cfoot);
+    auto fcpath = footConstraint->getRelativePathName(cfoot);
 
     auto& off1 = footConstraint->getFrame1();
     auto& sock1 = off1.getSocket<PhysicalFrame>("parent");
     auto& off2 = footConstraint->getFrame2();
     auto& sock2 = off2.getSocket<PhysicalFrame>("parent");
 
-    auto off1Path = off1.getAbsolutePathString();
-    auto off2Path = off2.getAbsolutePathString();
+    auto off1Path = off1.getAbsolutePathName();
+    auto off2Path = off2.getAbsolutePathName();
 
-    /*auto& pathOff1 = */sock1.getConnecteePath();
-    /*auto& pathOff2 = */sock2.getConnecteePath();
+    /*auto& pathOff1 = */sock1.getConnecteeName();
+    /*auto& pathOff2 = */sock2.getConnecteeName();
 
-    auto relPathOff1 = cfoot.getRelativePathString(off1);
-    auto relPathOff2 = cground.getRelativePathString(off2);
+    auto relPathOff1 = cfoot.getRelativePathName(off1);
+    auto relPathOff2 = cground.getRelativePathName(off2);
 
     //modelConstrained.setUseVisualizer(true);
     modelConstrained.printSubcomponentInfo();
@@ -2235,7 +2240,7 @@ void testUserJointReversal()
 
     // Open model.
     auto model = Model("double_pendulum_testReverse.osim");
-    model.finalizeConnections(); //calls finalizeFromProperties internally
+    model.finalizeConnections(model); //calls finalizeFromProperties internally
 
     // In this model file:
     // - pin1's parent is ground and child is rod1
@@ -2244,7 +2249,7 @@ void testUserJointReversal()
     // deserialization, the following should be true:
     // - pin1's parent is ground and child is rod1
     // - pin2's parent is rod2 and child is rod1 (parent and child are swapped)
-    auto& pin1 = model.getComponent<Joint>("./jointset/pin1");
+    auto& pin1 = model.getComponent<Joint>("pin1");
     ASSERT(pin1.getParentFrame().findBaseFrame().getName() == "ground",
         __FILE__, __LINE__,
         "Incorrect parent frame when 'reverse' element is set to 'false'");
@@ -2252,7 +2257,7 @@ void testUserJointReversal()
         __FILE__, __LINE__,
         "Incorrect child frame when 'reverse' element is set to 'false'");
 
-    auto& pin2 = model.getComponent<Joint>("./jointset/pin2");
+    auto& pin2 = model.getComponent<Joint>("pin2");
     ASSERT(pin2.getParentFrame().findBaseFrame().getName() == "rod2",
         __FILE__, __LINE__,
         "Incorrect parent frame when 'reverse' element is set to 'true'");
@@ -2495,112 +2500,69 @@ void testUniversalJointAccessors()
 
 void testMotionTypesForCustomJointCoordinates()
 {
-    {
-        Model osimModel;
+    Model osimModel;
 
-        //OpenSim bodies
-        const Ground& ground = osimModel.getGround();
-        //OpenSim thigh
-        auto osim_thigh = new OpenSim::Body ("thigh", femurMass.getMass(),
-                femurMass.getMassCenter(), femurMass.getInertia());
+    //OpenSim bodies
+    const Ground& ground = osimModel.getGround();
+    //OpenSim thigh
+    auto osim_thigh = new OpenSim::Body ("thigh", femurMass.getMass(),
+        femurMass.getMassCenter(), femurMass.getInertia());
 
-        // Define hip coordinates and axes for custom joint
-        SpatialTransform hipTransform;
-        OpenSim::Array<std::string> coordNames;
-        coordNames.append("hip_qx");
-        coordNames.append("hip_qy");
-        hipTransform[2].setCoordinateNames(coordNames);
-        hipTransform[2].setFunction(new MultidimensionalFunction());
-        hipTransform[3].setCoordinateNames(OpenSim::Array<std::string>(coordNames[0], 1, 1));
-        hipTransform[3].setFunction(new LinearFunction());
-        hipTransform[4].setCoordinateNames(OpenSim::Array<std::string>(coordNames[1], 1, 1));
-        hipTransform[4].setFunction(new LinearFunction(2.0, -0.5));
-        // define a pure translational dof
-        coordNames.append("hip_tz");
-        hipTransform[5].setCoordinateNames(OpenSim::Array<std::string>(coordNames[2], 1, 1));
-        hipTransform[5].setFunction(new LinearFunction());
+    // Define hip coordinates and axes for custom joint
+    SpatialTransform hipTransform;
+    OpenSim::Array<std::string> coordNames;
+    coordNames.append("hip_qx");
+    coordNames.append("hip_qy");
+    hipTransform[2].setCoordinateNames(coordNames);
+    hipTransform[2].setFunction(new MultidimensionalFunction());
+    hipTransform[3].setCoordinateNames(OpenSim::Array<std::string>(coordNames[0], 1, 1));
+    hipTransform[3].setFunction(new LinearFunction());
+    hipTransform[4].setCoordinateNames(OpenSim::Array<std::string>(coordNames[1], 1, 1));
+    hipTransform[4].setFunction(new LinearFunction(2.0, -0.5));
+    // define a pure translational dof
+    coordNames.append("hip_tz");
+    hipTransform[5].setCoordinateNames(OpenSim::Array<std::string>(coordNames[2], 1, 1));
+    hipTransform[5].setFunction(new LinearFunction());
 
-        // define a pure rotational dof
-        coordNames.append("hip_rx");
-        hipTransform[0].setCoordinateNames(OpenSim::Array<std::string>(coordNames[3], 1, 1));
-        hipTransform[0].setFunction(new LinearFunction());
+    // define a pure rotational dof
+    coordNames.append("hip_rx");
+    hipTransform[0].setCoordinateNames(OpenSim::Array<std::string>(coordNames[3], 1, 1));
+    hipTransform[0].setFunction(new LinearFunction());
 
-        // create custom hip joint
-        auto hip = new CustomJoint("hip", ground, hipInPelvis, SimTK::Vec3(0),
-                *osim_thigh, hipInFemur, SimTK::Vec3(0), hipTransform);
+    // create custom hip joint
+    auto hip = new CustomJoint("hip", ground, hipInPelvis, SimTK::Vec3(0),
+        *osim_thigh, hipInFemur, SimTK::Vec3(0), hipTransform);
 
-        // Add the thigh body which now also contains the hip joint to the model
-        osimModel.addBody(osim_thigh);
-        osimModel.addJoint(hip);
+    // Add the thigh body which now also contains the hip joint to the model
+    osimModel.addBody(osim_thigh);
+    osimModel.addJoint(hip);
 
-        // hip_rx is the first coordinate and pure rotational about X
-        auto coordName = hip->getCoordinate(0).getName();
-        auto mt = hip->getCoordinate(0).getMotionType();
-        ASSERT( mt == Coordinate::MotionType::Rotational, __FILE__, __LINE__,
-                "Coordinate `" + coordName + "' failed to register as MotionType::Rotational");
+    // hip_rx is the first coordinate and pure rotational about X
+    auto coordName = hip->getCoordinate(0).getName();
+    auto mt = hip->getCoordinate(0).getMotionType();
+    ASSERT( mt == Coordinate::MotionType::Rotational, __FILE__, __LINE__,
+        "Coordinate `" + coordName + "' failed to register as MotionType::Rotational");
 
-        // hip_qx is the second coordinate that influences Z rotation but is pure
-        // translational along X
-        coordName = hip->getCoordinate(1).getName();
-        mt = hip->getCoordinate(1).getMotionType();
-        ASSERT( mt == Coordinate::MotionType::Translational, __FILE__, __LINE__,
-                "Coordinate `" + coordName + "' failed to register as MotionType::Translational");
+    // hip_qx is the second coordinate that influences Z rotation but is pure
+    // translational along X
+    coordName = hip->getCoordinate(1).getName();
+     mt = hip->getCoordinate(1).getMotionType();
+    ASSERT( mt == Coordinate::MotionType::Translational, __FILE__, __LINE__,
+        "Coordinate `" + coordName + "' failed to register as MotionType::Translational");
 
-        // hip_qy is the third coordinate that also influences Z rotation but is scaled
-        // to translate along Y and therefore NOT a pure translational coordinate either
-        coordName = hip->getCoordinate(2).getName();
-        mt = hip->getCoordinate(2).getMotionType();
-        ASSERT( mt == Coordinate::MotionType::Coupled, __FILE__, __LINE__,
-                "Coordinate `" + coordName + "' failed to register as MotionType::Coupled");
+    // hip_qy is the third coordinate that also influences Z rotation but is scaled
+    // to translate along Y and therefore NOT a pure translational coordinate either
+    coordName = hip->getCoordinate(2).getName();
+    mt = hip->getCoordinate(2).getMotionType();
+    ASSERT( mt == Coordinate::MotionType::Coupled, __FILE__, __LINE__,
+        "Coordinate `" + coordName + "' failed to register as MotionType::Coupled");
 
-        // hip_tz is the fourth coordinate, which is pure translational along Z
-        coordName = hip->getCoordinate(3).getName();
-        mt = hip->getCoordinate(3).getMotionType();
-        ASSERT( mt == Coordinate::MotionType::Translational, __FILE__, __LINE__,
-                "Coordinate `" + coordName + 
-                "' failed to register as MotionType::Translational");
-    }
-    {
-        // Specifying a linear function with slope of -1 should still yield a
-        // rotational coordinate.
-        // This checks that Issue 2062 is fixed.
-        // https://github.com/opensim-org/opensim-core/issues/2062.
-        Model osimModel;
-
-        //OpenSim bodies
-        const Ground& ground = osimModel.getGround();
-        //OpenSim thigh
-        auto osim_thigh = new OpenSim::Body ("thigh", femurMass.getMass(),
-                femurMass.getMassCenter(), femurMass.getInertia());
-
-        SpatialTransform hipTransform;
-        std::string coordNameRX = "hip_rx";
-        hipTransform[0].setCoordinateNames(OpenSim::Array<std::string>(coordNameRX, 1, 1));
-        hipTransform[0].setFunction(new LinearFunction(-1.0, 0.0));
-
-        std::string coordNameRY = "hip_ry";
-        hipTransform[1].setCoordinateNames(OpenSim::Array<std::string>(coordNameRY, 1, 1));
-        // A non-zero intercept does not prevent the coordinate from being
-        // rotational.
-        hipTransform[1].setFunction(new LinearFunction(-1.0, 8.313));
-
-        // create custom hip joint
-        auto hip = new CustomJoint("hip", ground, hipInPelvis, SimTK::Vec3(0),
-                *osim_thigh, hipInFemur, SimTK::Vec3(0), hipTransform);
-
-        // Add the thigh body which now also contains the hip joint to the model
-        osimModel.addBody(osim_thigh);
-        osimModel.addJoint(hip);
-
-        // hip_rx is the first coordinate and pure rotational about X
-        auto mt = hip->getCoordinate(0).getMotionType();
-        ASSERT( mt == Coordinate::MotionType::Rotational, __FILE__, __LINE__,
-                "Coordinate `" + coordNameRX + "' failed to register as MotionType::Rotational");
-        // hip_ry is the second coordinate and pure rotational about Y
-        mt = hip->getCoordinate(1).getMotionType();
-        ASSERT( mt == Coordinate::MotionType::Rotational, __FILE__, __LINE__,
-                "Coordinate `" + coordNameRY + "' failed to register as MotionType::Rotational");
-    }
+    // hip_tz is the fourth coordinate, which is pure translational along Z
+    coordName = hip->getCoordinate(3).getName();
+    mt = hip->getCoordinate(3).getMotionType();
+    ASSERT( mt == Coordinate::MotionType::Translational, __FILE__, __LINE__,
+        "Coordinate `" + coordName + 
+        "' failed to register as MotionType::Translational");
 }
 
 void testNonzeroInterceptCustomJointVsPin()

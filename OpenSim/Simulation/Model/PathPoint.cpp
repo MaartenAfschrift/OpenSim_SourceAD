@@ -25,7 +25,6 @@
 // INCLUDES
 //=============================================================================
 #include "PathPoint.h"
-#include <OpenSim/Common/ScaleSet.h>
 
 //=============================================================================
 // STATICS
@@ -53,7 +52,7 @@ void PathPoint::extendFinalizeFromProperties()
     Super::extendFinalizeFromProperties();
     updStation().upd_location() = get_location();
     updStation().updSocket("parent_frame").
-            setConnecteePath(updSocket("parent_frame").getConnecteePath());
+        setConnecteeName(updSocket("parent_frame").getConnecteeName());
 }
 
 void PathPoint::setLocation(const SimTK::Vec3& location) {
@@ -91,19 +90,8 @@ changeBodyPreserveLocation(const SimTK::State& s, const PhysicalFrame& frame)
     setParentFrame(frame);
 }
 
-void PathPoint::extendScale(const SimTK::State& s, const ScaleSet& scaleSet)
-{
-    Super::extendScale(s, scaleSet);
-
-    // Get scale factors (if an entry for the parent Frame's base Body exists).
-    const Vec3& scaleFactors = getScaleFactors(scaleSet, getParentFrame());
-    if (scaleFactors == ModelComponent::InvalidScaleFactors)
-        return;
-
-    // Note: Currently, PathPoint and its Station subcomponent both have a
-    //       property named "location" and the values of these properties should
-    //       always match. We scale only PathPoint's "location" property here;
-    //       the "location" property on Station will be similarly adjusted when
-    //       Station's scale() method is called.
-    upd_location() = get_location().elementwiseMultiply(scaleFactors);
+void PathPoint::scale(const SimTK::Vec3& scaleFactors) {
+    auto& loc = upd_location();
+    loc = loc.elementwiseMultiply(scaleFactors);
+    updStation().upd_location() = loc;
 }

@@ -25,6 +25,7 @@
 //=============================================================================
 #include "SegmentedQuinticBezierToolkit.h"
 #include <fstream>
+#include "osim_adouble.h"
 
 
 //=============================================================================
@@ -67,7 +68,7 @@ void SegmentedQuinticBezierToolkit::
 } 
 
 void SegmentedQuinticBezierToolkit::
-    printBezierSplineFitCurves(const SimTK::Function_<double>& curveFit, 
+    printBezierSplineFitCurves(const SimTK::Function_<osim_double_adouble>& curveFit, 
     SimTK::Matrix& ctrlPts, SimTK::Vector& xVal, SimTK::Vector& yVal, 
     std::string& filename)
 {
@@ -91,7 +92,7 @@ void SegmentedQuinticBezierToolkit::
         deriv1[0] = 0;
         deriv2[0] = 0;
         deriv2[1] = 0;
-        double u = 0;
+        osim_double_adouble u = 0;
         int oidx = 0;
         int offset = 0;
         for(int j=0; j < nbezier ; j++)
@@ -104,7 +105,7 @@ void SegmentedQuinticBezierToolkit::
             {
               oidx = i + j*NUM_SAMPLE_PTS - offset*(j-1);
 
-              u = ( (double)(i+offset) )/( (double)(NUM_SAMPLE_PTS-1) );
+              u = ( (osim_double_adouble)(i+offset) )/( (osim_double_adouble)(NUM_SAMPLE_PTS-1) );
               y1Val(oidx) = calcQuinticBezierCurveDerivDYDX(u,
                   ctrlPts(2*j),ctrlPts(2*j+1),1);
               y2Val(oidx) = calcQuinticBezierCurveDerivDYDX(u,
@@ -139,8 +140,8 @@ void SegmentedQuinticBezierToolkit::
         1           13              9              23
 */
 SimTK::Matrix SegmentedQuinticBezierToolkit::
-    calcQuinticBezierCornerControlPoints(double x0, double y0, double dydx0, 
-                           double x1, double y1, double dydx1, double curviness)
+    calcQuinticBezierCornerControlPoints(osim_double_adouble x0, osim_double_adouble y0, osim_double_adouble dydx0, 
+                           osim_double_adouble x1, osim_double_adouble y1, osim_double_adouble dydx1, osim_double_adouble curviness)
 {
     SimTK::Matrix xyPts(6,2); 
 
@@ -154,10 +155,10 @@ SimTK::Matrix SegmentedQuinticBezierToolkit::
     //   x*(dydx0-dydx1) = y1-y0-x1*dydx1+x0*dydx0
     //                 x = (y1-y0-x1*dydx1+x0*dydx0)/(dydx0-dydx1);
 
-    double xC = 0;
-    double yC = 0;
-    double rootEPS = sqrt(SimTK::Eps);
-    if(abs(dydx0-dydx1) > rootEPS){
+    osim_double_adouble xC = 0;
+    osim_double_adouble yC = 0;
+    osim_double_adouble rootEPS = sqrt(SimTK::Eps);
+    if(fabs(dydx0-dydx1) > rootEPS){
         xC = (y1-y0-x1*dydx1+x0*dydx0)/(dydx0-dydx1);    
     }else{
         xC = (x1+x0)/2;
@@ -173,16 +174,16 @@ SimTK::Matrix SegmentedQuinticBezierToolkit::
     //'C' shaped curve. If this is not true, an 'S' shaped curve will result, 
     //and this function should not be used.
 
-    double xCx0 = (xC-x0);
-    double yCy0 = (yC-y0);
-    double xCx1 = (xC-x1);
-    double yCy1 = (yC-y1);
-    double x0x1 = (x1-x0);
-    double y0y1 = (y1-y0);
+    osim_double_adouble xCx0 = (xC-x0);
+    osim_double_adouble yCy0 = (yC-y0);
+    osim_double_adouble xCx1 = (xC-x1);
+    osim_double_adouble yCy1 = (yC-y1);
+    osim_double_adouble x0x1 = (x1-x0);
+    osim_double_adouble y0y1 = (y1-y0);
 
-    double a = xCx0*xCx0 + yCy0*yCy0;
-    double b = xCx1*xCx1 + yCy1*yCy1;
-    double c = x0x1*x0x1 + y0y1*y0y1;
+    osim_double_adouble a = xCx0*xCx0 + yCy0*yCy0;
+    osim_double_adouble b = xCx1*xCx1 + yCy1*yCy1;
+    osim_double_adouble c = x0x1*x0x1 + y0y1*y0y1;
 
     //This error message needs to be better.
     SimTK_ERRCHK_ALWAYS( ((c > a) && (c > b)), 
@@ -242,10 +243,10 @@ SimTK::Matrix SegmentedQuinticBezierToolkit::
 Multiplications     Additions   Assignments
 21                  20          13
 */
-double  SegmentedQuinticBezierToolkit::
-    calcQuinticBezierCurveVal(double u, const SimTK::Vector& pts)
+osim_double_adouble  SegmentedQuinticBezierToolkit::
+    calcQuinticBezierCurveVal(osim_double_adouble u, const SimTK::Vector& pts)
 {
-    double val = -1;
+    osim_double_adouble val = -1;
 
 
     SimTK_ERRCHK1_ALWAYS( (u>=0 && u <= 1) , 
@@ -260,29 +261,29 @@ double  SegmentedQuinticBezierToolkit::
         "Error: vector argument pts must have a length of 6.");
 
     //Compute the Bezier point
-    double p0 = pts(0);
-    double p1 = pts(1);
-    double p2 = pts(2);
-    double p3 = pts(3);
-    double p4 = pts(4);
-    double p5 = pts(5);
+    osim_double_adouble p0 = pts(0);
+    osim_double_adouble p1 = pts(1);
+    osim_double_adouble p2 = pts(2);
+    osim_double_adouble p3 = pts(3);
+    osim_double_adouble p4 = pts(4);
+    osim_double_adouble p5 = pts(5);
 
-    double u5 = 1;
-    double u4 = u;
-    double u3 = u4*u;
-    double u2 = u3*u;
-    double u1 = u2*u;
-    double u0 = u1*u;
+    osim_double_adouble u5 = 1;
+    osim_double_adouble u4 = u;
+    osim_double_adouble u3 = u4*u;
+    osim_double_adouble u2 = u3*u;
+    osim_double_adouble u1 = u2*u;
+    osim_double_adouble u0 = u1*u;
 
     //See lines 1-6 of MuscleCurveCodeOpt_20120210
-    double t2 = u1 * 0.5e1;
-    double t3 = u2 * 0.10e2;
-    double t4 = u3 * 0.10e2;
-    double t5 = u4 * 0.5e1;
-    double t9 = u0 * 0.5e1;
-    double t10 = u1 * 0.20e2;
-    double t11 = u2 * 0.30e2;
-    double t15 = u0 * 0.10e2;
+    osim_double_adouble t2 = u1 * 0.5e1;
+    osim_double_adouble t3 = u2 * 0.10e2;
+    osim_double_adouble t4 = u3 * 0.10e2;
+    osim_double_adouble t5 = u4 * 0.5e1;
+    osim_double_adouble t9 = u0 * 0.5e1;
+    osim_double_adouble t10 = u1 * 0.20e2;
+    osim_double_adouble t11 = u2 * 0.30e2;
+    osim_double_adouble t15 = u0 * 0.10e2;
     val = p0 * (u0 * (-0.1e1) + t2 - t3 + t4 - t5 + u5 * 0.1e1) 
         + p1 * (t9 - t10 + t11 + u3 * (-0.20e2) + t5) 
         + p2 * (-t15 + u1 * 0.30e2 - t11 + t4) 
@@ -364,10 +365,10 @@ Detailed Computational Costs
             total   9           334             209         106
 
 */
-double SegmentedQuinticBezierToolkit::calcQuinticBezierCurveDerivDYDX(double u,
+osim_double_adouble SegmentedQuinticBezierToolkit::calcQuinticBezierCurveDerivDYDX(osim_double_adouble u,
                 const SimTK::Vector& xpts, const SimTK::Vector& ypts, int order)
 {
-    double val = SimTK::NaN;
+    osim_double_adouble val = SimTK::NaN;
    
     //Bounds checking on the input
     SimTK_ERRCHK_ALWAYS( (u>=0 && u <= 1) , 
@@ -396,9 +397,9 @@ double SegmentedQuinticBezierToolkit::calcQuinticBezierCurveDerivDYDX(double u,
      switch(order){
         case 1: //Calculate dy/dx 
             { 
-                double dxdu =calcQuinticBezierCurveDerivU(u,xpts,1);
-                double dydu =calcQuinticBezierCurveDerivU(u,ypts,1);
-                double dydx = dydu/dxdu;
+                osim_double_adouble dxdu =calcQuinticBezierCurveDerivU(u,xpts,1);
+                osim_double_adouble dydu =calcQuinticBezierCurveDerivU(u,ypts,1);
+                osim_double_adouble dydx = dydu/dxdu;
 
                 val = dydx;
                 //Question: 
@@ -407,16 +408,16 @@ double SegmentedQuinticBezierToolkit::calcQuinticBezierCurveDerivDYDX(double u,
             break;
         case 2: //Calculate d^2y/dx^2
             { 
-               double dxdu  =calcQuinticBezierCurveDerivU(u,xpts,1);
-               double dydu  =calcQuinticBezierCurveDerivU(u,ypts,1);
-               double d2xdu2=calcQuinticBezierCurveDerivU(u,xpts,2);
-               double d2ydu2=calcQuinticBezierCurveDerivU(u,ypts,2);
+               osim_double_adouble dxdu  =calcQuinticBezierCurveDerivU(u,xpts,1);
+               osim_double_adouble dydu  =calcQuinticBezierCurveDerivU(u,ypts,1);
+               osim_double_adouble d2xdu2=calcQuinticBezierCurveDerivU(u,xpts,2);
+               osim_double_adouble d2ydu2=calcQuinticBezierCurveDerivU(u,ypts,2);
                 
                 //Optimized code from Maple - 
                 //see MuscleCurveCodeOpt_20120210 for details
-                double t1 = 0.1e1 / dxdu;
-                double t3 = dxdu*dxdu;//dxdu ^ 2;
-                double d2ydx2 = (d2ydu2 * t1 - dydu / t3 * d2xdu2) * t1;
+                osim_double_adouble t1 = 0.1e1 / dxdu;
+                osim_double_adouble t3 = dxdu*dxdu;//dxdu ^ 2;
+                osim_double_adouble d2ydx2 = (d2ydu2 * t1 - dydu / t3 * d2xdu2) * t1;
 
                 val = d2ydx2;
 
@@ -424,19 +425,19 @@ double SegmentedQuinticBezierToolkit::calcQuinticBezierCurveDerivDYDX(double u,
             break;
         case 3: //Calculate d^3y/dx^3
             { 
-               double dxdu  =calcQuinticBezierCurveDerivU(u,xpts,1);
-               double dydu  =calcQuinticBezierCurveDerivU(u,ypts,1);
-               double d2xdu2=calcQuinticBezierCurveDerivU(u,xpts,2);
-               double d2ydu2=calcQuinticBezierCurveDerivU(u,ypts,2);
-               double d3xdu3=calcQuinticBezierCurveDerivU(u,xpts,3);
-               double d3ydu3=calcQuinticBezierCurveDerivU(u,ypts,3);
+               osim_double_adouble dxdu  =calcQuinticBezierCurveDerivU(u,xpts,1);
+               osim_double_adouble dydu  =calcQuinticBezierCurveDerivU(u,ypts,1);
+               osim_double_adouble d2xdu2=calcQuinticBezierCurveDerivU(u,xpts,2);
+               osim_double_adouble d2ydu2=calcQuinticBezierCurveDerivU(u,ypts,2);
+               osim_double_adouble d3xdu3=calcQuinticBezierCurveDerivU(u,xpts,3);
+               osim_double_adouble d3ydu3=calcQuinticBezierCurveDerivU(u,ypts,3);
 
-               double t1 = 1 / dxdu;
-               double t3 = dxdu*dxdu;//(dxdu ^ 2);
-               double t4 = 1 / t3;
-               double t11 = d2xdu2*d2xdu2;//(d2xdu2 ^ 2);
-               double t14 = (dydu * t4);
-               double d3ydx3 = ((d3ydu3 * t1 - 2 * d2ydu2 * t4 * d2xdu2 
+               osim_double_adouble t1 = 1 / dxdu;
+               osim_double_adouble t3 = dxdu*dxdu;//(dxdu ^ 2);
+               osim_double_adouble t4 = 1 / t3;
+               osim_double_adouble t11 = d2xdu2*d2xdu2;//(d2xdu2 ^ 2);
+               osim_double_adouble t14 = (dydu * t4);
+               osim_double_adouble d3ydx3 = ((d3ydu3 * t1 - 2 * d2ydu2 * t4 * d2xdu2 
                    + 2 * dydu / t3 / dxdu * t11 - t14 * d3xdu3) * t1 
                    - (d2ydu2 * t1 - t14 * d2xdu2) * t4 * d2xdu2) * t1;
 
@@ -445,29 +446,29 @@ double SegmentedQuinticBezierToolkit::calcQuinticBezierCurveDerivDYDX(double u,
             break;
         case 4: //Calculate d^4y/dx^4
             { 
-               double dxdu  =calcQuinticBezierCurveDerivU(u,xpts,1);
-               double dydu  =calcQuinticBezierCurveDerivU(u,ypts,1);
-               double d2xdu2=calcQuinticBezierCurveDerivU(u,xpts,2);
-               double d2ydu2=calcQuinticBezierCurveDerivU(u,ypts,2);
-               double d3xdu3=calcQuinticBezierCurveDerivU(u,xpts,3);
-               double d3ydu3=calcQuinticBezierCurveDerivU(u,ypts,3);
-               double d4xdu4=calcQuinticBezierCurveDerivU(u,xpts,4);
-               double d4ydu4=calcQuinticBezierCurveDerivU(u,ypts,4);
+               osim_double_adouble dxdu  =calcQuinticBezierCurveDerivU(u,xpts,1);
+               osim_double_adouble dydu  =calcQuinticBezierCurveDerivU(u,ypts,1);
+               osim_double_adouble d2xdu2=calcQuinticBezierCurveDerivU(u,xpts,2);
+               osim_double_adouble d2ydu2=calcQuinticBezierCurveDerivU(u,ypts,2);
+               osim_double_adouble d3xdu3=calcQuinticBezierCurveDerivU(u,xpts,3);
+               osim_double_adouble d3ydu3=calcQuinticBezierCurveDerivU(u,ypts,3);
+               osim_double_adouble d4xdu4=calcQuinticBezierCurveDerivU(u,xpts,4);
+               osim_double_adouble d4ydu4=calcQuinticBezierCurveDerivU(u,ypts,4);
 
-               double t1 = 1 / dxdu;
-               double t3 = dxdu*dxdu;//dxdu ^ 2;
-               double t4 = 1 / t3;
-               double t9 = (0.1e1 / t3 / dxdu);
-               double t11 = d2xdu2*d2xdu2;//(d2xdu2 ^ 2);
-               double t14 = (d2ydu2 * t4);
-               double t17 = t3*t3;//(t3 ^ 2);
-               double t23 = (dydu * t9);
-               double t27 = (dydu * t4);
-               double t37 = d3ydu3 * t1 - 2 * t14 * d2xdu2 + 2 * t23 * t11 
+               osim_double_adouble t1 = 1 / dxdu;
+               osim_double_adouble t3 = dxdu*dxdu;//dxdu ^ 2;
+               osim_double_adouble t4 = 1 / t3;
+               osim_double_adouble t9 = (0.1e1 / t3 / dxdu);
+               osim_double_adouble t11 = d2xdu2*d2xdu2;//(d2xdu2 ^ 2);
+               osim_double_adouble t14 = (d2ydu2 * t4);
+               osim_double_adouble t17 = t3*t3;//(t3 ^ 2);
+               osim_double_adouble t23 = (dydu * t9);
+               osim_double_adouble t27 = (dydu * t4);
+               osim_double_adouble t37 = d3ydu3 * t1 - 2 * t14 * d2xdu2 + 2 * t23 * t11 
                             - t27 * d3xdu3;
-               double t43 = d2ydu2 * t1 - t27 * d2xdu2;
-               double t47 = t43 * t4;
-               double d4ydx4 = (((d4ydu4 * t1 - 3 * d3ydu3 * t4 * d2xdu2 
+               osim_double_adouble t43 = d2ydu2 * t1 - t27 * d2xdu2;
+               osim_double_adouble t47 = t43 * t4;
+               osim_double_adouble d4ydx4 = (((d4ydu4 * t1 - 3 * d3ydu3 * t4 * d2xdu2 
                        + 6 * d2ydu2 * t9 * t11 - 3 * t14 * d3xdu3 
                        - 6 * dydu / t17 * t11 * d2xdu2 + 6 * t23 * d2xdu2 * d3xdu3
                        - t27 * d4xdu4) * t1 - 2 * t37 * t4 * d2xdu2 
@@ -481,45 +482,45 @@ double SegmentedQuinticBezierToolkit::calcQuinticBezierCurveDerivDYDX(double u,
             break;
         case 5: 
             { 
-               double dxdu  =calcQuinticBezierCurveDerivU(u,xpts,1);
-               double dydu  =calcQuinticBezierCurveDerivU(u,ypts,1);
-               double d2xdu2=calcQuinticBezierCurveDerivU(u,xpts,2);
-               double d2ydu2=calcQuinticBezierCurveDerivU(u,ypts,2);
-               double d3xdu3=calcQuinticBezierCurveDerivU(u,xpts,3);
-               double d3ydu3=calcQuinticBezierCurveDerivU(u,ypts,3);
-               double d4xdu4=calcQuinticBezierCurveDerivU(u,xpts,4);
-               double d4ydu4=calcQuinticBezierCurveDerivU(u,ypts,4);
-               double d5xdu5=calcQuinticBezierCurveDerivU(u,xpts,5);
-               double d5ydu5=calcQuinticBezierCurveDerivU(u,ypts,5);
+               osim_double_adouble dxdu  =calcQuinticBezierCurveDerivU(u,xpts,1);
+               osim_double_adouble dydu  =calcQuinticBezierCurveDerivU(u,ypts,1);
+               osim_double_adouble d2xdu2=calcQuinticBezierCurveDerivU(u,xpts,2);
+               osim_double_adouble d2ydu2=calcQuinticBezierCurveDerivU(u,ypts,2);
+               osim_double_adouble d3xdu3=calcQuinticBezierCurveDerivU(u,xpts,3);
+               osim_double_adouble d3ydu3=calcQuinticBezierCurveDerivU(u,ypts,3);
+               osim_double_adouble d4xdu4=calcQuinticBezierCurveDerivU(u,xpts,4);
+               osim_double_adouble d4ydu4=calcQuinticBezierCurveDerivU(u,ypts,4);
+               osim_double_adouble d5xdu5=calcQuinticBezierCurveDerivU(u,xpts,5);
+               osim_double_adouble d5ydu5=calcQuinticBezierCurveDerivU(u,ypts,5);
 
-               double t1 = 1 / dxdu;
-               double t3 = dxdu*dxdu;//dxdu ^ 2;
-               double t4 = 1 / t3;
-               double t9 = (0.1e1 / t3 / dxdu);
-               double t11 = d2xdu2*d2xdu2;//(d2xdu2 ^ 2);
-               double t14 = (d3ydu3 * t4);
-               double t17 = t3*t3;//(t3 ^ 2);
-               double t18 = 1 / t17;
-               double t20 = (t11 * d2xdu2);
-               double t23 = (d2ydu2 * t9);
-               double t24 = (d2xdu2 * d3xdu3);
-               double t27 = (d2ydu2 * t4);
-               double t33 = t11*t11;//(t11 ^ 2);
-               double t36 = (dydu * t18);
-               double t40 = (dydu * t9);
-               double t41 = d3xdu3*d3xdu3;//(d3xdu3 ^ 2);
-               double t47 = (dydu * t4);
-               double t49 = d5ydu5 * t1 - 4 * d4ydu4 * t4 * d2xdu2 + 12 * d3ydu3 * t9 * t11 - 6 * t14 * d3xdu3 - 24 * d2ydu2 * t18 * t20 + 24 * t23 * t24 - 4 * t27 * d4xdu4 + 24 * dydu / t17 / dxdu * t33 - 36 * t36 * t11 * d3xdu3 + 6 * t40 * t41 + 8 * t40 * d2xdu2 * d4xdu4 - t47 * d5xdu5;
-               double t63 = d4ydu4 * t1 - 3 * t14 * d2xdu2 + 6 * t23 * t11 - 3 * t27 * d3xdu3 - 6 * t36 * t20 + 6 * t40 * t24 - t47 * d4xdu4;
-               double t73 = d3ydu3 * t1 - 2 * t27 * d2xdu2 + 2 * t40 * t11 - t47 * d3xdu3;
-               double t77 = t73 * t4;
-               double t82 = d2ydu2 * t1 - t47 * d2xdu2;
-               double t86 = t82 * t9;
-               double t89 = t82 * t4;
-               double t99 = t63 * t1 - 2 * t77 * d2xdu2 + 2 * t86 * t11 - t89 * d3xdu3;
-               double t105 = t73 * t1 - t89 * d2xdu2;
-               double t109 = t105 * t4;
-               double d5ydx5 = (((t49 * t1 - 3 * t63 * t4 * d2xdu2 
+               osim_double_adouble t1 = 1 / dxdu;
+               osim_double_adouble t3 = dxdu*dxdu;//dxdu ^ 2;
+               osim_double_adouble t4 = 1 / t3;
+               osim_double_adouble t9 = (0.1e1 / t3 / dxdu);
+               osim_double_adouble t11 = d2xdu2*d2xdu2;//(d2xdu2 ^ 2);
+               osim_double_adouble t14 = (d3ydu3 * t4);
+               osim_double_adouble t17 = t3*t3;//(t3 ^ 2);
+               osim_double_adouble t18 = 1 / t17;
+               osim_double_adouble t20 = (t11 * d2xdu2);
+               osim_double_adouble t23 = (d2ydu2 * t9);
+               osim_double_adouble t24 = (d2xdu2 * d3xdu3);
+               osim_double_adouble t27 = (d2ydu2 * t4);
+               osim_double_adouble t33 = t11*t11;//(t11 ^ 2);
+               osim_double_adouble t36 = (dydu * t18);
+               osim_double_adouble t40 = (dydu * t9);
+               osim_double_adouble t41 = d3xdu3*d3xdu3;//(d3xdu3 ^ 2);
+               osim_double_adouble t47 = (dydu * t4);
+               osim_double_adouble t49 = d5ydu5 * t1 - 4 * d4ydu4 * t4 * d2xdu2 + 12 * d3ydu3 * t9 * t11 - 6 * t14 * d3xdu3 - 24 * d2ydu2 * t18 * t20 + 24 * t23 * t24 - 4 * t27 * d4xdu4 + 24 * dydu / t17 / dxdu * t33 - 36 * t36 * t11 * d3xdu3 + 6 * t40 * t41 + 8 * t40 * d2xdu2 * d4xdu4 - t47 * d5xdu5;
+               osim_double_adouble t63 = d4ydu4 * t1 - 3 * t14 * d2xdu2 + 6 * t23 * t11 - 3 * t27 * d3xdu3 - 6 * t36 * t20 + 6 * t40 * t24 - t47 * d4xdu4;
+               osim_double_adouble t73 = d3ydu3 * t1 - 2 * t27 * d2xdu2 + 2 * t40 * t11 - t47 * d3xdu3;
+               osim_double_adouble t77 = t73 * t4;
+               osim_double_adouble t82 = d2ydu2 * t1 - t47 * d2xdu2;
+               osim_double_adouble t86 = t82 * t9;
+               osim_double_adouble t89 = t82 * t4;
+               osim_double_adouble t99 = t63 * t1 - 2 * t77 * d2xdu2 + 2 * t86 * t11 - t89 * d3xdu3;
+               osim_double_adouble t105 = t73 * t1 - t89 * d2xdu2;
+               osim_double_adouble t109 = t105 * t4;
+               osim_double_adouble d5ydx5 = (((t49 * t1 - 3 * t63 * t4 * d2xdu2 
                    + 6 * t73 * t9 * t11 - 3 * t77 * d3xdu3 - 6 * t82 * t18 * t20 
                    + 6 * t86 * t24 - t89 * d4xdu4) * t1 - 2 * t99 * t4 * d2xdu2
                    + 2 * t105 * t9 * t11 - t109 * d3xdu3) * t1 
@@ -532,44 +533,44 @@ double SegmentedQuinticBezierToolkit::calcQuinticBezierCurveDerivDYDX(double u,
             break;
         case 6: 
             {
-               double dxdu  =calcQuinticBezierCurveDerivU(u,xpts,1);
-               double dydu  =calcQuinticBezierCurveDerivU(u,ypts,1);
-               double d2xdu2=calcQuinticBezierCurveDerivU(u,xpts,2);
-               double d2ydu2=calcQuinticBezierCurveDerivU(u,ypts,2);
-               double d3xdu3=calcQuinticBezierCurveDerivU(u,xpts,3);
-               double d3ydu3=calcQuinticBezierCurveDerivU(u,ypts,3);
-               double d4xdu4=calcQuinticBezierCurveDerivU(u,xpts,4);
-               double d4ydu4=calcQuinticBezierCurveDerivU(u,ypts,4);
-               double d5xdu5=calcQuinticBezierCurveDerivU(u,xpts,5);
-               double d5ydu5=calcQuinticBezierCurveDerivU(u,ypts,5);
-               double d6xdu6=calcQuinticBezierCurveDerivU(u,xpts,6);
-               double d6ydu6=calcQuinticBezierCurveDerivU(u,ypts,6);
+               osim_double_adouble dxdu  =calcQuinticBezierCurveDerivU(u,xpts,1);
+               osim_double_adouble dydu  =calcQuinticBezierCurveDerivU(u,ypts,1);
+               osim_double_adouble d2xdu2=calcQuinticBezierCurveDerivU(u,xpts,2);
+               osim_double_adouble d2ydu2=calcQuinticBezierCurveDerivU(u,ypts,2);
+               osim_double_adouble d3xdu3=calcQuinticBezierCurveDerivU(u,xpts,3);
+               osim_double_adouble d3ydu3=calcQuinticBezierCurveDerivU(u,ypts,3);
+               osim_double_adouble d4xdu4=calcQuinticBezierCurveDerivU(u,xpts,4);
+               osim_double_adouble d4ydu4=calcQuinticBezierCurveDerivU(u,ypts,4);
+               osim_double_adouble d5xdu5=calcQuinticBezierCurveDerivU(u,xpts,5);
+               osim_double_adouble d5ydu5=calcQuinticBezierCurveDerivU(u,ypts,5);
+               osim_double_adouble d6xdu6=calcQuinticBezierCurveDerivU(u,xpts,6);
+               osim_double_adouble d6ydu6=calcQuinticBezierCurveDerivU(u,ypts,6);
 
-               double t1 = dxdu*dxdu;//(dxdu ^ 2);
-               double t3 = (0.1e1 / t1 / dxdu);
-               double t5 = d2xdu2*d2xdu2;//(d2xdu2 ^ 2);
-               double t8 = t1*t1;//(t1 ^ 2);
-               double t9 = 1 / t8;
-               double t11 = (t5 * d2xdu2);
-               double t14 = (d3ydu3 * t3);
-               double t15 = (d2xdu2 * d3xdu3);
-               double t19 = (0.1e1 / t8 / dxdu);
-               double t21 = t5*t5;//(t5 ^ 2);
-               double t24 = (d2ydu2 * t9);
-               double t25 = (t5 * d3xdu3);
-               double t28 = (d2ydu2 * t3);
-               double t29 = d3xdu3*d3xdu3;//(d3xdu3 ^ 2);
-               double t32 = (d2xdu2 * d4xdu4);
-               double t41 = (dydu * t19);
-               double t45 = (dydu * t9);
-               double t49 = (dydu * t3);
-               double t56 = 1 / dxdu;
-               double t61 = 1 / t1;
-               double t62 = (dydu * t61);
-               double t67 = (d4ydu4 * t61);
-               double t70 = (d2ydu2 * t61);
-               double t73 = (d3ydu3 * t61);
-               double t76 = 20 * d4ydu4 * t3 * t5 - 60 * d3ydu3 * t9 * t11 
+               osim_double_adouble t1 = dxdu*dxdu;//(dxdu ^ 2);
+               osim_double_adouble t3 = (0.1e1 / t1 / dxdu);
+               osim_double_adouble t5 = d2xdu2*d2xdu2;//(d2xdu2 ^ 2);
+               osim_double_adouble t8 = t1*t1;//(t1 ^ 2);
+               osim_double_adouble t9 = 1 / t8;
+               osim_double_adouble t11 = (t5 * d2xdu2);
+               osim_double_adouble t14 = (d3ydu3 * t3);
+               osim_double_adouble t15 = (d2xdu2 * d3xdu3);
+               osim_double_adouble t19 = (0.1e1 / t8 / dxdu);
+               osim_double_adouble t21 = t5*t5;//(t5 ^ 2);
+               osim_double_adouble t24 = (d2ydu2 * t9);
+               osim_double_adouble t25 = (t5 * d3xdu3);
+               osim_double_adouble t28 = (d2ydu2 * t3);
+               osim_double_adouble t29 = d3xdu3*d3xdu3;//(d3xdu3 ^ 2);
+               osim_double_adouble t32 = (d2xdu2 * d4xdu4);
+               osim_double_adouble t41 = (dydu * t19);
+               osim_double_adouble t45 = (dydu * t9);
+               osim_double_adouble t49 = (dydu * t3);
+               osim_double_adouble t56 = 1 / dxdu;
+               osim_double_adouble t61 = 1 / t1;
+               osim_double_adouble t62 = (dydu * t61);
+               osim_double_adouble t67 = (d4ydu4 * t61);
+               osim_double_adouble t70 = (d2ydu2 * t61);
+               osim_double_adouble t73 = (d3ydu3 * t61);
+               osim_double_adouble t76 = 20 * d4ydu4 * t3 * t5 - 60 * d3ydu3 * t9 * t11 
                    + 60 * t14 * t15 + 120 * d2ydu2 * t19 * t21 - 180 * t24 * t25 
                    + 30 * t28 * t29 + 40 * t28 * t32 
                    - 120 * dydu / t8 / t1 * t21 * d2xdu2 + 240 * t41 *t11*d3xdu3 
@@ -579,46 +580,46 @@ double SegmentedQuinticBezierToolkit::calcQuinticBezierCurveDerivDYDX(double u,
                    - 5 * d5ydu5 * t61 * d2xdu2 - 10 * t67 * d3xdu3 
                    - 5 * t70 * d5xdu5 - 10 * t73 * d4xdu4;
 
-               double t100 = d5ydu5 * t56 - 4 * t67 * d2xdu2 + 12 * t14 * t5 
+               osim_double_adouble t100 = d5ydu5 * t56 - 4 * t67 * d2xdu2 + 12 * t14 * t5 
                    - 6 * t73 * d3xdu3 - 24 * t24 * t11 + 24 * t28 * t15 
                    - 4 * t70 * d4xdu4 + 24 * t41 * t21 - 36 * t45 * t25
                    + 6 * t49 * t29 + 8 * t49 * t32 - t62 * d5xdu5;
 
-               double t116 = d4ydu4 * t56 - 3 * t73 * d2xdu2 + 6 * t28 * t5 
+               osim_double_adouble t116 = d4ydu4 * t56 - 3 * t73 * d2xdu2 + 6 * t28 * t5 
                    - 3 * t70 * d3xdu3 - 6 * t45 * t11 + 6 * t49 * t15 
                    - t62 * d4xdu4;
 
-               double t120 = t116 * t61;
-               double t129 = d3ydu3 * t56 - 2 * t70 * d2xdu2 + 2 * t49 * t5 
+               osim_double_adouble t120 = t116 * t61;
+               osim_double_adouble t129 = d3ydu3 * t56 - 2 * t70 * d2xdu2 + 2 * t49 * t5 
                    - t62 * d3xdu3;
-               double t133 = t129 * t3;
-               double t136 = t129 * t61;
-               double t141 = d2ydu2 * t56 - t62 * d2xdu2;
-               double t145 = t141 * t9;
-               double t148 = t141 * t3;
-               double t153 = t141 * t61;
-               double t155 = t76 * t56 - 4 * t100 * t61 * d2xdu2 
+               osim_double_adouble t133 = t129 * t3;
+               osim_double_adouble t136 = t129 * t61;
+               osim_double_adouble t141 = d2ydu2 * t56 - t62 * d2xdu2;
+               osim_double_adouble t145 = t141 * t9;
+               osim_double_adouble t148 = t141 * t3;
+               osim_double_adouble t153 = t141 * t61;
+               osim_double_adouble t155 = t76 * t56 - 4 * t100 * t61 * d2xdu2 
                    + 12 * t116 * t3 * t5 - 6 * t120 * d3xdu3 
                    - 24 * t129 * t9 * t11 + 24 * t133 * t15 - 4 * t136 * d4xdu4 
                    + 24 * t141 * t19 * t21 - 36 * t145 * t25 + 6 * t148 * t29 
                    + 8 * t148 * t32 - t153 * d5xdu5;
 
-               double t169 = t100 * t56 - 3 * t120 * d2xdu2 + 6 * t133 * t5 
+               osim_double_adouble t169 = t100 * t56 - 3 * t120 * d2xdu2 + 6 * t133 * t5 
                    - 3 * t136 * d3xdu3 - 6 * t145 * t11 + 6 * t148 * t15 
                    - t153 * d4xdu4;
 
-               double t179 = t116 * t56 - 2 * t136 * d2xdu2 + 2 * t148 * t5 
+               osim_double_adouble t179 = t116 * t56 - 2 * t136 * d2xdu2 + 2 * t148 * t5 
                    - t153 * d3xdu3;
 
-               double t183 = t179 * t61;
-               double t188 = t129 * t56 - t153 * d2xdu2;
-               double t192 = t188 * t3;
-               double t195 = t188 * t61;
-               double t205 = t169 * t56 - 2 * t183 * d2xdu2 + 2 * t192 * t5 
+               osim_double_adouble t183 = t179 * t61;
+               osim_double_adouble t188 = t129 * t56 - t153 * d2xdu2;
+               osim_double_adouble t192 = t188 * t3;
+               osim_double_adouble t195 = t188 * t61;
+               osim_double_adouble t205 = t169 * t56 - 2 * t183 * d2xdu2 + 2 * t192 * t5 
                    - t195 * d3xdu3;
-               double t211 = t179 * t56 - t195 * d2xdu2;
-               double t215 = t211 * t61;
-               double d6ydx6 = (((t155 * t56 - 3 * t169 * t61 * d2xdu2 
+               osim_double_adouble t211 = t179 * t56 - t195 * d2xdu2;
+               osim_double_adouble t215 = t211 * t61;
+               osim_double_adouble d6ydx6 = (((t155 * t56 - 3 * t169 * t61 * d2xdu2 
                    + 6 * t179 * t3 * t5 - 3 * t183 * d3xdu3 - 6 * t188 * t9 *t11 
                    + 6 * t192 * t15 - t195 * d4xdu4) * t56 
                    - 2 * t205 * t61 * d2xdu2 + 2 * t211*t3*t5-t215*d3xdu3)*t56 
@@ -641,10 +642,10 @@ d2x/du2             17              17          9
 d3y/du3             14              14          6
 
 */
-double SegmentedQuinticBezierToolkit::calcQuinticBezierCurveDerivU(double u,
+osim_double_adouble SegmentedQuinticBezierToolkit::calcQuinticBezierCurveDerivU(osim_double_adouble u,
                  const SimTK::Vector& pts,int order)
 {
-    double val = -1;
+    osim_double_adouble val = -1;
 
     SimTK_ERRCHK_ALWAYS( (u>=0 && u <= 1) , 
         "SegmentedQuinticBezierToolkit::calcQuinticBezierCurveDerivU", 
@@ -659,26 +660,26 @@ double SegmentedQuinticBezierToolkit::calcQuinticBezierCurveDerivU(double u,
         "Error: order must be greater than, or equal to 1");
 
     //Compute the Bezier point
-    double p0 = pts(0);
-    double p1 = pts(1);
-    double p2 = pts(2);
-    double p3 = pts(3);
-    double p4 = pts(4);
-    double p5 = pts(5);
+    osim_double_adouble p0 = pts(0);
+    osim_double_adouble p1 = pts(1);
+    osim_double_adouble p2 = pts(2);
+    osim_double_adouble p3 = pts(3);
+    osim_double_adouble p4 = pts(4);
+    osim_double_adouble p5 = pts(5);
 
     switch(order){
         case 1: 
             {  
-                double t1 = u*u;//u ^ 2;
-                double t2 = t1*t1;//t1 ^ 2;
-                double t4 = t1 * u;
-                double t5 = t4 * 0.20e2;
-                double t6 = t1 * 0.30e2;
-                double t7 = u * 0.20e2;
-                double t10 = t2 * 0.25e2;
-                double t11 = t4 * 0.80e2;
-                double t12 = t1 * 0.90e2;
-                double t16 = t2 * 0.50e2;
+                osim_double_adouble t1 = u*u;//u ^ 2;
+                osim_double_adouble t2 = t1*t1;//t1 ^ 2;
+                osim_double_adouble t4 = t1 * u;
+                osim_double_adouble t5 = t4 * 0.20e2;
+                osim_double_adouble t6 = t1 * 0.30e2;
+                osim_double_adouble t7 = u * 0.20e2;
+                osim_double_adouble t10 = t2 * 0.25e2;
+                osim_double_adouble t11 = t4 * 0.80e2;
+                osim_double_adouble t12 = t1 * 0.90e2;
+                osim_double_adouble t16 = t2 * 0.50e2;
                 val = p0 * (t2 * (-0.5e1) + t5 - t6 + t7 - 0.5e1) 
                     + p1 * (t10 - t11 + t12 + u * (-0.40e2) + 0.5e1) 
                     + p2 * (-t16 + t4 * 0.120e3 - t12 + t7) 
@@ -690,14 +691,14 @@ double SegmentedQuinticBezierToolkit::calcQuinticBezierCurveDerivU(double u,
             break;
         case 2:    
             {
-                double t1 = u*u;//u ^ 2;
-                double t2 = t1 * u;
-                double t4 = t1 * 0.60e2;
-                double t5 = u * 0.60e2;
-                double t8 = t2 * 0.100e3;
-                double t9 = t1 * 0.240e3;
-                double t10 = u * 0.180e3;
-                double t13 = t2 * 0.200e3;
+                osim_double_adouble t1 = u*u;//u ^ 2;
+                osim_double_adouble t2 = t1 * u;
+                osim_double_adouble t4 = t1 * 0.60e2;
+                osim_double_adouble t5 = u * 0.60e2;
+                osim_double_adouble t8 = t2 * 0.100e3;
+                osim_double_adouble t9 = t1 * 0.240e3;
+                osim_double_adouble t10 = u * 0.180e3;
+                osim_double_adouble t13 = t2 * 0.200e3;
                 val = p0 * (t2 * (-0.20e2) + t4 - t5 + 0.20e2) 
                     + p1 * (t8 - t9 + t10 - 0.40e2) 
                     + p2 * (-t13 + t1 * 0.360e3 - t10 + 0.20e2) 
@@ -709,11 +710,11 @@ double SegmentedQuinticBezierToolkit::calcQuinticBezierCurveDerivU(double u,
             break;      
         case 3:   
             {
-                double t1 = u*u;//u ^ 2;
-                double t3 = u * 0.120e3;
-                double t6 = t1 * 0.300e3;
-                double t7 = u * 0.480e3;
-                double t10 = t1 * 0.600e3;
+                osim_double_adouble t1 = u*u;//u ^ 2;
+                osim_double_adouble t3 = u * 0.120e3;
+                osim_double_adouble t6 = t1 * 0.300e3;
+                osim_double_adouble t7 = u * 0.480e3;
+                osim_double_adouble t10 = t1 * 0.600e3;
                 val = p0 * (t1 * (-0.60e2) + t3 - 0.60e2) 
                     + p1 * (t6 - t7 + 0.180e3) 
                     + p2 * (-t10 + u * 0.720e3 - 0.180e3) 
@@ -725,8 +726,8 @@ double SegmentedQuinticBezierToolkit::calcQuinticBezierCurveDerivU(double u,
             break;
         case 4:       
             {
-                double t4 = u * 0.600e3;
-                double t7 = u * 0.1200e4;
+                osim_double_adouble t4 = u * 0.600e3;
+                osim_double_adouble t7 = u * 0.1200e4;
                 val = p0 * (u * (-0.120e3) + 0.120e3) 
                     + p1 * (t4 - 0.480e3) 
                     + p2 * (-t7 + 0.720e3) 
@@ -755,8 +756,8 @@ double SegmentedQuinticBezierToolkit::calcQuinticBezierCurveDerivU(double u,
 
 }
 
-double SegmentedQuinticBezierToolkit::clampU(double u){
-    double uC = u;
+osim_double_adouble SegmentedQuinticBezierToolkit::clampU(osim_double_adouble u){
+    osim_double_adouble uC = u;
     if(u<0.0){
         uC=0;
     }
@@ -785,13 +786,13 @@ double SegmentedQuinticBezierToolkit::clampU(double u){
                 Comparisons     Div     Mult    Additions   Assignments
     eval U      7+8=15          2       82      42          60
 */
-double SegmentedQuinticBezierToolkit::calcU(double ax, const SimTK::Vector& bezierPtsX, 
-                                 const SimTK::Spline& splineUX, double tol, 
+osim_double_adouble SegmentedQuinticBezierToolkit::calcU(osim_double_adouble ax, const SimTK::Vector& bezierPtsX, 
+                                 const SimTK::Spline& splineUX, osim_double_adouble tol, 
                                  int maxIter)
 {
     //Check to make sure that ax is in the curve domain
-    double minX = 1e100;
-    double maxX = -1e100;
+    osim_double_adouble minX = 1e100;
+    osim_double_adouble maxX = -1e100;
     for(int i=0; i<bezierPtsX.nrow(); i++){
         if(bezierPtsX(i) > maxX)
             maxX = bezierPtsX(i);
@@ -804,22 +805,22 @@ double SegmentedQuinticBezierToolkit::calcU(double ax, const SimTK::Vector& bezi
         "Error: input ax was not in the domain of the Bezier curve specified \n"
         "by the control points in bezierPtsX.");
 
-    double u = splineUX.calcValue(ax);
+    osim_double_adouble u = splineUX.calcValue(ax);
     u = clampU(u);
-    double f = 0;
+    osim_double_adouble f = 0;
 
 
     f = calcQuinticBezierCurveVal(u,bezierPtsX)-ax;
-    double df= 0;
-    double du= 0;
+    osim_double_adouble df= 0;
+    osim_double_adouble du= 0;
     int iter = 0;
     bool pathologic = false;
     
     //Newton iterate to the desired tolerance
-    while(abs(f) > tol && iter < maxIter && pathologic == false){
+    while(fabs(f) > tol && iter < maxIter && pathologic == false){
        //Take a Newton step
         df = calcQuinticBezierCurveDerivU(u,bezierPtsX,1);
-        if(abs(df) > 0){
+        if(fabs(df) > 0){
             du = -f/df;
             u  = u + du;
             u  = clampU(u); 
@@ -852,7 +853,7 @@ Cost: n comparisons, for a quintic Bezier curve with n-spline sections
 Cost            3*n+2                       1*n      3                         
         
 */
-int SegmentedQuinticBezierToolkit::calcIndex(double x, 
+int SegmentedQuinticBezierToolkit::calcIndex(osim_double_adouble x, 
                                              const SimTK::Matrix& bezierPtsX)
 {
     int idx = 0;
@@ -879,7 +880,7 @@ int SegmentedQuinticBezierToolkit::calcIndex(double x,
     return idx;
 }
 
-int SegmentedQuinticBezierToolkit::calcIndex(double x, 
+int SegmentedQuinticBezierToolkit::calcIndex(osim_double_adouble x, 
                                              const SimTK::Array_<SimTK::Vector>& bezierPtsX)
 {
     int idx = 0;
@@ -942,8 +943,8 @@ Total       46,800      3600    185,400     117,000        136,000
 */
 SimTK::Matrix SegmentedQuinticBezierToolkit::calcNumIntBezierYfcnX(
                             const SimTK::Vector& vX, 
-                            double ic0, double intAcc, 
-                            double uTol, int uMaxIter,
+                            osim_double_adouble ic0, osim_double_adouble intAcc, 
+                            osim_double_adouble uTol, int uMaxIter,
                             const SimTK::Matrix& mX, const SimTK::Matrix& mY,
                             const SimTK::Array_<SimTK::Spline>& aSplineUX,
                             bool flag_intLeftToRight,
@@ -962,8 +963,8 @@ SimTK::Matrix SegmentedQuinticBezierToolkit::calcNumIntBezierYfcnX(
 
     //These aren't really times, but I'm perpetuating the SimTK language
     //so that I don't make a mistake
-    double startTime = vX(0);
-    double endTime   = vX(vX.size()-1);
+    osim_double_adouble startTime = vX(0);
+    osim_double_adouble endTime   = vX(vX.size()-1);
     
     if(flag_intLeftToRight){
         bdata._startValue = startTime;
@@ -983,7 +984,7 @@ SimTK::Matrix SegmentedQuinticBezierToolkit::calcNumIntBezierYfcnX(
     integ.initialize(initState);
 
     int idx = 0;    
-    double nextTimeInterval = 0;
+    osim_double_adouble nextTimeInterval = 0;
     Integrator::SuccessfulStepStatus status;
 
     while (idx < vX.nelt()) {      
@@ -1006,10 +1007,10 @@ SimTK::Matrix SegmentedQuinticBezierToolkit::calcNumIntBezierYfcnX(
 
         if(flag_intLeftToRight){
             intXY(idx,0) = nextTimeInterval;
-            intXY(idx,1) = (double)state.getZ()[0];                        
+            intXY(idx,1) = (osim_double_adouble)state.getZ()[0];                        
         }else{
             intXY(vX.size()-idx-1,0) = vX(vX.size()-idx-1);
-            intXY(vX.size()-idx-1,1) = (double)state.getZ()[0];
+            intXY(vX.size()-idx-1,1) = (osim_double_adouble)state.getZ()[0];
         }
         idx++;
 

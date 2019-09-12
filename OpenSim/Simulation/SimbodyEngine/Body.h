@@ -46,7 +46,7 @@ public:
 //==============================================================================
 // PROPERTIES
 //==============================================================================
-    OpenSim_DECLARE_PROPERTY(mass, double, 
+    OpenSim_DECLARE_PROPERTY(mass, osim_double_adouble, 
         "The mass of the body (kg)");
 
     OpenSim_DECLARE_PROPERTY(mass_center, SimTK::Vec3, 
@@ -68,15 +68,15 @@ public:
     Body();
 
     /** Convenience constructor */  
-    Body(const std::string &aName, double aMass, const SimTK::Vec3& aMassCenter,
+    Body(const std::string &aName, osim_double_adouble aMass, const SimTK::Vec3& aMassCenter,
         const SimTK::Inertia& aInertia);
 
     // use compiler generated destructor, copy constructor and assignment operator
 
     /** Access Properties of the Body */
     /** The mass of the body in kg */
-    const double& getMass() const { return get_mass(); }
-    void setMass(const double& mass) { set_mass(mass); }
+    const osim_double_adouble& getMass() const { return get_mass(); }
+    void setMass(const osim_double_adouble& mass) { set_mass(mass); }
 
     /** The body center of mass location (Vec3) in the Body frame. */
     const SimTK::Vec3& getMassCenter() const { return get_mass_center(); }
@@ -92,19 +92,9 @@ public:
      */
     SimTK::MassProperties getMassProperties() const;
 
-    /** Scale the Body's center of mass location and its inertial properties. */
-    void scale(const SimTK::Vec3& scaleFactors, bool scaleMass = false);
-
-    /** Scale the Body's center of mass location only. Note that
-        scaleInertialProperties() must be called after this method to update the
-        Body's mass and inertia tensor. */
-    void extendScale(const SimTK::State& s, const ScaleSet& scaleSet) override;
-
-    /** Scale the Body's mass and inertia tensor. */
-    void scaleInertialProperties(const ScaleSet& scaleSet, bool scaleMass = true);
-    void scaleInertialProperties(const SimTK::Vec3& scaleFactors, bool scaleMass = true);
-
-    void scaleMass(double aScaleFactor);
+    void scale(const SimTK::Vec3& aScaleFactors, bool aScaleMass = false);
+    void scaleInertialProperties(const SimTK::Vec3& aScaleFactors, bool aScaleMass = true);
+    void scaleMass(osim_double_adouble aScaleFactor);
  protected:
 
     // Model component interface.
@@ -120,8 +110,8 @@ private:
     void constructProperties();
 
     /** Override of the default implementation to account for versioning. */
-    void updateFromXMLNode(SimTK::Xml::Element& aNode,
-        int versionNumber = -1) override;
+    //void updateFromXMLNode(SimTK::Xml::Element& aNode,
+    //    int versionNumber = -1) override;
 
     /** Return the equivalent (internal) SimTK::Rigid::Body for this body.
     Not valid until after extendAddToSystem on Body has been called.*/

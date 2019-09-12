@@ -30,6 +30,7 @@ provide an in-memory container for data access and manipulation.              */
 
 #include "OpenSim/Common/DataTable.h"
 
+
 namespace OpenSim {
 
 class InvalidTable : public Exception {
@@ -62,8 +63,8 @@ public:
                                      size_t line,
                                      const std::string& func,
                                      size_t rowIndex,
-                                     double new_timestamp,
-                                     double prev_timestamp) :
+                                     osim_double new_timestamp,
+                                     osim_double prev_timestamp) :
         InvalidTimestamp(file, line, func) {
         std::string msg = "Timestamp at row " + std::to_string(rowIndex);
         msg += " with value " + std::to_string(new_timestamp);
@@ -81,8 +82,8 @@ public:
                                     size_t line,
                                     const std::string& func,
                                     size_t rowIndex,
-                                    double new_timestamp,
-                                    double next_timestamp) :
+                                    osim_double new_timestamp,
+                                    osim_double next_timestamp) :
         InvalidTimestamp(file, line, func) {
         std::string msg = "Timestamp at row " + std::to_string(rowIndex);
         msg += " with value " + std::to_string(new_timestamp);
@@ -99,9 +100,9 @@ public:
     TimeOutOfRange(const std::string& file,
                    size_t line,
                    const std::string& func,
-                   const double time,
-                   const double min,
-                   const double max) :
+                   const osim_double time,
+                   const osim_double min,
+                   const osim_double max) :
         Exception(file, line, func) {
         std::string msg = "Time " + std::to_string(time) + 
             " is out of time range [" + std::to_string(min) +
@@ -116,8 +117,8 @@ public:
     InvalidTimeRange(const std::string& file,
                      size_t line,
                      const std::string& func,
-                     const double begTime,
-                     const double endTime) :
+                     const osim_double begTime,
+                     const osim_double endTime) :
         Exception(file, line, func) {
         std::string msg = " Invalid time range: initial time " + 
             std::to_string(begTime)  + " >= final time = " +
@@ -130,7 +131,7 @@ public:
 /** TimeSeriesTable_ is a DataTable_ where the independent column is time of 
 type double. The time column is enforced to be strictly increasing.           */
 template<typename ETY = SimTK::Real>
-class TimeSeriesTable_ : public DataTable_<double, ETY> {
+class TimeSeriesTable_ : public DataTable_<osim_double_adouble, ETY> {
 public:
     typedef SimTK::RowVector_<ETY>     RowVector;
     typedef SimTK::RowVectorView_<ETY> RowVectorView;
@@ -145,15 +146,12 @@ public:
     /** Convenience constructor to efficiently populate a time series table
     from available data. This is primarily useful for constructing with large
     data read in from file without having to reallocate and copy memory.*/
-    TimeSeriesTable_(const std::vector<double>& indVec,
+    TimeSeriesTable_(const std::vector<osim_double_adouble>& indVec,
         const SimTK::Matrix_<ETY>& depData,
         const std::vector<std::string>& labels) : 
-            DataTable_<double, ETY>(indVec, depData, labels) {
+            DataTable_<osim_double_adouble, ETY>(indVec, depData, labels) {
         try {
-            // Perform the validation of the data of this TimeSeriesTable.
-            // validateDependentsMetaData() invoked by the DataTable_
-            // constructor via setColumnLabels(), but we invoke it again
-            // because base classes cannot properly invoke virtual functions.
+            // Perform the validation of the data of this TimeSeriesTable
             this->validateDependentsMetaData();
             for (size_t i = 0; i < indVec.size(); ++i) {
                 this->validateRow(i, indVec[i], depData.row(int(i)));
@@ -168,51 +166,26 @@ public:
         }
     }
 
-    /** Construct a table with only the independent (time) column and 0
-    dependent columns. This constructor is useful if you want to populate the
-    table by appending columns rather than by appending rows.                 */
-    TimeSeriesTable_(const std::vector<double>& indVec) :
-            DataTable_<double, ETY>(indVec) {
-        try {
-            // Perform the validation of the data of this TimeSeriesTable.
-            // validateDependentsMetaData() invoked by the DataTable_
-            // constructor via setColumnLabels(), but we invoke it again
-            // because base classes cannot properly invoke virtual functions.
-            this->validateDependentsMetaData();
-            for (size_t i = 0; i < indVec.size(); ++i) {
-                this->validateRow(i, indVec[i], this->_depData.row(int(i)));
-            }
-        }
-        catch (std::exception&) {
-            // wipe out the data loaded if any
-            this->_indData.clear();
-            this->_depData.clear(); // should be empty
-            this->removeDependentsMetaDataForKey("labels"); // should be empty
-            throw;
-        }
-
-    }
-
 #ifndef SWIG
-    using DataTable_<double, ETY>::DataTable_;
-    using DataTable_<double, ETY>::operator=;
+    using DataTable_<osim_double_adouble, ETY>::DataTable_;
+    using DataTable_<osim_double_adouble, ETY>::operator=;
     /** Flatten the columns of this table to create a TimeSeriesTable_<double>.
     See documentation of DataTable_::flatten() for details.                   */
-    using DataTable_<double, ETY>::flatten;
+    using DataTable_<osim_double_adouble, ETY>::flatten;
     /** Pack the columns of this table (which should be TimeSeriesTable_<double>
     ) to create a TimeSeriesTable_<SimTK::Vec3>, TimeSeriesTable_<SimTK::Vec6>,
     TimeSeriesTable_<SimTK::UnitVec3> and so on. See documentation for 
     DataTable_::pack().                                                       */
-    using DataTable_<double, ETY>::pack;
+    using DataTable_<osim_double_adouble, ETY>::pack;
 #endif    
     
     /** Construct a TimeSeriesTable_ from a DataTable_.                       
 
     \throws InvalidTable If the input table's independent column is not strictly
                          increasing.                                          */
-    TimeSeriesTable_(const DataTable_<double, ETY>& datatable) : 
-        DataTable_<double, ETY>(datatable) {
-        using DT = DataTable_<double, ETY>;
+    TimeSeriesTable_(const DataTable_<osim_double_adouble, ETY>& datatable) : 
+        DataTable_<osim_double_adouble, ETY>(datatable) {
+        using DT = DataTable_<osim_double_adouble, ETY>;
 
         OPENSIM_THROW_IF(!std::is_sorted(DT::_indData.cbegin(), 
                                          DT::_indData.cend()) ||
@@ -243,76 +216,36 @@ public:
                             tablename was not specified.
     \throws InvalidArgument If the input file contains a table that is not of
                             this TimeSeriesTable_ type.                       */
-    TimeSeriesTable_(const std::string& filename, 
-                     const std::string& tablename) {
-        auto absTables = FileAdapter::createAdapterFromExtension(filename)->read(filename);
-
-        OPENSIM_THROW_IF(absTables.size() > 1 && tablename.empty(),
-                         InvalidArgument,
-                         "File '" + filename + 
-                         "' contains more than one table and tablename not "
-                         "specified.");
-
-        AbstractDataTable* absTable{};
-        if(tablename.empty()) {
-            absTable = (absTables.cbegin()->second).get();
-        } else {
-            try {
-                absTable = absTables.at(tablename).get();
-            } catch (const std::out_of_range&) {
-                OPENSIM_THROW(InvalidArgument,
-                              "File '" + filename + "' contains no table named "
-                              "'"+ tablename + "'.");
-            }
-        }
-        auto table = dynamic_cast<TimeSeriesTable_*>(absTable);
-        OPENSIM_THROW_IF(table == nullptr,
-                         InvalidArgument,
-                         "DataTable cannot be created from file '" + filename +
-                         "'. Type mismatch.");
-
-        *this = std::move(*table);
-    }
-
-    /** Get index of row whose time is nearest/closest to the given value.
-
-    \param time Value to search for.
-    \param restrictToTimeRange  When true -- Exception is thrown if the given
-                                value is out-of-range of the time column. A value
-                                within SimTK::SignifcantReal of a time column
-                                bound is considered to be equal to the bound.
-                                When false -- If the given value is less than or
-                                equal to the first value in the time column, the
-                                index returned is of the first row. If the given
-                                value is greater than or equal to the last value
-                                in the time column, the index of the last row is
-                                returned. Defaults to 'true'.
-
-    \throws TimeOutOfRange If the given value is out-of-range of time column.
-    \throws EmptyTable If the table is empty.                                 */
-    size_t getNearestRowIndexForTime(const double time,
-                                     const bool restrictToTimeRange = true) const {
-        using DT = DataTable_<double, ETY>;
-        const auto& timeCol = DT::getIndependentColumn();
-        OPENSIM_THROW_IF(timeCol.size() == 0,
-            EmptyTable);
-        const SimTK::Real eps = SimTK::SignificantReal;
-        OPENSIM_THROW_IF(restrictToTimeRange &&
-            ((time < timeCol.front() - eps) ||
-            (time > timeCol.back() + eps)),
-            TimeOutOfRange,
-            time, timeCol.front(), timeCol.back());
-
-        auto iter = std::lower_bound(timeCol.begin(), timeCol.end(), time);
-        if (iter == timeCol.end())
-            return timeCol.size() - 1;
-        if (iter == timeCol.begin())
-            return 0;
-        if ((*iter - time) <= (time - *std::prev(iter)))
-            return std::distance(timeCol.begin(), iter);
-        else
-            return std::distance(timeCol.begin(), std::prev(iter));
-    }
+//    TimeSeriesTable_(const std::string& filename, 
+//                     const std::string& tablename) {
+//        auto absTables = FileAdapter::readFile(filename);
+//
+//        OPENSIM_THROW_IF(absTables.size() > 1 && tablename.empty(),
+//                         InvalidArgument,
+//                         "File '" + filename + 
+//                         "' contains more than one table and tablename not "
+//                         "specified.");
+//
+//        AbstractDataTable* absTable{};
+//        if(tablename.empty()) {
+//            absTable = (absTables.cbegin()->second).get();
+//        } else {
+//            try {
+//                absTable = absTables.at(tablename).get();
+//            } catch (const std::out_of_range&) {
+//                OPENSIM_THROW(InvalidArgument,
+//                              "File '" + filename + "' contains no table named "
+//                              "'"+ tablename + "'.");
+//            }
+//        }
+//        auto table = dynamic_cast<TimeSeriesTable_*>(absTable);
+//        OPENSIM_THROW_IF(table == nullptr,
+//                         InvalidArgument,
+//                         "DataTable cannot be created from file '" + filename +
+//                         "'. Type mismatch.");
+//
+//        *this = std::move(*table);
+//    }
 
     /** Get row whose time column is nearest/closest to the given value. 
 
@@ -331,11 +264,27 @@ public:
     \throws TimeOutOfRange If the given value is out-of-range of time column.
     \throws EmptyTable If the table is empty.                                 */
     RowVectorView
-    getNearestRow(const double& time,
+    getNearestRow(const osim_double_adouble& time,
                   const bool restrictToTimeRange = true) const {
-        using DT = DataTable_<double, ETY>;
-        return DT::getRowAtIndex( 
-            getNearestRowIndexForTime(time, restrictToTimeRange) );
+        using DT = DataTable_<osim_double_adouble, ETY>;
+        const auto& timeCol = DT::getIndependentColumn();
+        OPENSIM_THROW_IF(timeCol.size() == 0,
+                         EmptyTable);
+        OPENSIM_THROW_IF(restrictToTimeRange &&
+                         time < timeCol.front() || time > timeCol.back(),
+                         TimeOutOfRange,
+                         time, timeCol.front(), timeCol.back());
+
+        auto iter = std::lower_bound(timeCol.begin(), timeCol.end(), time);
+        if(iter == timeCol.end())
+            return DT::getRowAtIndex(timeCol.size() - 1);
+        if(iter == timeCol.begin())
+            return DT::getRowAtIndex(0);
+        if((*iter - time) <= (time - *std::prev(iter)))
+            return DT::getRowAtIndex(std::distance(timeCol.begin(), iter));
+        else
+            return DT::getRowAtIndex(std::distance(timeCol.begin(),
+                                                   std::prev(iter)));
     }
 
     /** Get writable reference to row whose time column is nearest/closest to 
@@ -356,11 +305,27 @@ public:
     \throws TimeOutOfRange If the given value is out-of-range of time column.
     \throws EmptyTable If the table is empty.                                 */
     RowVectorView
-    updNearestRow(const double& time,
+    updNearestRow(const osim_double_adouble& time,
                   const bool restrictToTimeRange = true) {
-        using DT = DataTable_<double, ETY>;
-        return DT::updRowAtIndex(
-            getNearestRowIndexForTime(time, restrictToTimeRange));
+        using DT = DataTable_<osim_double_adouble, ETY>;
+        const auto& timeCol = DT::getIndependentColumn();
+        OPENSIM_THROW_IF(timeCol.size() == 0,
+                         EmptyTable);
+        OPENSIM_THROW_IF(restrictToTimeRange &&
+                         time < timeCol.front() || time > timeCol.back(),
+                         TimeOutOfRange,
+                         time, timeCol.front(), timeCol.back());
+
+        auto iter = std::lower_bound(timeCol.begin(), timeCol.end(), time);
+        if(iter == timeCol.end())
+            return DT::updRowAtIndex(timeCol.size() - 1);
+        if(iter == timeCol.begin())
+            return DT::updRowAtIndex(0);
+        if((*iter - time) <= (time - *std::prev(iter)))
+            return DT::updRowAtIndex(std::distance(timeCol.begin(), iter));
+        else
+            return DT::updRowAtIndex(std::distance(timeCol.begin(),
+                                                   std::prev(iter)));
     }
 
     /** Compute the average row in the time range (inclusive) given. This
@@ -370,8 +335,8 @@ public:
     \throws InvalidTimeRange If beginTime is greater than or equal to endTime.
     \throws TimeOutOfRange If beginTime or endTime is out of range of time 
                            column.                                            */
-    RowVector averageRow(const double& beginTime, const double& endTime) const {
-        using DT = DataTable_<double, ETY>;
+    RowVector averageRow(const osim_double_adouble& beginTime, const osim_double_adouble& endTime) const {
+        using DT = DataTable_<osim_double_adouble, ETY>;
         OPENSIM_THROW_IF(endTime <= beginTime,
                          InvalidTimeRange,
                          beginTime, endTime);
@@ -385,7 +350,7 @@ public:
                          TimeOutOfRange,
                          endTime, timeCol.front(), timeCol.back());
 
-        std::vector<double> comps(DT::numComponentsPerElement(), 0);
+        std::vector<osim_double_adouble> comps(DT::numComponentsPerElement(), 0);
         RowVector row{static_cast<int>(DT::getNumColumns()),
                       DT::makeElement(comps.begin(), comps.end())};
         unsigned numRowsInRange{};
@@ -406,24 +371,24 @@ protected:
     \throws InvalidRow If the timestamp for the row breaks strictly increasing
                        property of the independent column.                    */
     void validateRow(size_t rowIndex,
-                     const double& time, 
+                     const osim_double_adouble& time, 
                      const RowVector& row) const override {
-        using DT = DataTable_<double, ETY>;
+        using DT = DataTable_<osim_double_adouble, ETY>;
 
         if(DT::_indData.empty())
             return;
 
-        if(rowIndex > 0) {
-            OPENSIM_THROW_IF(DT::_indData[rowIndex - 1] >= time,
-                             TimestampLessThanEqualToPrevious, rowIndex, time, 
-                             DT::_indData[rowIndex - 1]);
-        }
+        //if(rowIndex > 0) {
+        //    OPENSIM_THROW_IF(DT::_indData[rowIndex - 1] >= time,
+        //                     TimestampLessThanEqualToPrevious, rowIndex, time, 
+        //                     DT::_indData[rowIndex - 1]);
+        //}
 
-        if(rowIndex < DT::_indData.size() - 1) {
-            OPENSIM_THROW_IF(DT::_indData[rowIndex + 1] <= time,
-                             TimestampGreaterThanEqualToNext, rowIndex, time, 
-                             DT::_indData[rowIndex + 1]);
-        }
+        //if(rowIndex < DT::_indData.size() - 1) {
+        //    OPENSIM_THROW_IF(DT::_indData[rowIndex + 1] <= time,
+        //                     TimestampGreaterThanEqualToNext, rowIndex, time, 
+        //                     DT::_indData[rowIndex + 1]);
+        //}
     }
 }; // TimeSeriesTable_
 
@@ -432,9 +397,6 @@ typedef TimeSeriesTable_<SimTK::Real> TimeSeriesTable;
 
 /** See TimeSeriesTable_ for details on the interface.                        */
 typedef TimeSeriesTable_<SimTK::Vec3> TimeSeriesTableVec3;
-
-/** See TimeSeriesTable_ for details on the interface.                        */
-typedef TimeSeriesTable_<SimTK::Quaternion> TimeSeriesTableQuaternion;
 } // namespace OpenSim
 
 #endif // OPENSIM_TIME_SERIES_DATA_TABLE_H_

@@ -34,6 +34,8 @@
 #include "SimTKcommon.h"
 #include <vector>
 
+#include "osim_adouble.h"
+
 
 namespace OpenSim { 
 
@@ -61,9 +63,9 @@ class OSIMCOMMON_API StateVector
 //=============================================================================
 private:
     /** Time stamp of the statevector. */
-    double _t;
+    osim_double_adouble _t;
     /** Array of states. */
-    Array<double> _data;
+    Array<osim_double_adouble> _data;
 
 //=============================================================================
 // METHODS
@@ -73,8 +75,8 @@ public:
     StateVector(const StateVector&) = default;
     virtual ~StateVector();
 
-    StateVector(double aT);
-    StateVector(double aT, const SimTK::Vector_<double>& data);
+    StateVector(osim_double_adouble aT);
+    StateVector(osim_double_adouble aT, const SimTK::Vector_<osim_double_adouble>& data);
 
 private:
     void setNull();
@@ -97,33 +99,33 @@ public:
     // GET AND SET
     //--------------------------------------------------------------------------
 public:
-    void setStates(double aT, const SimTK::Vector_<double>& data);
+    void setStates(osim_double_adouble aT, const SimTK::Vector_<osim_double_adouble>& data);
     int getSize() const;
-    void setTime(double aT);
-    double  getTime() const;
-    int getDataValue(int aIndex,double &rValue);
-    void setDataValue(int aIndex,double &aValue);
-    Array<double>& getData();
+    void setTime(osim_double_adouble aT);
+	osim_double_adouble  getTime() const;
+    int getDataValue(int aIndex, osim_double_adouble &rValue);
+    void setDataValue(int aIndex, osim_double_adouble &aValue);
+    Array<osim_double_adouble>& getData();
 #ifndef SWIG
-    const Array<double>& getData() const;
+    const Array<osim_double_adouble>& getData() const;
 #endif
     //--------------------------------------------------------------------------
     // OPERATIONS
     //--------------------------------------------------------------------------
-    void shiftTime(double aValue);
-    void scaleTime(double aValue);
-    void add(double aValue);
-    void add(const SimTK::Vector_<double>& values);
-    void add(int aN,double aValue);
+    void shiftTime(osim_double_adouble aValue);
+    void scaleTime(osim_double_adouble aValue);
+    void add(osim_double_adouble aValue);
+    void add(const SimTK::Vector_<osim_double_adouble>& values);
+    void add(int aN, osim_double_adouble aValue);
     void add(StateVector *aStateVector);
-    void subtract(double aValue);
-    void subtract(const SimTK::Vector_<double>& values);
+    void subtract(osim_double_adouble aValue);
+    void subtract(const SimTK::Vector_<osim_double_adouble>& values);
     void subtract(StateVector *aStateVector);
-    void multiply(double aValue);
-    void multiply(const SimTK::Vector_<double>& values);
+    void multiply(osim_double_adouble aValue);
+    void multiply(const SimTK::Vector_<osim_double_adouble>& values);
     void multiply(StateVector *aStateVector);
-    void divide(double aValue);
-    void divide(const SimTK::Vector_<double>& values);
+    void divide(osim_double_adouble aValue);
+    void divide(const SimTK::Vector_<osim_double_adouble>& values);
     void divide(StateVector *aStateVector);
 
     //--------------------------------------------------------------------------

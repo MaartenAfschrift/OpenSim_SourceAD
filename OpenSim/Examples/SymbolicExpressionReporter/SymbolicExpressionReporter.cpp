@@ -252,7 +252,7 @@ record(const SimTK::State& s)
  * @return -1 on error, 0 otherwise.
  */
 int SymbolicExpressionReporter::
-begin( const SimTK::State& s)
+begin( SimTK::State& s)
 {
     if(!proceed()) return(0);
     // LABELS
@@ -312,7 +312,7 @@ step(const SimTK::State& s, int stepNumber )
  * @return -1 on error, 0 otherwise.
  */
 int SymbolicExpressionReporter::
-end( const SimTK::State& s )
+end( SimTK::State& s )
 {
     if (!proceed()) return 0;
 

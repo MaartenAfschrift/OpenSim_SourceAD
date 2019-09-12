@@ -69,7 +69,7 @@ MultiplierFunction::MultiplierFunction(Function* aFunction) :
 //_____________________________________________________________________________
 /**
  */
-MultiplierFunction::MultiplierFunction(Function* aFunction, double aScaleFactor) :
+MultiplierFunction::MultiplierFunction(Function* aFunction, osim_double_adouble aScaleFactor) :
    _osFunction(_osFunctionProp.getValueObjPtrRef()),
    _scale(_scaleProp.getValueDbl())
 {
@@ -157,12 +157,12 @@ void MultiplierFunction::setFunction(Function* aFunction)
     _osFunction = aFunction;
 }
 
-void MultiplierFunction::setScale(double aScaleFactor)
+void MultiplierFunction::setScale(osim_double_adouble aScaleFactor)
 {
     _scale = aScaleFactor;
 }
 
-double MultiplierFunction::calcDerivative(const std::vector<int>& derivComponents, const Vector& x) const
+osim_double_adouble MultiplierFunction::calcDerivative(const std::vector<int>& derivComponents, const Vector& x) const
 {
     if (_osFunction)
         return _osFunction->calcDerivative(derivComponents, x) * _scale;
@@ -172,7 +172,7 @@ double MultiplierFunction::calcDerivative(const std::vector<int>& derivComponent
     }
 }
 
-double MultiplierFunction::calcValue(const SimTK::Vector& x) const
+osim_double_adouble MultiplierFunction::calcValue(const SimTK::Vector& x) const
 {
     if (_osFunction)
         return _osFunction->calcValue(x) * _scale;

@@ -297,26 +297,20 @@ deleteStorage()
 // GET AND SET
 //=============================================================================
 //_____________________________________________________________________________
-/* Set the model for which the point kinematics are to be computed. */
-void PointKinematics::setModel(Model& model)
+/**
+ * Set the model for which the point kinematics are to be computed.
+ *
+ * @param aModel Model pointer
+ */
+void PointKinematics::
+setModel(Model& aModel)
 {
-    Analysis::setModel(model);
-
-    _body = nullptr;
-    _relativeToBody = nullptr;
+    Analysis::setModel(aModel);
 
     // Map name to index
-    if (model.hasComponent<PhysicalFrame>(_bodyName))
-        _body = &model.getComponent<PhysicalFrame>(_bodyName);
-    else if (model.hasComponent<PhysicalFrame>("./bodyset/" + _bodyName))
-        _body = &model.getComponent<PhysicalFrame>("./bodyset/"+_bodyName);
-
-    if (model.hasComponent<PhysicalFrame>(_relativeToBodyName))
-        _relativeToBody = &model.getComponent<PhysicalFrame>(
-            _relativeToBodyName);
-    else if(model.hasComponent<PhysicalFrame>("./bodyset/" + _relativeToBodyName))
-        _relativeToBody = &model.getComponent<PhysicalFrame>(
-            "./bodyset/" + _relativeToBodyName);
+    _body = &aModel.updBodySet().get(_bodyName);
+    if (aModel.updBodySet().contains(_relativeToBodyName))
+        _relativeToBody = &aModel.updBodySet().get(_relativeToBodyName);
 
     // DESCRIPTION AND LABELS
     constructDescription();
@@ -349,7 +343,8 @@ setBodyPoint(const std::string& aBody, const SimTK::Vec3& aPoint)
  *
  * @param aBody Body ID
  */
-void PointKinematics::setBody(const PhysicalFrame* aBody)
+void PointKinematics::
+setBody(Body* aBody)
 {
     // CHECK
     if (aBody==NULL) {
@@ -363,7 +358,8 @@ void PointKinematics::setBody(const PhysicalFrame* aBody)
     _bodyName = _body->getName();
     cout<<"PointKinematics.setBody: set body to "<<_bodyName<<endl;
 }
-void PointKinematics::setRelativeToBody(const PhysicalFrame* aBody)
+void PointKinematics::
+setRelativeToBody(Body* aBody)
 {
     // CHECK
     if (aBody==NULL) {
@@ -384,12 +380,12 @@ void PointKinematics::setRelativeToBody(const PhysicalFrame* aBody)
  *
  * @return Body pointer
  */
-const PhysicalFrame* PointKinematics::getBody() const
+Body* PointKinematics::getBody()
 {
     return(_body);
 }
 
-const PhysicalFrame* PointKinematics::getRelativeToBody() const
+Body* PointKinematics::getRelativeToBody()
 {
     return(_relativeToBody);
 }
@@ -521,7 +517,7 @@ record(const SimTK::State& s)
     SimTK::Vec3 vec;
 
     const double& time = s.getTime();
-    const Ground& ground = _model->getGround();
+    Ground ground = _model->getGround();
 
     // POSITION
     vec = _body->findStationLocationInGround(s, _point);
@@ -567,7 +563,7 @@ record(const SimTK::State& s)
  * @return -1 on error, 0 otherwise.
  */
 int PointKinematics::
-begin( const SimTK::State& s)
+begin( SimTK::State& s)
 {
     if(!proceed()) return(0);
 
@@ -623,7 +619,7 @@ step(const SimTK::State& s, int stepNumber)
  * @return -1 on error, 0 otherwise.
  */
 int PointKinematics::
-end( const SimTK::State& s)
+end( SimTK::State& s)
 {
     if(!proceed()) return(0);
     record(s);

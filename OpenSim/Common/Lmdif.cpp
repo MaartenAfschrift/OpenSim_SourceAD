@@ -38,67 +38,68 @@
 #include <stdio.h>
 #include <math.h>
 #include "Lmdif.h"
+#include "osim_adouble.h"
 
-void pmat(int m, int n, double y[]);
+void pmat(int m, int n, osim_double_adouble y[]);
 int mod(int k, int m);
 int min0(int a, int b);
-double dmin1(double a, double b);
-double dmax1(double a, double b);
+osim_double_adouble dmin1(osim_double_adouble a, osim_double_adouble b);
+osim_double_adouble dmax1(osim_double_adouble a, osim_double_adouble b);
 
 //#define BUG 0
 int JACOBIAN;
 
 void fdjac2(
-  void (*fcn)(int, int, double[], double[], int *, void *),
+  void (*fcn)(int, int, osim_double_adouble[], osim_double_adouble[], int *, void *),
   int    m,
   int    n,
-  double x[],
-  double fvec[],
-  double fjac[],
+  osim_double_adouble x[],
+  osim_double_adouble fvec[],
+  osim_double_adouble fjac[],
   int    ldfjac,
   int   *iflag,
-  double epsfcn,
-  double wa[],
+  osim_double_adouble epsfcn,
+  osim_double_adouble wa[],
   void *data);
 
-double enorm(int n, double x[]);
+osim_double_adouble enorm(int n, osim_double_adouble x[]);
 
 void qrsolv(
   int    n,
-  double r[],
+  osim_double_adouble r[],
   int    ldr,
   int    ipvt[],
-  double diag[],
-  double qtb[],
-  double x[],
-  double sdiag[],
-  double wa[]);
+  osim_double_adouble diag[],
+  osim_double_adouble qtb[],
+  osim_double_adouble x[],
+  osim_double_adouble sdiag[],
+  osim_double_adouble wa[]);
 
 void qrfac(
   int    m,
   int    n,
-  double a[],
+  osim_double_adouble a[],
   int    lda,
   int    pivot,
   int    ipvt[],
   int    lipvt,
-  double rdiag[],
-  double acnorm[],
-  double wa[]);
+  osim_double_adouble rdiag[],
+  osim_double_adouble acnorm[],
+  osim_double_adouble wa[]);
 
 void lmpar(
   int    n,
-  double r[],
+  osim_double_adouble r[],
   int    ldr,
   int    ipvt[],
-  double diag[],
-  double qtb[],
-  double delta,
-  double *par,
-  double x[],
-  double sdiag[],
-  double wa1[],
-  double wa2[]);
+  osim_double_adouble diag[],
+  osim_double_adouble qtb[],
+  osim_double_adouble delta,
+  osim_double_adouble *par,
+  osim_double_adouble x[],
+  osim_double_adouble sdiag[],
+  osim_double_adouble wa1[],
+  osim_double_adouble wa2[]);
 
 
 
@@ -290,30 +291,30 @@ void lmpar(
 *     **********
 */
 void lmdif_C(
-  void (*fcn)(int, int, double[], double[], int *, void *),
+  void (*fcn)(int, int, osim_double_adouble[], osim_double_adouble[], int *, void *),
   int    m,
   int    n,
-  double x[],
-  double fvec[],
-  double ftol,
-  double xtol,
-  double gtol,
+  osim_double_adouble x[],
+  osim_double_adouble fvec[],
+  osim_double_adouble ftol,
+  osim_double_adouble xtol,
+  osim_double_adouble gtol,
   int    maxfev,
-  double epsfcn,
-  double diag[],
+  osim_double_adouble epsfcn,
+  osim_double_adouble diag[],
   int    mode,
-  double factor,
+  osim_double_adouble factor,
   int    nprint,
   int   *info,
   int   *nfev,
-  double fjac[],
+  osim_double_adouble fjac[],
   int    ldfjac,
   int    ipvt[],
-  double qtf[],
-  double wa1[],
-  double wa2[],
-  double wa3[],
-  double wa4[],
+  osim_double_adouble qtf[],
+  osim_double_adouble wa1[],
+  osim_double_adouble wa2[],
+  osim_double_adouble wa3[],
+  osim_double_adouble wa4[],
   void *data)
 {
    int i;
@@ -323,29 +324,29 @@ void lmdif_C(
    int iter;
    int j;
    int l;
-   double actred;
-   double delta;
-   double dirder;
-   double fnorm;
-   double fnorm1;
-   double gnorm;
-   double par;
-   double pnorm;
-   double prered;
-   double ratio;
-   double sum;
-   double temp;
-   double temp1;
-   double temp2;
-   double temp3;
-   double xnorm;
-   static double one = 1.0;
-   static double p1 = 0.1;
-   static double p5 = 0.5;
-   static double p25 = 0.25;
-   static double p75 = 0.75;
-   static double p0001 = 1.0e-4;
-   static double zero = 0.0;
+   osim_double_adouble actred;
+   osim_double_adouble delta;
+   osim_double_adouble dirder;
+   osim_double_adouble fnorm;
+   osim_double_adouble fnorm1;
+   osim_double_adouble gnorm;
+   osim_double_adouble par;
+   osim_double_adouble pnorm;
+   osim_double_adouble prered;
+   osim_double_adouble ratio;
+   osim_double_adouble sum;
+   osim_double_adouble temp;
+   osim_double_adouble temp1;
+   osim_double_adouble temp2;
+   osim_double_adouble temp3;
+   osim_double_adouble xnorm;
+   static osim_double_adouble one = 1.0;
+   static osim_double_adouble p1 = 0.1;
+   static osim_double_adouble p5 = 0.5;
+   static osim_double_adouble p25 = 0.25;
+   static osim_double_adouble p75 = 0.75;
+   static osim_double_adouble p0001 = 1.0e-4;
+   static osim_double_adouble zero = 0.0;
    //static double p05 = 0.05;
    
    *info = 0;
@@ -773,17 +774,17 @@ L300:
 */
 void lmpar(
   int n,
-  double r[],
+  osim_double_adouble r[],
   int ldr,
   int ipvt[],
-  double diag[],
-  double qtb[],
-  double delta,
-  double *par,
-  double x[],
-  double sdiag[],
-  double wa1[],
-  double wa2[])
+  osim_double_adouble diag[],
+  osim_double_adouble qtb[],
+  osim_double_adouble delta,
+  osim_double_adouble *par,
+  osim_double_adouble x[],
+  osim_double_adouble sdiag[],
+  osim_double_adouble wa1[],
+  osim_double_adouble wa2[])
 {
    int i;
    int iter;
@@ -795,18 +796,18 @@ void lmpar(
    int k;
    int l;
    int nsing;
-   double dxnorm;
-   double fp;
-   double gnorm;
-   double parc;
-   double parl;
-   double paru;
-   double sum;
-   double temp;
-   static double zero = 0.0;
+   osim_double_adouble dxnorm;
+   osim_double_adouble fp;
+   osim_double_adouble gnorm;
+   osim_double_adouble parc;
+   osim_double_adouble parl;
+   osim_double_adouble paru;
+   osim_double_adouble sum;
+   osim_double_adouble temp;
+   static osim_double_adouble zero = 0.0;
    //static double one = 1.0;
-   static double p1 = 0.1;
-   static double p001 = 0.001;
+   static osim_double_adouble p1 = 0.1;
+   static osim_double_adouble p001 = 0.001;
    
 #ifdef BUG
    printf( "lmpar\n" );
@@ -1099,14 +1100,14 @@ L220:
 */
 void qrfac(int m,
            int n,
-           double a[],
+           osim_double_adouble a[],
            int lda,
            int pivot,
            int ipvt[],
            int lipvt,
-           double rdiag[],
-           double acnorm[],
-           double wa[])
+           osim_double_adouble rdiag[],
+           osim_double_adouble acnorm[],
+           osim_double_adouble wa[])
 {
    int i;
    int ij;
@@ -1116,12 +1117,12 @@ void qrfac(int m,
    int k;
    int kmax;
    int minmn;
-   double ajnorm;
-   double sum;
-   double temp;
-   static double zero = 0.0;
-   static double one = 1.0;
-   static double p05 = 0.05;
+   osim_double_adouble ajnorm;
+   osim_double_adouble sum;
+   osim_double_adouble temp;
+   static osim_double_adouble zero = 0.0;
+   static osim_double_adouble one = 1.0;
+   static osim_double_adouble p05 = 0.05;
    
    /* compute the initial column norms and initialize several arrays. */
    //printf("\nqrfac\n");
@@ -1327,14 +1328,14 @@ L100:
 */
 
 void qrsolv(int n,
-            double r[],
+            osim_double_adouble r[],
             int ldr,
             int ipvt[],
-            double diag[],
-            double qtb[],
-            double x[],
-            double sdiag[],
-            double wa[])
+            osim_double_adouble diag[],
+            osim_double_adouble qtb[],
+            osim_double_adouble x[],
+            osim_double_adouble sdiag[],
+            osim_double_adouble wa[])
 {
    int i;
    int ij;
@@ -1346,16 +1347,16 @@ void qrsolv(int n,
    int kp1;
    int l;
    int nsing;
-   double cos;
-   double cotan;
-   double qtbpj;
-   double sin;
-   double sum;
-   double tan;
-   double temp;
-   static double zero = 0.0;
-   static double p25 = 0.25;
-   static double p5 = 0.5;
+   osim_double_adouble cos;
+   osim_double_adouble cotan;
+   osim_double_adouble qtbpj;
+   osim_double_adouble sin;
+   osim_double_adouble sum;
+   osim_double_adouble tan;
+   osim_double_adouble temp;
+   static osim_double_adouble zero = 0.0;
+   static osim_double_adouble p25 = 0.25;
+   static osim_double_adouble p5 = 0.5;
    //double fabs(), sqrt();
    
    /* copy r and (q transpose)*b to preserve input and initialize s.
@@ -1531,23 +1532,23 @@ L150:
 *
 *     **********
 */
-double enorm(int n, double x[])
+osim_double_adouble enorm(int n, osim_double_adouble x[])
 {
    int i;
-   double agiant;
-   double floatn;
-   double s1;
-   double s2;
-   double s3;
-   double xabs;
-   double x1max;
-   double x3max;
-   double ans;
-   double temp;
-   static double rdwarf = 3.834e-20;
-   static double rgiant = 1.304e19;
-   static double zero = 0.0;
-   static double one = 1.0;
+   osim_double_adouble agiant;
+   osim_double_adouble floatn;
+   osim_double_adouble s1;
+   osim_double_adouble s2;
+   osim_double_adouble s3;
+   osim_double_adouble xabs;
+   osim_double_adouble x1max;
+   osim_double_adouble x3max;
+   osim_double_adouble ans;
+   osim_double_adouble temp;
+   static osim_double_adouble rdwarf = 3.834e-20;
+   static osim_double_adouble rgiant = 1.304e19;
+   static osim_double_adouble zero = 0.0;
+   static osim_double_adouble one = 1.0;
    //double fabs(), sqrt();
    
    s1 = zero;
@@ -1701,24 +1702,24 @@ double enorm(int n, double x[])
 **********
 */
 //#define BUG 0
-void fdjac2(void (*fcn)(int, int, double[], double[], int *, void *),
+void fdjac2(void (*fcn)(int, int, osim_double_adouble[], osim_double_adouble[], int *, void *),
             int m,
             int n,
-            double x[],
-            double fvec[],
-            double fjac[],
+            osim_double_adouble x[],
+            osim_double_adouble fvec[],
+            osim_double_adouble fjac[],
             int ldfjac,
             int *iflag,
-            double epsfcn,
-            double wa[],
+            osim_double_adouble epsfcn,
+            osim_double_adouble wa[],
             void *data)
 {
    int i;
    int j;
    int ij;
-   double eps;
-   double h;
-   double temp;
+   osim_double_adouble eps;
+   osim_double_adouble h;
+   osim_double_adouble temp;
    //static double zero = 0.0;
 
    //dkb - changed to equal TvdB solver code, use constant delta = 1e-5
@@ -1766,7 +1767,7 @@ void fdjac2(void (*fcn)(int, int, double[], double[], int *, void *),
 
 /************************lmmisc.c*************************/
 
-double dmax1(double a, double b)
+osim_double_adouble dmax1(osim_double_adouble a, osim_double_adouble b)
 {
    if (a >= b)
       return a;
@@ -1774,7 +1775,7 @@ double dmax1(double a, double b)
       return b;
 }
 
-double dmin1(double a, double b)
+osim_double_adouble dmin1(osim_double_adouble a, osim_double_adouble b)
 {
    if (a <= b)
       return a;
@@ -1796,7 +1797,7 @@ int mod(int k, int m)
 }
 
 
-void pmat(int m, int n, double y[])
+void pmat(int m, int n, osim_double_adouble y[])
 {
    int i;
    int j;

@@ -28,6 +28,7 @@
 #include <OpenSim/Simulation/Model/Model.h>
 #include <OpenSim/Simulation/Model/PhysicalFrame.h>
 #include <OpenSim/Simulation/Model/PhysicalOffsetFrame.h>
+#include <OpenSim/Common/ScaleSet.h>
 #include "simbody/internal/Constraint.h"
 #include "simbody/internal/MobilizedBody_Ground.h"
 
@@ -258,15 +259,50 @@ bool Joint::isCoordinateUsed(const Coordinate& aCoordinate) const
     return false;
 }
 
+//=============================================================================
+// SCALING
+//=============================================================================
+//_____________________________________________________________________________
 
-void Joint::addFrame(PhysicalOffsetFrame* frame)
+void Joint::scale(const ScaleSet& scaleSet)
 {
-    OPENSIM_THROW_IF(isComponentInOwnershipTree(frame),
-                     ComponentAlreadyPartOfOwnershipTree,
-                     frame->getName(), getName());
-    updProperty_frames().adoptAndAppendValue(frame);
-    finalizeFromProperties();
-    prependComponentPathToConnecteePath(*frame);
+    SimTK::Vec3 parentFactors(1.0);
+    SimTK::Vec3 childFactors(1.0);
+
+    // Find the factors associated with the PhysicalFrames this Joint connects
+    const string& parentName = getParentFrame().findBaseFrame().getName();
+    const string& childName = getChildFrame().findBaseFrame().getName();
+    // Get scale factors
+    bool found_p = false;
+    bool found_b = false;
+    for (int i = 0; i < scaleSet.getSize(); i++) {
+        Scale& scale = scaleSet.get(i);
+        if (!found_p && (scale.getSegmentName() == parentName)) {
+            scale.getScaleFactors(parentFactors);
+            found_p = true;
+        }
+        if (!found_b && (scale.getSegmentName() == childName)) {
+            scale.getScaleFactors(childFactors);
+            found_b = true;
+        }
+        if (found_p && found_b)
+            break;
+    }
+
+    // if the frame is owned by this Joint scale it,
+    // otherwise let the owner of the frame decide.
+    int found = getProperty_frames().findIndex(getParentFrame());
+    if (found >= 0) {
+        PhysicalOffsetFrame& offset
+            = SimTK_DYNAMIC_CAST_DEBUG<PhysicalOffsetFrame&>(upd_frames(found));
+        offset.scale(parentFactors);
+    }
+    found = getProperty_frames().findIndex(getChildFrame());
+    if (found >= 0) {
+        PhysicalOffsetFrame& offset
+            = SimTK_DYNAMIC_CAST_DEBUG<PhysicalOffsetFrame&>(upd_frames(found));
+        offset.scale(childFactors);
+    }
 }
 
 const SimTK::MobilizedBodyIndex Joint::
@@ -280,17 +316,6 @@ void Joint::setChildMobilizedBodyIndex(const SimTK::MobilizedBodyIndex index) co
     getChildFrame().setMobilizedBodyIndex(index);
 }
 
-
-void Joint::extendConnectToModel(Model& model) 
-{
-    Super::extendConnectToModel(model);
-
-    auto& parent = updSocket<PhysicalFrame>("parent_frame").getConnectee();
-    auto& child = updSocket<PhysicalFrame>("child_frame").getConnectee();
-
-    OPENSIM_THROW_IF(&parent == &child, JointFramesAreTheSame,
-        getName(), parent.getName());
-}
 
 void Joint::extendAddToSystem(SimTK::MultibodySystem& system) const
 {
@@ -326,56 +351,56 @@ void Joint::extendSetPropertiesFromState(const SimTK::State& state)
 //=============================================================================
 /* Calculate the equivalent spatial force, FB_G, acting on the body connected by
    this joint at its location B, expressed in ground.  */
-SimTK::SpatialVec Joint::calcEquivalentSpatialForce(const SimTK::State &s, 
-    const SimTK::Vector &mobilityForces) const
-{
-    // The number of mobilities for the entire system.
-    int nm = _model->getMatterSubsystem().getNumMobilities();
-
-    if(nm != mobilityForces.size()){
-        throw Exception("Joint::calcEquivalentSpatialForce(): input mobilityForces does not match model's mobilities");
-    }
-
-    const SimTK::MobilizedBodyIndex &mbx = getChildFrame().getMobilizedBodyIndex();
-    // build a unique list of underlying MobilizedBodies that are involved
-    // with this Joint in addition to and not including that of the child body
-
-    std::set<SimTK::MobilizedBodyIndex> mbds;
-
-    for(int i = 0; i < numCoordinates(); ++i) {
-        const MobilizedBodyIndex& coordsMbx = get_coordinates(i).getBodyIndex();
-        if (coordsMbx != mbx){
-            mbds.insert(coordsMbx);
-        }
-    }
-    
-    SimTK::SpatialVec FB_G = calcEquivalentSpatialForceForMobilizedBody(s, mbx, mobilityForces);
-    SimTK::SpatialVec FBx_G;
-
-    std::set<SimTK::MobilizedBodyIndex>::const_iterator it = mbds.begin();
-
-    //const SimTK::MobilizedBody &G = getModel().getMatterSubsystem().getGround();
-    //const SimTK::MobilizedBody &B = getModel().getMatterSubsystem().getMobilizedBody(mbx);
-    //SimTK::Vec3 r_BG =
-    //    B.expressVectorInAnotherBodyFrame(s, B.getOutboardFrame(s).p(), G);
-
-    while(it != mbds.end()){
-        FBx_G = calcEquivalentSpatialForceForMobilizedBody(s, *it, mobilityForces);
-
-        //const SimTK::MobilizedBody &b = 
-        //   getModel().getMatterSubsystem().getMobilizedBody(*it);
-
-        
-        //SimTK::Vec3 r_bG = 
-        //    b.expressVectorInAnotherBodyFrame(s, b.getOutboardFrame(s).p(), G);
-
-        // Torques add and include term due to offset in forces
-        FB_G += FBx_G; // shiftForceFromTo(FBx_G, r_bG, r_BG);
-        ++it;
-    }
-    
-    return FB_G;
-}
+//SimTK::SpatialVec Joint::calcEquivalentSpatialForce(const SimTK::State &s, 
+//    const SimTK::Vector &mobilityForces) const
+//{
+//    // The number of mobilities for the entire system.
+//    int nm = _model->getMatterSubsystem().getNumMobilities();
+//
+//    if(nm != mobilityForces.size()){
+//        throw Exception("Joint::calcEquivalentSpatialForce(): input mobilityForces does not match model's mobilities");
+//    }
+//
+//    const SimTK::MobilizedBodyIndex &mbx = getChildFrame().getMobilizedBodyIndex();
+//    // build a unique list of underlying MobilizedBodies that are involved
+//    // with this Joint in addition to and not including that of the child body
+//
+//    std::set<SimTK::MobilizedBodyIndex> mbds;
+//
+//    for(int i = 0; i < numCoordinates(); ++i) {
+//        const MobilizedBodyIndex& coordsMbx = get_coordinates(i).getBodyIndex();
+//        if (coordsMbx != mbx){
+//            mbds.insert(coordsMbx);
+//        }
+//    }
+//    
+//    SimTK::SpatialVec FB_G = calcEquivalentSpatialForceForMobilizedBody(s, mbx, mobilityForces);
+//    SimTK::SpatialVec FBx_G;
+//
+//    std::set<SimTK::MobilizedBodyIndex>::const_iterator it = mbds.begin();
+//
+//    //const SimTK::MobilizedBody &G = getModel().getMatterSubsystem().getGround();
+//    //const SimTK::MobilizedBody &B = getModel().getMatterSubsystem().getMobilizedBody(mbx);
+//    //SimTK::Vec3 r_BG =
+//    //    B.expressVectorInAnotherBodyFrame(s, B.getOutboardFrame(s).p(), G);
+//
+//    while(it != mbds.end()){
+//        FBx_G = calcEquivalentSpatialForceForMobilizedBody(s, *it, mobilityForces);
+//
+//        //const SimTK::MobilizedBody &b = 
+//        //   getModel().getMatterSubsystem().getMobilizedBody(*it);
+//
+//        
+//        //SimTK::Vec3 r_bG = 
+//        //    b.expressVectorInAnotherBodyFrame(s, b.getOutboardFrame(s).p(), G);
+//
+//        // Torques add and include term due to offset in forces
+//        FB_G += FBx_G; // shiftForceFromTo(FBx_G, r_bG, r_BG);
+//        ++it;
+//    }
+//    
+//    return FB_G;
+//}
 
 /** Joints only produce power when internal constraint forces have components along
     the mobilities of the joint (for example to satisfy prescribed motion). In 
@@ -383,9 +408,9 @@ SimTK::SpatialVec Joint::calcEquivalentSpatialForce(const SimTK::State &s,
     multiplied by the mobilities (internal coordinate velocities). Only constraints
     internal to the joint are accounted for, not external constraints that affect
     joint motion. */
-double Joint::calcPower(const SimTK::State &s) const
+osim_double_adouble Joint::calcPower(const SimTK::State &s) const
 {
-    double power = 0;
+    osim_double_adouble power = 0;
     for(int i = 0; i < numCoordinates(); ++i) {
         if (get_coordinates(i).isPrescribed(s)) {
             // get the reaction force for this coordinate prescribed motion constraint
@@ -404,314 +429,314 @@ double Joint::calcPower(const SimTK::State &s) const
 //=============================================================================
 /* Calculate the equivalent spatial force, FB_G, acting on a mobilized body specified 
    by index acting at its mobilizer frame B, expressed in ground.  */
-SimTK::SpatialVec Joint::calcEquivalentSpatialForceForMobilizedBody(const SimTK::State &s, 
-    const SimTK::MobilizedBodyIndex mbx, const SimTK::Vector &mobilityForces) const
-{
-    // Get the mobilized body
-    const SimTK::MobilizedBody mbd    = getModel().getMatterSubsystem().getMobilizedBody(mbx);
-    const SimTK::UIndex        ustart = mbd.getFirstUIndex(s);
-    const int                  nu     = mbd.getNumU(s);
+//SimTK::SpatialVec Joint::calcEquivalentSpatialForceForMobilizedBody(const SimTK::State &s, 
+//    const SimTK::MobilizedBodyIndex mbx, const SimTK::Vector &mobilityForces) const
+//{
+//    // Get the mobilized body
+//    const SimTK::MobilizedBody mbd    = getModel().getMatterSubsystem().getMobilizedBody(mbx);
+//    const SimTK::UIndex        ustart = mbd.getFirstUIndex(s);
+//    const int                  nu     = mbd.getNumU(s);
+//
+//    const SimTK::MobilizedBody ground = getModel().getMatterSubsystem().getGround();
+//
+//    if (nu == 0) // No mobility forces (weld joint?).
+//        return SimTK::SpatialVec(SimTK::Vec3(0), SimTK::Vec3(0));
+//
+//    // Construct the H (joint Jacobian, joint transition) matrix for this mobilizer
+//    SimTK::Matrix transposeH_PB_w(nu, 3);
+//    SimTK::Matrix transposeH_PB_v(nu, 3);
+//    // from individual columns
+//    SimTK::SpatialVec Hcol;
+//    
+//    // To obtain the joint Jacobian, H_PB (H_FM in Simbody) need to be realized to at least position
+//    _model->getMultibodySystem().realize(s, SimTK::Stage::Position);
+//
+//    SimTK::Vector f(nu, 0.0);
+//    for(int i =0; i<nu; ++i){
+//        f[i] = mobilityForces[ustart + i];
+//        // Get the H matrix for this Joint by constructing it from the operator H*u
+//        Hcol = mbd.getH_FMCol(s, SimTK::MobilizerUIndex(i));
+//        const SimTK::Vector hcolw(Hcol[0]);
+//        const SimTK::Vector hcolv(Hcol[1]);
+//
+//        transposeH_PB_w[i] = ~hcolw;
+//        transposeH_PB_v[i] = ~hcolv;
+//    }
+//
+//    // Spatial force and torque vectors
+//    SimTK::Vector Fv(3, 0.0), Fw(3, 0.0);
+//
+//    // Solve the pseudoinverse problem of Fv = pinv(~H_PB_G_v)*f;
+//    SimTK::FactorQTZ pinvForce(transposeH_PB_v);
+//
+//    //if rank = 0, body force cannot contribute to the mobility force
+//    if(pinvForce.getRank() > 0)
+//        pinvForce.solve(f, Fv);
+//    
+//    // Now solve the pseudoinverse for torque for any unaccounted f: Fw = pinv(~H_PB_G_w)*(f - ~H_PB_G_v*Fv);
+//    SimTK::FactorQTZ pinvTorq(transposeH_PB_w);
+//
+//    //if rank = 0, body torque cannot contribute to the mobility force
+//    if(pinvTorq.getRank() > 0)
+//        pinvTorq.solve(f, Fw);
+//    
+//    // Now we have two solution with either the body force Fv or body torque accounting for some or all of f
+//    SimTK::Vector fv =  transposeH_PB_v*Fv;
+//    SimTK::Vector fw =  transposeH_PB_w*Fw; 
+//
+//    // which to choose? Choose the more effective as fx.norm/Fx.norm
+//    if(fv.norm() > SimTK::SignificantReal){ // if body force can contributes at all
+//        // if body torque can contribute too and it is more effective
+//        if(fw.norm() > SimTK::SignificantReal){
+//            if (fw.norm()/Fw.norm() > fv.norm()/Fv.norm() ){ 
+//                // account for f using torque, Fw, so compute Fv with remainder
+//                pinvForce.solve(f-fw, Fv);      
+//            }else{
+//                // account for f using force, Fv, first and Fw from remainder
+//                pinvTorq.solve(f-fv, Fw);
+//            }
+//        }
+//        // else no torque contribution and Fw should be zero
+//    }
+//    // no force contribution but have a torque
+//    else if(fw.norm() > SimTK::SignificantReal){
+//        // just Fw
+//    }
+//    else{
+//        // should be the case where gen force is zero.
+//        assert(f.norm() < SimTK::SignificantReal);
+//    }
+//
+//    // The spatial forces above are expressed in the joint frame of the parent
+//    // Transform from parent joint frame, P into the parent body frame, Po
+//    const SimTK::Rotation R_PPo = (mbd.getInboardFrame(s).R());
+//
+//    // Re-express forces in ground, first by describing force in the parent, Po, 
+//    // frame instead of joint frame
+//    SimTK::Vec3 vecFw = R_PPo*SimTK::Vec3::getAs(&Fw[0]);
+//    SimTK::Vec3 vecFv = R_PPo*SimTK::Vec3::getAs(&Fv[0]);
+//
+//    //Force Acting on joint frame, B,  in child body expressed in Parent body, Po
+//    SimTK::SpatialVec FB_Po(vecFw, vecFv);
+//
+//    const MobilizedBody parent = mbd.getParentMobilizedBody();
+//    // to apply spatial forces on bodies they must be expressed in ground
+//    vecFw = parent.expressVectorInAnotherBodyFrame(s, FB_Po[0], ground);
+//    vecFv = parent.expressVectorInAnotherBodyFrame(s, FB_Po[1], ground);
+//
+//    // Package resulting torque and force as a spatial vec
+//    SimTK::SpatialVec FB_G(vecFw, vecFv);
+//
+//    return FB_G;
+//}
 
-    const SimTK::MobilizedBody ground = getModel().getMatterSubsystem().getGround();
-
-    if (nu == 0) // No mobility forces (weld joint?).
-        return SimTK::SpatialVec(SimTK::Vec3(0), SimTK::Vec3(0));
-
-    // Construct the H (joint Jacobian, joint transition) matrix for this mobilizer
-    SimTK::Matrix transposeH_PB_w(nu, 3);
-    SimTK::Matrix transposeH_PB_v(nu, 3);
-    // from individual columns
-    SimTK::SpatialVec Hcol;
-    
-    // To obtain the joint Jacobian, H_PB (H_FM in Simbody) need to be realized to at least position
-    _model->getMultibodySystem().realize(s, SimTK::Stage::Position);
-
-    SimTK::Vector f(nu, 0.0);
-    for(int i =0; i<nu; ++i){
-        f[i] = mobilityForces[ustart + i];
-        // Get the H matrix for this Joint by constructing it from the operator H*u
-        Hcol = mbd.getH_FMCol(s, SimTK::MobilizerUIndex(i));
-        const SimTK::Vector hcolw(Hcol[0]);
-        const SimTK::Vector hcolv(Hcol[1]);
-
-        transposeH_PB_w[i] = ~hcolw;
-        transposeH_PB_v[i] = ~hcolv;
-    }
-
-    // Spatial force and torque vectors
-    SimTK::Vector Fv(3, 0.0), Fw(3, 0.0);
-
-    // Solve the pseudoinverse problem of Fv = pinv(~H_PB_G_v)*f;
-    SimTK::FactorQTZ pinvForce(transposeH_PB_v);
-
-    //if rank = 0, body force cannot contribute to the mobility force
-    if(pinvForce.getRank() > 0)
-        pinvForce.solve(f, Fv);
-    
-    // Now solve the pseudoinverse for torque for any unaccounted f: Fw = pinv(~H_PB_G_w)*(f - ~H_PB_G_v*Fv);
-    SimTK::FactorQTZ pinvTorq(transposeH_PB_w);
-
-    //if rank = 0, body torque cannot contribute to the mobility force
-    if(pinvTorq.getRank() > 0)
-        pinvTorq.solve(f, Fw);
-    
-    // Now we have two solution with either the body force Fv or body torque accounting for some or all of f
-    SimTK::Vector fv =  transposeH_PB_v*Fv;
-    SimTK::Vector fw =  transposeH_PB_w*Fw; 
-
-    // which to choose? Choose the more effective as fx.norm/Fx.norm
-    if(fv.norm() > SimTK::SignificantReal){ // if body force can contributes at all
-        // if body torque can contribute too and it is more effective
-        if(fw.norm() > SimTK::SignificantReal){
-            if (fw.norm()/Fw.norm() > fv.norm()/Fv.norm() ){ 
-                // account for f using torque, Fw, so compute Fv with remainder
-                pinvForce.solve(f-fw, Fv);      
-            }else{
-                // account for f using force, Fv, first and Fw from remainder
-                pinvTorq.solve(f-fv, Fw);
-            }
-        }
-        // else no torque contribution and Fw should be zero
-    }
-    // no force contribution but have a torque
-    else if(fw.norm() > SimTK::SignificantReal){
-        // just Fw
-    }
-    else{
-        // should be the case where gen force is zero.
-        assert(f.norm() < SimTK::SignificantReal);
-    }
-
-    // The spatial forces above are expressed in the joint frame of the parent
-    // Transform from parent joint frame, P into the parent body frame, Po
-    const SimTK::Rotation R_PPo = (mbd.getInboardFrame(s).R());
-
-    // Re-express forces in ground, first by describing force in the parent, Po, 
-    // frame instead of joint frame
-    SimTK::Vec3 vecFw = R_PPo*SimTK::Vec3::getAs(&Fw[0]);
-    SimTK::Vec3 vecFv = R_PPo*SimTK::Vec3::getAs(&Fv[0]);
-
-    //Force Acting on joint frame, B,  in child body expressed in Parent body, Po
-    SimTK::SpatialVec FB_Po(vecFw, vecFv);
-
-    const MobilizedBody parent = mbd.getParentMobilizedBody();
-    // to apply spatial forces on bodies they must be expressed in ground
-    vecFw = parent.expressVectorInAnotherBodyFrame(s, FB_Po[0], ground);
-    vecFv = parent.expressVectorInAnotherBodyFrame(s, FB_Po[1], ground);
-
-    // Package resulting torque and force as a spatial vec
-    SimTK::SpatialVec FB_G(vecFw, vecFv);
-
-    return FB_G;
-}
-
-void Joint::updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber)
-{
-    int documentVersion = versionNumber;
-    //bool converting = false;
-    if (documentVersion < XMLDocument::getLatestVersion()){
-        if (documentVersion<30500){
-            XMLDocument::renameChildNode(aNode, "location", "location_in_child"); 
-            XMLDocument::renameChildNode(aNode, "orientation", "orientation_in_child");
-        }
-        // Version 30501 converted Connector_Body_ to Connector_PhysicalFrame_
-        if (documentVersion < 30501) {
-            // Handle any models that have the Joint connecting to Bodies instead
-            // of PhyscialFrames
-            XMLDocument::renameChildNode(aNode, "Connector_Body_",
-                                                "Connector_PhysicalFrame_");
-        }
-        // Version 30505 changed "parent_body" connector name to "parent_frame"
-        // Convert location and orientation into PhysicalOffsetFrames owned by the Joint
-        if (documentVersion < 30505) {
-            // Elements for the parent and child names the joint connects
-            SimTK::Xml::element_iterator parentNameElt;
-            SimTK::Xml::element_iterator childNameElt;
-            // The names of the two PhysicalFrames this joint connects
-            std::string parentFrameName("");
-            std::string childFrameName("");
-
-            SimTK::Xml::element_iterator connectors_node = aNode.element_begin("connectors");
-
-            SimTK::Xml::element_iterator connectorElement =
-                connectors_node->element_begin("Connector_PhysicalFrame_");
-            while (connectorElement != aNode.element_end()) {
-                // If connector name is "parent_body" rename it to "parent_frame"
-                if (connectorElement->getRequiredAttributeValue("name") == "parent_body") {
-                    connectorElement->setAttributeValue("name", "parent_frame");
-                }
-                // If connector name is "parent_frame" get the name of the connectee
-                if (connectorElement->getRequiredAttributeValue("name") == "parent_frame"){
-                    parentNameElt = connectorElement->element_begin("connectee_name");
-                    parentNameElt->getValueAs<std::string>(parentFrameName);
-
-                    const auto slashLoc = parentFrameName.rfind('/');
-                    if (slashLoc != std::string::npos)
-                        parentFrameName = parentFrameName.substr(slashLoc + 1);
-                }
-                if (connectorElement->getRequiredAttributeValue("name") == "child_body") {
-                    connectorElement->setAttributeValue("name", "child_frame");
-                }
-                if (connectorElement->getRequiredAttributeValue("name") == "child_frame") {
-                    childNameElt =  connectorElement->element_begin("connectee_name");
-                    childNameElt->getValueAs<std::string>(childFrameName);
-                    const auto slashLoc = childFrameName.rfind('/');
-                    if (slashLoc != std::string::npos)
-                        childFrameName = childFrameName.substr(slashLoc + 1);
-                }
-                ++connectorElement;
-            }
-
-            SimTK::Xml::element_iterator locParentElt =
-                aNode.element_begin("location_in_parent");
-            SimTK::Xml::element_iterator orientParentElt =
-                aNode.element_begin("orientation_in_parent");
-            SimTK::Xml::element_iterator locChildElt =
-                aNode.element_begin("location_in_child");
-            SimTK::Xml::element_iterator orientChildElt =
-                aNode.element_begin("orientation_in_child");
-
-            Vec3 location_in_parent(0);
-            Vec3 orientation_in_parent(0);
-            Vec3 location_in_child(0);
-            Vec3 orientation_in_child(0);
-
-            if (locParentElt != aNode.element_end()){
-                locParentElt->getValueAs<Vec3>(location_in_parent);
-            }
-            if (orientParentElt != aNode.element_end()){
-                orientParentElt->getValueAs<Vec3>(orientation_in_parent);
-            }
-            if (locChildElt != aNode.element_end()){
-                locChildElt->getValueAs<Vec3>(location_in_child);
-            }
-            if (orientChildElt != aNode.element_end()){
-                orientChildElt->getValueAs<Vec3>(orientation_in_child);
-            }
-
-            // now append updated frames to the property list for
-            // both parent and child
-            XMLDocument::addPhysicalOffsetFrame30505_30517(aNode, parentFrameName+"_offset",
-                parentFrameName, location_in_parent, orientation_in_parent);
-            parentNameElt->setValue(parentFrameName + "_offset");
-
-            XMLDocument::addPhysicalOffsetFrame30505_30517(aNode, childFrameName + "_offset",
-                childFrameName, location_in_child, orientation_in_child);
-            childNameElt->setValue(childFrameName + "_offset");
-        }
-
-        // Version 30507 replaced Joint's CoordinateSet with a "coordinates"
-        // list property.
-        if (documentVersion < 30507) {
-            if (aNode.hasElement("CoordinateSet")) {
-                auto coordSetIter = aNode.element_begin("CoordinateSet");
-                if (coordSetIter->hasElement("objects")) {
-                    auto coordIter = coordSetIter->getRequiredElement("objects")
-                                                   .element_begin("Coordinate");
-                    if (coordIter != aNode.element_end()) {
-                        // A "CoordinateSet" element exists, it contains an
-                        // "objects" element, and the "objects" element contains
-                        // at least one "Coordinate" element.
-
-                        // Create an element for the new layout.
-                        Xml::Element coordinatesElement("coordinates");
-                        // Copy all "Coordinate" elements from the old layout.
-                        while (coordIter != aNode.element_end()) {
-                            coordinatesElement.appendNode(coordIter->clone());
-                            ++coordIter;
-                        }
-                        // Insert new "coordinates" element.
-                        aNode.insertNodeAfter(coordSetIter, coordinatesElement);
-                    }
-                }
-
-                // Remove old "CoordinateSet" element.
-                aNode.eraseNode(coordSetIter);
-            }
-        }
-
-        // Version 30514 removed the user-facing "reverse" property from Joint.
-        // The parent and child frames are swapped if a "reverse" element is
-        // found and its value is "true".
-        if (documentVersion < 30514) {
-            auto reverseElt = aNode.element_begin("reverse");
-
-            if (reverseElt != aNode.element_end()) {
-                bool swapFrames = false;
-                reverseElt->getValue().tryConvertToBool(swapFrames);
-
-                if (swapFrames) {
-                    std::string oldParentFrameName = "";
-                    std::string oldChildFrameName  = "";
-
-                    // Find names of parent and child frames. If more than one
-                    // "parent_frame" or "child_frame" element exists, keep the
-                    // first one. The "parent_frame" and "child_frame" elements
-                    // may be listed in either order.
-                    SimTK::Xml::element_iterator connectorsNode =
-                        aNode.element_begin("connectors");
-                    SimTK::Xml::element_iterator connectorElt = connectorsNode->
-                        element_begin("Connector_PhysicalFrame_");
-                    SimTK::Xml::element_iterator connecteeNameElt;
-
-                    while (connectorElt != connectorsNode->element_end())
-                    {
-                        if (connectorElt->getRequiredAttributeValue("name") ==
-                            "parent_frame" && oldParentFrameName.empty())
-                        {
-                            connecteeNameElt = connectorElt->
-                                               element_begin("connectee_name");
-                            connecteeNameElt->getValueAs<std::string>(
-                                oldParentFrameName);
-                        }
-                        else if (connectorElt->getRequiredAttributeValue("name")
-                                 == "child_frame" && oldChildFrameName.empty())
-                        {
-                            connecteeNameElt = connectorElt->
-                                               element_begin("connectee_name");
-                            connecteeNameElt->getValueAs<std::string>(
-                                oldChildFrameName);
-                        }
-                        ++connectorElt;
-                    }
-
-                    // Swap parent and child frame names. If more than one
-                    // "parent_frame" or "child_frame" element exists, assign
-                    // the same value to all such elements.
-                    connectorsNode = aNode.element_begin("connectors");
-                    connectorElt = connectorsNode->element_begin(
-                                   "Connector_PhysicalFrame_");
-
-                    while (connectorElt != connectorsNode->element_end())
-                    {
-                        if (connectorElt->getRequiredAttributeValue("name") ==
-                            "parent_frame")
-                        {
-                            connecteeNameElt = connectorElt->
-                                               element_begin("connectee_name");
-                            connecteeNameElt->setValue(oldChildFrameName);
-                        }
-                        else if (connectorElt->getRequiredAttributeValue("name")
-                                 == "child_frame")
-                        {
-                            connecteeNameElt = connectorElt->
-                                               element_begin("connectee_name");
-                            connecteeNameElt->setValue(oldParentFrameName);
-                        }
-                        ++connectorElt;
-                    }
-                }
-
-                // Remove "reverse" element regardless of its value (it is no
-                // longer a property of Joint).
-                aNode.eraseNode(reverseElt);
-            }
-        }
-
-    }
-
-    Super::updateFromXMLNode(aNode, versionNumber);
-}
+//void Joint::updateFromXMLNode(SimTK::Xml::Element& aNode, int versionNumber)
+//{
+//    int documentVersion = versionNumber;
+//    //bool converting = false;
+//    if (documentVersion < XMLDocument::getLatestVersion()){
+//        if (documentVersion<30500){
+//            XMLDocument::renameChildNode(aNode, "location", "location_in_child"); 
+//            XMLDocument::renameChildNode(aNode, "orientation", "orientation_in_child");
+//        }
+//        // Version 30501 converted Connector_Body_ to Connector_PhysicalFrame_
+//        if (documentVersion < 30501) {
+//            // Handle any models that have the Joint connecting to Bodies instead
+//            // of PhyscialFrames
+//            XMLDocument::renameChildNode(aNode, "Connector_Body_",
+//                                                "Connector_PhysicalFrame_");
+//        }
+//        // Version 30505 changed "parent_body" connector name to "parent_frame"
+//        // Convert location and orientation into PhysicalOffsetFrames owned by the Joint
+//        if (documentVersion < 30505) {
+//            // Elements for the parent and child names the joint connects
+//            SimTK::Xml::element_iterator parentNameElt;
+//            SimTK::Xml::element_iterator childNameElt;
+//            // The names of the two PhysicalFrames this joint connects
+//            std::string parentFrameName("");
+//            std::string childFrameName("");
+//
+//            SimTK::Xml::element_iterator connectors_node = aNode.element_begin("connectors");
+//
+//            SimTK::Xml::element_iterator connectorElement =
+//                connectors_node->element_begin("Connector_PhysicalFrame_");
+//            while (connectorElement != aNode.element_end()) {
+//                // If connector name is "parent_body" rename it to "parent_frame"
+//                if (connectorElement->getRequiredAttributeValue("name") == "parent_body") {
+//                    connectorElement->setAttributeValue("name", "parent_frame");
+//                }
+//                // If connector name is "parent_frame" get the name of the connectee
+//                if (connectorElement->getRequiredAttributeValue("name") == "parent_frame"){
+//                    parentNameElt = connectorElement->element_begin("connectee_name");
+//                    parentNameElt->getValueAs<std::string>(parentFrameName);
+//                }
+//                if (connectorElement->getRequiredAttributeValue("name") == "child_body") {
+//                    connectorElement->setAttributeValue("name", "child_frame");
+//                }
+//                if (connectorElement->getRequiredAttributeValue("name") == "child_frame") {
+//                    childNameElt =  connectorElement->element_begin("connectee_name");
+//                    childNameElt->getValueAs<std::string>(childFrameName);
+//                }
+//                ++connectorElement;
+//            }
+//
+//            SimTK::Xml::element_iterator locParentElt =
+//                aNode.element_begin("location_in_parent");
+//            SimTK::Xml::element_iterator orientParentElt =
+//                aNode.element_begin("orientation_in_parent");
+//            SimTK::Xml::element_iterator locChildElt =
+//                aNode.element_begin("location_in_child");
+//            SimTK::Xml::element_iterator orientChildElt =
+//                aNode.element_begin("orientation_in_child");
+//
+//            Vec3 location_in_parent(0);
+//            Vec3 orientation_in_parent(0);
+//            Vec3 location_in_child(0);
+//            Vec3 orientation_in_child(0);
+//
+//            if (locParentElt != aNode.element_end()){
+//                locParentElt->getValueAs<Vec3>(location_in_parent);
+//            }
+//            if (orientParentElt != aNode.element_end()){
+//                orientParentElt->getValueAs<Vec3>(orientation_in_parent);
+//            }
+//            if (locChildElt != aNode.element_end()){
+//                locChildElt->getValueAs<Vec3>(location_in_child);
+//            }
+//            if (orientChildElt != aNode.element_end()){
+//                orientChildElt->getValueAs<Vec3>(orientation_in_child);
+//            }
+//
+//            // now append updated frames to the property list if they are not
+//            // identity transforms.
+//            if ((location_in_parent.norm() > 0.0) ||
+//                (orientation_in_parent.norm() > 0.0)) {
+//                XMLDocument::addPhysicalOffsetFrame(aNode, parentFrameName+"_offset",
+//                    parentFrameName, location_in_parent, orientation_in_parent);
+//                parentNameElt->setValue(parentFrameName + "_offset");
+//            }
+//
+//            // again for the offset frame on the child
+//            if ((location_in_child.norm() > 0.0) ||
+//                (orientation_in_child.norm() > 0.0)) {
+//                XMLDocument::addPhysicalOffsetFrame(aNode, childFrameName + "_offset",
+//                    childFrameName, location_in_child, orientation_in_child);
+//                childNameElt->setValue(childFrameName + "_offset");
+//            }
+//        }
+//
+//        // Version 30507 replaced Joint's CoordinateSet with a "coordinates"
+//        // list property.
+//        if (documentVersion < 30507) {
+//            if (aNode.hasElement("CoordinateSet")) {
+//                auto coordSetIter = aNode.element_begin("CoordinateSet");
+//                if (coordSetIter->hasElement("objects")) {
+//                    auto coordIter = coordSetIter->getRequiredElement("objects")
+//                                                   .element_begin("Coordinate");
+//                    if (coordIter != aNode.element_end()) {
+//                        // A "CoordinateSet" element exists, it contains an
+//                        // "objects" element, and the "objects" element contains
+//                        // at least one "Coordinate" element.
+//
+//                        // Create an element for the new layout.
+//                        Xml::Element coordinatesElement("coordinates");
+//                        // Copy all "Coordinate" elements from the old layout.
+//                        while (coordIter != aNode.element_end()) {
+//                            coordinatesElement.appendNode(coordIter->clone());
+//                            ++coordIter;
+//                        }
+//                        // Insert new "coordinates" element.
+//                        aNode.insertNodeAfter(coordSetIter, coordinatesElement);
+//                    }
+//                }
+//
+//                // Remove old "CoordinateSet" element.
+//                aNode.eraseNode(coordSetIter);
+//            }
+//        }
+//
+//        // Version 30514 removed the user-facing "reverse" property from Joint.
+//        // The parent and child frames are swapped if a "reverse" element is
+//        // found and its value is "true".
+//        if (documentVersion < 30514) {
+//            auto reverseElt = aNode.element_begin("reverse");
+//
+//            if (reverseElt != aNode.element_end()) {
+//                bool swapFrames = false;
+//                reverseElt->getValue().tryConvertToBool(swapFrames);
+//
+//                if (swapFrames) {
+//                    std::string oldParentFrameName = "";
+//                    std::string oldChildFrameName  = "";
+//
+//                    // Find names of parent and child frames. If more than one
+//                    // "parent_frame" or "child_frame" element exists, keep the
+//                    // first one. The "parent_frame" and "child_frame" elements
+//                    // may be listed in either order.
+//                    SimTK::Xml::element_iterator connectorsNode =
+//                        aNode.element_begin("connectors");
+//                    SimTK::Xml::element_iterator connectorElt = connectorsNode->
+//                        element_begin("Connector_PhysicalFrame_");
+//                    SimTK::Xml::element_iterator connecteeNameElt;
+//
+//                    while (connectorElt != connectorsNode->element_end())
+//                    {
+//                        if (connectorElt->getRequiredAttributeValue("name") ==
+//                            "parent_frame" && oldParentFrameName.empty())
+//                        {
+//                            connecteeNameElt = connectorElt->
+//                                               element_begin("connectee_name");
+//                            connecteeNameElt->getValueAs<std::string>(
+//                                oldParentFrameName);
+//                        }
+//                        else if (connectorElt->getRequiredAttributeValue("name")
+//                                 == "child_frame" && oldChildFrameName.empty())
+//                        {
+//                            connecteeNameElt = connectorElt->
+//                                               element_begin("connectee_name");
+//                            connecteeNameElt->getValueAs<std::string>(
+//                                oldChildFrameName);
+//                        }
+//                        ++connectorElt;
+//                    }
+//
+//                    // Swap parent and child frame names. If more than one
+//                    // "parent_frame" or "child_frame" element exists, assign
+//                    // the same value to all such elements.
+//                    connectorsNode = aNode.element_begin("connectors");
+//                    connectorElt = connectorsNode->element_begin(
+//                                   "Connector_PhysicalFrame_");
+//
+//                    while (connectorElt != connectorsNode->element_end())
+//                    {
+//                        if (connectorElt->getRequiredAttributeValue("name") ==
+//                            "parent_frame")
+//                        {
+//                            connecteeNameElt = connectorElt->
+//                                               element_begin("connectee_name");
+//                            connecteeNameElt->setValue(oldChildFrameName);
+//                        }
+//                        else if (connectorElt->getRequiredAttributeValue("name")
+//                                 == "child_frame")
+//                        {
+//                            connecteeNameElt = connectorElt->
+//                                               element_begin("connectee_name");
+//                            connecteeNameElt->setValue(oldParentFrameName);
+//                        }
+//                        ++connectorElt;
+//                    }
+//                }
+//
+//                // Remove "reverse" element regardless of its value (it is no
+//                // longer a property of Joint).
+//                aNode.eraseNode(reverseElt);
+//            }
+//        }
+//
+//    }
+//
+//    Super::updateFromXMLNode(aNode, versionNumber);
+//}
 
 int Joint::assignSystemIndicesToBodyAndCoordinates(
     const SimTK::MobilizedBody& mobod,

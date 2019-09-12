@@ -48,8 +48,8 @@ StateVector::~StateVector()
 /**
  * Default constructor.
  */
-StateVector::StateVector(double aT) :
-    StateVector(aT, SimTK::Vector_<double>()) {
+StateVector::StateVector(osim_double_adouble aT) :
+    StateVector(aT, SimTK::Vector_<osim_double_adouble>()) {
     // No operation.
 }
 
@@ -60,7 +60,7 @@ StateVector::StateVector(double aT) :
  * @param aT Time-stamp of the state-vector.
  * @param data Array of values to set the state-vector to.
  */
-StateVector::StateVector(double aT, const SimTK::Vector_<double>& data) :
+StateVector::StateVector(osim_double_adouble aT, const SimTK::Vector_<osim_double_adouble>& data) :
     _data(0.0)
 {
     // INITIAL VALUES
@@ -150,7 +150,7 @@ operator<(const StateVector &aStateVector) const
  * Set the time stamp of this vector.
  */
 void StateVector::
-setTime(double aT)
+setTime(osim_double_adouble aT)
 {
     _t = aT;
 }
@@ -158,7 +158,7 @@ setTime(double aT)
 /**
  * Get the time stamp of this vector.
  */
-double StateVector::
+osim_double_adouble StateVector::
 getTime() const
 {
     return(_t);
@@ -171,7 +171,7 @@ getTime() const
  * @param data Array of values to set the state to.
  */
 void StateVector::
-setStates(double aT, const SimTK::Vector_<double>& data) {
+setStates(osim_double_adouble aT, const SimTK::Vector_<osim_double_adouble>& data) {
     _t = aT;
     _data.setSize(data.size());
     int size = _data.getSize();
@@ -192,7 +192,7 @@ getSize() const
 /**
  * Get the data values of this vector.
  */
-Array<double>& StateVector::
+Array<osim_double_adouble>& StateVector::
 getData()
 {
     return(_data);
@@ -201,7 +201,7 @@ getData()
 /**
  * Get the data values of this vector.
  */
-const Array<double>& StateVector::
+const Array<osim_double_adouble>& StateVector::
 getData() const
 {
     return(_data);
@@ -215,7 +215,7 @@ getData() const
  * @return 1 on success, 0 on failure.
  */
 int StateVector::
-getDataValue(int aIndex,double &rValue)
+getDataValue(int aIndex, osim_double_adouble &rValue)
 {
     if(aIndex<0) return(0);
     if(aIndex>=_data.getSize()) return(0);
@@ -232,7 +232,7 @@ getDataValue(int aIndex,double &rValue)
  * @param aValue Value of the data point if it is defined.
  */
 void StateVector::
-setDataValue(int aIndex,double &aValue)
+setDataValue(int aIndex, osim_double_adouble &aValue)
 {
     if(aIndex<0) return;
     if(aIndex>=_data.getSize()) return;
@@ -253,7 +253,7 @@ setDataValue(int aIndex,double &aValue)
  * @param aValue Value by which to shift time.
  */
 void StateVector::
-shiftTime(double aValue)
+shiftTime(osim_double_adouble aValue)
 {
     _t += aValue;
 }
@@ -264,7 +264,7 @@ shiftTime(double aValue)
  * @param aValue Value by which to scale time.
  */
 void StateVector::
-scaleTime(double aValue)
+scaleTime(osim_double_adouble aValue)
 {
     _t *= aValue;
 }
@@ -279,7 +279,7 @@ scaleTime(double aValue)
  * @param aValue Value to add to each state.
  */
 void StateVector::
-add(double aValue)
+add(osim_double_adouble aValue)
 {
     int i;
     for(i=0;i<_data.getSize();i++)  _data[i] += aValue;
@@ -293,7 +293,7 @@ add(double aValue)
  * @param values Array of values to add to this state-vector.
  */
 void StateVector::
-add(const SimTK::Vector_<double>& values) {
+add(const SimTK::Vector_<osim_double_adouble>& values) {
     if(values.size() == 0)
         return;
     int i, n = values.size();
@@ -313,7 +313,7 @@ add(const SimTK::Vector_<double>& values) {
  * @param aValue Values to add to the state.
  */
 void StateVector::
-add(int aN,double aValue)
+add(int aN, osim_double_adouble aValue)
 {
     if(aValue==0) return;
     if(aN>_data.getSize()) return;
@@ -335,7 +335,7 @@ add(StateVector *aStateVector)
     if(n>_data.getSize()) n = _data.getSize();
 
     // GET DATA
-    Array<double> &data = aStateVector->getData();
+    Array<osim_double_adouble> &data = aStateVector->getData();
 
     // ADD
     int i;
@@ -352,7 +352,7 @@ add(StateVector *aStateVector)
  * @param aValue Value to subtract from each state.
  */
 void StateVector::
-subtract(double aValue)
+subtract(osim_double_adouble aValue)
 {
     int i;
     for(i=0;i<_data.getSize();i++)  _data[i] -= aValue;
@@ -365,7 +365,7 @@ subtract(double aValue)
  *
  * @param values Array of values to subtract from this state-vector.
  */
-void StateVector::subtract(const SimTK::Vector_<double>& values) {
+void StateVector::subtract(const SimTK::Vector_<osim_double_adouble>& values) {
     if(values.size() == 0)
         return;
     int i, n = values.size();
@@ -390,7 +390,7 @@ subtract(StateVector *aStateVector)
     if(n>_data.getSize()) n = _data.getSize();
 
     // GET DATA
-    Array<double> &data = aStateVector->getData();
+    Array<osim_double_adouble> &data = aStateVector->getData();
 
     // SUBTRACT
     int i;
@@ -407,7 +407,7 @@ subtract(StateVector *aStateVector)
  * @param aValue Value each state is to be multiplied by.
  */
 void StateVector::
-multiply(double aValue)
+multiply(osim_double_adouble aValue)
 {
     int i;
     for(i=0;i<_data.getSize();i++)  _data[i] *= aValue;
@@ -420,7 +420,7 @@ multiply(double aValue)
  *
  * @param values Array of values to multiply this state-vector with.
  */
-void StateVector::multiply(const SimTK::Vector_<double>& values) {
+void StateVector::multiply(const SimTK::Vector_<osim_double_adouble>& values) {
     if(values.size() == 0)
         return;
     int i, n = values.size();
@@ -445,7 +445,7 @@ multiply(StateVector *aStateVector)
     if(n>_data.getSize()) n = _data.getSize();
 
     // GET DATA
-    Array<double> &data = aStateVector->getData();
+    Array<osim_double_adouble> &data = aStateVector->getData();
 
     // MULTIPLY
     int i;
@@ -462,7 +462,7 @@ multiply(StateVector *aStateVector)
  * @param aValue Value each state is to be divided by.
  */
 void StateVector::
-divide(double aValue)
+divide(osim_double_adouble aValue)
 {
     if(aValue==0.0) {
         printf("StateVector.divide: ERROR- divide by zero\n");
@@ -482,7 +482,7 @@ divide(double aValue)
  *
  * @param values Array of values the states are divided by.
  */
-void StateVector::divide(const SimTK::Vector_<double>& values) {
+void StateVector::divide(const SimTK::Vector_<osim_double_adouble>& values) {
     if(values.size() == 0)
         return;
     int i, n = values.size();
@@ -490,7 +490,7 @@ void StateVector::divide(const SimTK::Vector_<double>& values) {
         n = _data.getSize();
     for(i = 0; i < n; ++i) {  
         if(values[i] == 0.0)
-            _data[i] = SimTK::NaN;
+            _data[i] = SimTK::NaN.value();
         else
             _data[i] /= values[i];
     }
@@ -511,12 +511,12 @@ divide(StateVector *aStateVector)
     if(n>_data.getSize()) n = _data.getSize();
 
     // GET DATA
-    Array<double> &data = aStateVector->getData();
+    Array<osim_double_adouble> &data = aStateVector->getData();
 
     // DIVIDE
     int i;
     for(i=0;i<n;i++) {  
-        if(data[i]==0.0)    _data[i] = SimTK::NaN;
+        if(data[i]==0.0)    _data[i] = SimTK::NaN.value();
         else    _data[i] /= data[i];
     }
 }
