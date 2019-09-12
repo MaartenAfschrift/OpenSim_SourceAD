@@ -139,6 +139,11 @@ SetDefaultCMakeBuildType()
 
 ####################### Add dependencies below.
 
+AddDependency(NAME       Recorder
+              URL        https://github.com/jgillis/recorder.git
+              TAG        e8a4eb5bea8bbf69bba07b81db5dc450917d802e
+              CMAKE_ARGS -DBUILD_SHARED_LIBS:BOOL=ON)
+
 AddDependency(NAME       BTK
               # URL        https://github.com/Biomechanical-ToolKit/BTKCore.git
               URL        https://github.com/klshrinidhi/BTKCore.git
@@ -146,11 +151,13 @@ AddDependency(NAME       BTK
               CMAKE_ARGS -DBUILD_SHARED_LIBS:BOOL=ON)
 
 AddDependency(NAME       simbody
-              URL        https://github.com/simbody/simbody.git
-              TAG        332fd91cc6c17d4fbc1a2b1d41757f814174c8b6
+              # URL        https://github.com/simbody/simbody.git
+              # TAG        332fd91cc6c17d4fbc1a2b1d41757f814174c8b6
+              URL        https://github.com/antoinefalisse/simbody.git
+              TAG        639fa58c87a7eceebca20d4ffcb24a18041e9ddc
               CMAKE_ARGS -DBUILD_EXAMPLES:BOOL=OFF 
-                         -DBUILD_TESTING:BOOL=OFF)
-                     
+                         -DBUILD_TESTING:BOOL=OFF
+                         -DBUILD_RECORDER_LIBRARIES:BOOL=ON)                     
 
 AddDependency(NAME       docopt
               URL        https://github.com/docopt/docopt.cpp.git
