@@ -109,7 +109,7 @@ mark_as_advanced(OPENSIM_PYTHON_STANDALONE) # Mainly for packagers; not users.
 option(BUILD_API_ONLY "Build/install only headers, libraries,
 wrapping, tests; not applications (opensim, ik, rra, etc.)." OFF)
 
-option(WITH_ADOLC "Get the Simbody libraries build with ADOL-C" OFF)
+option(WITH_RECORDER "Get the Simbody libraries build with Recorder" OFF)
 
 
 set(OPENSIM_BUILD_INDIVIDUAL_APPS_DEFAULT OFF)
@@ -631,9 +631,9 @@ endif()
 # Check if Simbody targets were built using same BUILD_TYPE/CONFIGURATION as
 # current OpenSim build. If build/configuration types mismatch, stop the build.
 # ------------------------------------------------------------------------------
-if (WITH_ADOLC)
+if (WITH_RECORDER)
     get_property(Simbody_CONFIGURATION
-    TARGET   SimTKcommon_adolc
+    TARGET   SimTKcommon_recorder
     PROPERTY IMPORTED_CONFIGURATIONS)
 else()
     get_property(Simbody_CONFIGURATION
@@ -673,18 +673,15 @@ endif()
 # include directories.
 include_directories("${Simbody_INCLUDE_DIR}")
 
-if (WITH_ADOLC)
-    set(Simbody_LIBRARIES_TO_USE ${Simbody_ADOLC_LIBRARIES})
+if (WITH_RECORDER)
+    set(Simbody_LIBRARIES_TO_USE ${Simbody_RECORDER_LIBRARIES})
 else()
     set(Simbody_LIBRARIES_TO_USE ${Simbody_LIBRARIES})
 endif()
 
-# ADOL-C
-if (WITH_ADOLC)
+# Recorder
+if (WITH_RECORDER)
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-    # find_package(ADOLC REQUIRED)
-    # include_directories("${ADOLC_INCLUDES}")
-    # OpenSimCopyDependencyDLLsForWin(adolc "${ADOLC_DIR}/bin}")
     # RECORDER
     find_package(RECORDER REQUIRED)
     include_directories("${RECORDER_INCLUDES}")
