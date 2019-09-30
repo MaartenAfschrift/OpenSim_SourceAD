@@ -116,6 +116,8 @@ function(AddDependency)
              -DCMAKE_C_FLAGS_RELEASE:STRING=${CMAKE_C_FLAGS_RELEASE})
         list(APPEND CMAKE_ARGS
              -DCMAKE_C_FLAGS_RELWITHDEBINFO:STRING=${CMAKE_C_FLAGS_RELWITHDEBINFO})
+        list(APPEND CMAKE_ARGS
+             -DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=${CMAKE_OSX_DEPLOYMENT_TARGET})
 
         ExternalProject_Add(${DEP_NAME}
             TMP_DIR          ${BINARY_DIR}/tmp
@@ -139,11 +141,6 @@ SetDefaultCMakeBuildType()
 
 ####################### Add dependencies below.
 
-AddDependency(NAME       Recorder
-              URL        https://github.com/jgillis/recorder.git
-              TAG        e8a4eb5bea8bbf69bba07b81db5dc450917d802e
-              CMAKE_ARGS -DBUILD_SHARED_LIBS:BOOL=ON)
-
 AddDependency(NAME       BTK
               # URL        https://github.com/Biomechanical-ToolKit/BTKCore.git
               URL        https://github.com/klshrinidhi/BTKCore.git
@@ -154,10 +151,12 @@ AddDependency(NAME       simbody
               # URL        https://github.com/simbody/simbody.git
               # TAG        332fd91cc6c17d4fbc1a2b1d41757f814174c8b6
               URL        https://github.com/antoinefalisse/simbody.git
-              TAG        639fa58c87a7eceebca20d4ffcb24a18041e9ddc
+              TAG        526ed661e3bde3316a1e94213a972581c49bc602
               CMAKE_ARGS -DBUILD_EXAMPLES:BOOL=OFF 
                          -DBUILD_TESTING:BOOL=OFF
-                         -DBUILD_RECORDER_LIBRARIES:BOOL=ON)                     
+                         -DBUILD_VISUALIZER:BOOL=OFF
+                         -DBUILD_RECORDER_LIBRARIES:BOOL=ON)
+                                              
 
 AddDependency(NAME       docopt
               URL        https://github.com/docopt/docopt.cpp.git
