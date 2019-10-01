@@ -680,13 +680,13 @@ else()
 endif()
 
 # Recorder
-if (WITH_RECORDER)
-    list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-    # RECORDER
-    find_package(RECORDER REQUIRED)
-    include_directories("${RECORDER_INCLUDES}")
-    # OpenSimCopyDependencyDLLsForWin(recorder "${RECORDER_DIR}/bin")
-endif()
+# if (WITH_RECORDER)
+    # list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+    # # RECORDER
+    # find_package(RECORDER REQUIRED)
+    # include_directories("${RECORDER_INCLUDES}")
+    # # OpenSimCopyDependencyDLLsForWin(recorder "${RECORDER_DIR}/bin")
+# endif()
 
 # Installing dependencies into OpenSim's installation.
 # ----------------------------------------------------
