@@ -1,11 +1,27 @@
-OpenSim Core
-============
+OpenSim Core modified to enable the use of Algorithmic Differentiation 
+======================================================================
  [![Travis][buildstatus_image_travis]][travisci] [![Appveyor][buildstatus_image_appveyor]][appveyorci] [![ZenHub][zenhub_image]][zenhub]
+ 
+**NOTE: This repository has been forked from [Opensim's master source code](https://github.com/opensim-org/opensim-core). Changes have been
+made to enable the use of algorithmic differentiation. Consequently, some features of OpenSim have been disabled. Please rely on the original
+OpenSim's source code if you do not intend to exploit algorithmic differentiation when solving trajectory optimization problems with our framework.
+In addition, please make sure you verify your results. We cannot guarantee that our changes did not affect the original code.**
 
-**NOTE: This repository cannot be used to build OpenSim 3.x or earlier. For OpenSim 3.x, see [here](http://simtk-confluence.stanford.edu:8080/display/OpenSim/Building+OpenSim+from+Source).**
+OpenSim is a software that lets users develop models of musculoskeletal structures and create dynamic simulations of movement. In this work,
+we have expanded OpenSim and created a framework for solving trajectory optimization problems. This framework relies on OpenSim for the
+musculoskeletal structures and multibody dynamics models and [CasADi](https://web.casadi.org/) for the nonlinear optimization and
+algorithmic differentiation. To enable the use of algorithmic differentiation in OpenSim, we have developed a tool named Recorder that we integrated
+as part of a modifed version of Simbody. More information about this framework and this Recorder can be found in this publication.
 
-OpenSim is software that lets users develop models of musculoskeletal
-structures and create dynamic simulations of movement, such as this one:
+Solving trajectory optimization problems with our framework allows generating computationally efficient predictive simulations of movement.
+For example, you can produce the following predictive simulation of walking with a complex musculoskeletal models (29 degrees of freedom, 92 muscles,
+and 6 contact spheres per foot) in only about 20 minutes of CPU time on a single core of a standard laptop computer:
+
+
+More information about these predictive simulations can be found in this publication:
+
+
+ such as this one:
 
 ![Simulation of human running by Sam Hamner (doi:
 10.1016/j.jbiomech.2010.06.025)][running_gif]
