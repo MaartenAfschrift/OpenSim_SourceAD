@@ -1,6 +1,5 @@
-OpenSim Core modified to enable the use of Algorithmic Differentiation 
-======================================================================
- [![Travis][buildstatus_image_travis]][travisci] [![Appveyor][buildstatus_image_appveyor]][appveyorci] [![ZenHub][zenhub_image]][zenhub]
+OpenSim-based framework to solve trajectory optimization problems using direct collocation and algorithmic differentiation 
+==========================================================================================================================
  
 **NOTE: This repository has been forked from [Opensim's master source code](https://github.com/opensim-org/opensim-core). Changes have been
 made to enable the use of algorithmic differentiation. Consequently, some features of OpenSim have been disabled. Please rely on the original
