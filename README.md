@@ -241,6 +241,7 @@ Generate C-code
 ---------------
 
 1. Copy `foo.m` into `C:/opensim-ad-core/cgeneration/PredSim`.
+2. [Install CasADi](https://web.casadi.org/).
 2. Run `C:/opensim-ad-core/cgeneration/PredSim/generateMain.m` in MATLAB. This might take a while to open the folder if `foo.m` is large (you might consider running the file through the command line).
 
 **If you work with a new external function, you might need to adjust the dimension of `arg` as commented out in the MATLAB script**.
