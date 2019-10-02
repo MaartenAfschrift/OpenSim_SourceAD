@@ -23,7 +23,7 @@ More information about how to generate such predictive simulations can be found 
 Brief overview of the framework
 -------------------------------
 
-Solving trajectory optimization problems with our framework consists of different steps:
+Solving trajectory optimization problems with our framework necessitates performing several steps:
 
 * Build the source code of the modified versions of OpenSim and Simbody that enable the use of algorithmic differentiation ([On Windows using Microsoft Visual Studio](#on-windows-using-visual-studio)).
 
@@ -31,18 +31,18 @@ Solving trajectory optimization problems with our framework consists of differen
 
 * Run the executable ([Run executable](#run-executable)). This will generate a MATLAB file, named by default `foo.m`. This file contains the expression graph of the external function in a format that CasADi can interpret. Expression graphs are at the core of algorithmic differentiation.
 
-* Generate C-code with CasADi ([Generate C-code](#generate-c-code)). From the expression graph generated in the previous step, CasADi can generate C-code allowing to evaluate the (external) function and its derivatives. To generate the C-code, we rely on the code generation feature of CasADi through a few MATLAB commands. We provide a series of examples of how this should be done in the folder [cgeneration](https://github.com/antoinefalisse/opensim-core/tree/AD-recorder/cgeneration).
+* Generate C-code with CasADi ([Generate C-code](#generate-c-code)). From the expression graph generated in the previous step, CasADi can generate C-code that allows evaluating the (external) function and its derivatives. To generate the C-code, we rely on the code generation feature of CasADi through a few MATLAB commands. We provide a series of examples of how this should be done in the folder [cgeneration](https://github.com/antoinefalisse/opensim-core/tree/AD-recorder/cgeneration).
 
 * Compile the generated c-code as a Dynamic Link Library (dll) ([Compile C-code](#compile-c-code)). This dll can then be imported within the CasADi environment when formulating the trajectory optimization problems. 
 
 * Formulate and solve trajectory optimization problems ([Formulate and solve trajectory optimization problems](#formulate-and-solve-trajectory-optimization-problems)). [In this repository](https://github.com/antoinefalisse/3dpredictsim), you can find the code used to generate the predictive simulation in the animation above. [At this line](https://github.com/antoinefalisse/3dpredictsim/blob/master/OCP/PredSim_all.m#L435), we import the dll (compiled in the previous step) as an external function in our environment. We then [evaluate this function](https://github.com/antoinefalisse/3dpredictsim/blob/master/OCP/PredSim_all.m#L1161) when formulating our nonlinear programming problem (NLP). When solving the problem, CasADi provides the NLP solver (e.g., IPOPT) with evaluations of the NLP objective function, constraints, objective function gradient, constraint Jacobian, and Hessian of the Lagrangian. CasADi efficiently queries evaluation of the external function and its derivatives to construct the full derivative matrices.
 
-Building from the source code
------------------------------
+Building the framework from the source code
+-------------------------------------------
 
 **NOTE -- In all platforms (Windows, OSX, Linux), it is advised to build all OpenSim Dependencies (Simbody, BTK etc) with same *CMAKE_BUILD_TYPE* (Linux) / *CONFIGURATION* (MSVC/Xcode) as OpenSim. For example, if OpenSim is to be built with *CMAKE_BUILD_TYPE/CONFIGURATION* as *Debug*, Simbody, BTK and all other OpenSim dependencies also should be built with *CMAKE_BUILD_TYPE/CONFIGURATION* as *Debug*. Failing to do so *may* result in mysterious runtime errors like 'segfault' in standard c++ library implementation.**
 
-We have developed this project on Windows. We cannot guarantee that this works fine on other platforms although it should. For Max OSX and Ubuntu, get inspired from the [Windows instructions](#on-windows-using-visual-studio) for the modified version of OpenSim while relying on the original instructions for Max OSX and Ubuntu from the [OpenSim-Core git repository](https://github.com/opensim-org/opensim-core).
+We have developed this project on Windows. We cannot guarantee that this works fine on other platforms although it should. For Mac OSX and Ubuntu, get inspired from the [Windows instructions](#on-windows-using-visual-studio) for the modified version of OpenSim while relying on the original instructions for Mac OSX and Ubuntu from the [OpenSim-Core git repository](https://github.com/opensim-org/opensim-core).
 
 
 On Windows using Visual Studio
@@ -51,6 +51,7 @@ On Windows using Visual Studio
 #### Get the dependencies
 
 * **operating system**: Windows 10.
+* **tool for nonlinear optimization and algorithmic differentiation**: [CasADi](https://web.casadi.org/), install the MATLAB version.
 * **cross-platform build system**:
   [CMake](http://www.cmake.org/cmake/resources/software.html) >= 3.2
 * **compiler / IDE**: [Visual Studio 2015](https://www.visualstudio.com/). We started this project before the release of Visual Studio 2017 and 2019, you might experience bugs with these later versions so please stick to Visual Studio 2015 (or contribute to the code to make it work with the newer versions :)). You should be able to find Visual Studio Community 2015 after a little bit of googling ([here maybe](https://stackoverflow.com/questions/44290672/how-to-download-visual-studio-community-edition-2015-not-2017)).
@@ -109,7 +110,7 @@ On Windows using Visual Studio
    `C:/opensim-ad-core-dependencies-build`.
 4. Click the **Configure** button.
     1. Choose the *Visual Studio 14 2015* generator. Make sure
-       your build as 64-bit (x64; it might be 32-bit by default).
+       your build as 64-bit (Optional Platform for Generator: x64; it might be 32-bit by default).
     2. Click **Finish**.
 5. Where do you want to install OpenSim dependencies on your computer? Set this
    by changing the `CMAKE_INSTALL_PREFIX` variable. Let's say this is
@@ -123,7 +124,7 @@ On Windows using Visual Studio
 
         cd C:/opensim-ad-core-dependencies-build
 
-9. Use CMake to download, compile and install the dependencies:
+9. Use CMake to download, compile and install the dependencies (don't worry about the warnings):
 
         cmake --build . --config RelWithDebInfo
 
@@ -147,7 +148,7 @@ On Windows using Visual Studio
    directory. This is *not* where we are installing OpenSim-Core; see below.
 4. Click the **Configure** button.
     1. Choose the *Visual Studio 14 2015* generator. Make sure
-       your build as 64-bit (x64; it might be 32-bit by default).
+       your build as 64-bit (Optional Platform for Generator: x64; it might be 32-bit by default).
     2. Click **Finish**.
 5. Where do you want to install OpenSim-AD-Core on your computer? Set this by
    changing the `CMAKE_INSTALL_PREFIX` variable. We'll assume you set it to
@@ -179,7 +180,7 @@ On Windows using Visual Studio
       dependencies above. CMake sets `PYTHON_*` variables to tell you the
       Python version used when building the wrappers. Please turn this off (not relevant for our applications).
     * `OPENSIM_PYTHON_VERSION` to choose if the Python wrapping is built for
-      Python 2 or Python 3. Please turn this off (not relevant for our applications).
+      Python 2 or Python 3. Leave to 2 (not relevant for our applications).
     * `BUILD_API_ONLY` if you don't want to build the command-line applications.
 8. Click the **Configure** button again. Then, click **Generate** to make
    Visual Studio project files in the build directory.
@@ -187,7 +188,7 @@ On Windows using Visual Studio
 #### Build
 
 1. Open `C:/opensim-ad-core-build/OpenSim.sln` in Visual Studio.
-2. Select your desired *Solution configuration* from the drop-down at the top.
+2. Select your desired *Solution configuration* from the drop-down at the top (we recommend **RelWithDebInfo** for consistency with the dependencies).
     * **Debug**: debugger symbols; no optimizations (more than 10x slower).
       Library names end with `_d`.
     * **Release**: no debugger symbols; optimized.
@@ -235,10 +236,9 @@ Generate C-code
 ---------------
 
 1. Copy `foo.m` into `C:/opensim-ad-core/cgeneration/PredSim`.
-2. [Install CasADi](https://web.casadi.org/).
 2. Run `C:/opensim-ad-core/cgeneration/PredSim/generateMain.m` in MATLAB. This might take a while to open the folder if `foo.m` is large (you might consider running the file through the command line).
 
-**If you work with a new external function, you might need to adjust the dimension of `arg` as commented out in the MATLAB script**.
+**If you work with a new external function, you might need to adjust the dimension of `arg` as described in the comment in the MATLAB script**.
 
 After running the MATLAB script, you should find a C file `foo_jac.c` in `C:/opensim-ad-core/cgeneration/PredSim`.
 
@@ -251,7 +251,7 @@ Compile C-code
    `C:/opensim-ad-external-function/PredSim/PredSim-build`.
 4. Click the **Configure** button.
     1. Choose the *Visual Studio 14 2015* generator. Make sure
-       your build as 64-bit (x64; it might be 32-bit by default).
+       your build as 64-bit (Optional Platform for Generator: x64; it might be 32-bit by default).
     2. Click **Finish**.
 5. Where do you want to install the PredSim dll on your computer? Set this by
    changing the `CMAKE_INSTALL_PREFIX` variable. We'll assume you set it to
