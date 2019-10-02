@@ -26,13 +26,13 @@ Brief overview of the framework
 
 Solving trajectory optimization problems with our framework consists of different steps:
 
-* Build the source code of the modified versions of OpenSim and Simbody that enable the use of algorithmic differentiation (details below).
+* Build the source code of the modified versions of OpenSim and Simbody that enable the use of algorithmic differentiation (#on-windows-using-visual-studio).
 
-* Build the OpenSim code intended to be used when formulating the trajectory optimization problem (details below). For instance, this code may perform inverse dynamics with joint states and controls as input and joint torques as output. We provide a series of examples of how this code may look like in the folder External_Functions. Among them is the code used for generating the predictive simulation in the animation above. We will refer to such code as an external function. You should build this code as an executable.
+* Build the OpenSim code intended to be used when formulating the trajectory optimization problem (#build-external-functions). For instance, this code may perform inverse dynamics with joint states and controls as input and joint torques as output. We provide a series of examples of how this code may look like in the folder External_Functions. Among them is the code used for generating the predictive simulation in the animation above. We will refer to such code as an external function. You should build this code as an executable.
 
-* Run the executable (details below). This will generate a MATLAB file, named by default 'foo.m'. This file contains the expression graph of the external function in a format that CasADi can interpret. Expression graphs are at the core of algorithmic differentiation.
+* Run the executable (#run-executable). This will generate a MATLAB file, named by default 'foo.m'. This file contains the expression graph of the external function in a format that CasADi can interpret. Expression graphs are at the core of algorithmic differentiation.
 
-* Generate C-code with CasADi. From the expression graph generated in the previous step, CasADi can generate C-code allowing to evaluate the (external) function and its derivatives. To generate the C-code, we rely on the code generation feature of CasADi through a few MATLAB commands. We provide a series of examples of how this should be done in the folder cgeneration (details below).
+* Generate C-code with CasADi (#generate-c-code). From the expression graph generated in the previous step, CasADi can generate C-code allowing to evaluate the (external) function and its derivatives. To generate the C-code, we rely on the code generation feature of CasADi through a few MATLAB commands. We provide a series of examples of how this should be done in the folder cgeneration (details below).
 
 * Compile the generated c-code as a Dynamic Link Library (dll) (details below). This dll can then be imported within the CasADi environment when formulating the trajectory optimization problems. 
 
@@ -77,50 +77,48 @@ On Windows using Visual Studio
       *File > New > Project...* in Visual Studio, select *Visual C++*, and click
       *Install Visual C++ 2015 Tools for Windows Desktop*.
 * **physics engine**: Simbody >= 3.6. Two options:
-    * Let OpenSim get this for you using superbuild (recommended see below).
+    * Let OpenSim get this for you using superbuild (see below); much easier!
     * [Build on your own: be careful you need to build the modified version that enables the use of AD](
       https://github.com/antoinefalisse/simbody/tree/AD-recorder#windows-using-visual-studio).
 * **C3D file support**: Biomechanical-ToolKit Core. Two options:
-    * Let OpenSim get this for you using superbuild (see below).
+    * Let OpenSim get this for you using superbuild (see below); much easier!
     * [Build on your own](https://github.com/klshrinidhi/BTKCore).
 * **command-line argument parsing**: docopt.cpp. Two options:
     * Let OpenSim get this for you using superbuild (see below); much easier!
     * [Build on your own](https://github.com/docopt/docopt.cpp) (no instructions).
 
-#### Download the OpenSim-Core source code
+#### Download the OpenSim-Core source code modified to enable algorithmic differentiation (OpenSim-AD-Core)
 
-* Method 1: If you want to get going quickly, download the source code from
-  https://github.com/opensim-org/opensim-core/releases, for the version of
-  OpenSim you want. We'll assume you unzipped the source code into
-  `C:/opensim-core-source`.
-* Method 2: If you plan on updating your OpenSim installation or you want to
-  contribute back to the project, clone the opensim-core git repository into
-  `C:/opensim-core-source`. If using TortoiseGit, open Windows Explorer,
-  right-click in the window, select **Git Clone...**, and provide the
-  following:
-    * **URL**: `https://github.com/opensim-org/opensim-core.git`.
-    * **Directory**: `C:/opensim-core-source`.
+* Clone the opensim-ad-core git repository. We'll assume you clone it into `C:/opensim-ad-core-source`.
+  **Be careful that the repository is not on the `master` branch but on the `AD-recorder` branch.** 
 
   If using a Git Bash or Git Shell, run the following:
+  
+        $ git clone -b AD-recorder https://github.com/antoinefalisse/opensim-core.git C:/opensim-ad-core-source  
+  
+  If using TortoiseGit, open Windows Explorer,
+  right-click in the window, select **Git Clone...**, and provide the
+  following:
+    * **URL**: `https://github.com/antoinefalisse/opensim-core.git`.
 
-        $ git clone https://github.com/opensim-org/opensim-core.git C:/opensim-core-source
-
-  This will give you a bleeding-edge version of OpenSim-Core.
+    * **Directory**: `C:/opensim-ad-core-source`.
+    
+    * **Checkout the `AD-recorder` branch.**
 
 #### [Optional] Superbuild: download and build OpenSim dependencies
 1. Open the CMake GUI.
 2. In the field **Where is the source code**, specify
-   `C:/opensim-core-source/dependencies`.
+   `C:/opensim-ad-core-source/dependencies`.
 3. In the field **Where to build the binaries**, specify a directory under
    which to build dependencies. Let's say this is
-   `C:/opensim-core-dependencies-build`.
+   `C:/opensim-ad-core-dependencies-build`.
 4. Click the **Configure** button.
-    1. Choose the *Visual Studio 14* generator (for Visual Studio 2015). To
-       build as 64-bit, select *Visual Studio 14 Win64*.
+    1. Choose the *Visual Studio 14 2015* generator. Make sure
+       your build as 64-bit (x64; it's 32-bit by default in later CMake version).
     2. Click **Finish**.
 5. Where do you want to install OpenSim dependencies on your computer? Set this
    by changing the `CMAKE_INSTALL_PREFIX` variable. Let's say this is
-   `C:/opensim-core-dependencies-install`.
+   `C:/opensim-ad-core-dependencies-install`.
 6. Variables named `SUPERBUILD_<dependency-name>` allow you to selectively
    download dependencies. By default, all dependencies are downloaded,
    configured and built.
@@ -128,7 +126,7 @@ On Windows using Visual Studio
    Visual Studio project files in the build directory.
 8. Go to the build directory you specified in step 3 using the command:
 
-        cd C:/opensim-core-dependencies-build
+        cd C:/opensim-ad-core-dependencies-build
 
 9. Use CMake to download, compile and install the dependencies:
 
@@ -153,27 +151,25 @@ On Windows using Visual Studio
 #### Configure and generate project files
 
 1. Open the CMake GUI.
-2. In the field **Where is the source code**, specify `C:/opensim-core-source`.
+2. In the field **Where is the source code**, specify `C:/opensim-ad-core-source`.
 3. In the field **Where to build the binaries**, specify something like
-   `C:/opensim-core-build`, or some other path that is not inside your source
+   `C:/opensim-ad-core-build`, or some other path that is not inside your source
    directory. This is *not* where we are installing OpenSim-Core; see below.
 4. Click the **Configure** button.
-    1. Choose the *Visual Studio 14* or *Visual Studio 14 2015* generator. To
-       build as 64-bit, select *Visual Studio 14 Win64* or 
-       *Visual Studio 14 2015 Win64*. The choice between
-       32-bit/64-bit must be the same across all dependencies.
+    1. Choose the *Visual Studio 14 2015* generator. Make sure
+       your build as 64-bit (x64; it's 32-bit by default in later CMake version).
     2. Click **Finish**.
-5. Where do you want to install OpenSim-Core on your computer? Set this by
+5. Where do you want to install OpenSim-AD-Core on your computer? Set this by
    changing the `CMAKE_INSTALL_PREFIX` variable. We'll assume you set it to
-   `C:/opensim-core`. If you choose a different installation location, make
-   sure to use *yours* where we use `C:/opensim-core` below.
+   `C:/opensim-ad-core-install`. If you choose a different installation location, make
+   sure to use *yours* where we use `C:/opensim-ad-core-install` below.
 6. Tell CMake where to find dependencies. This depends on how you got them.
     * Superbuild: Set the variable `OPENSIM_DEPENDENCIES_DIR` to the root
       directory you specified with superbuild for installation of dependencies.
-      In our example, it would be `c:/opensim-core-dependencies-install`.
+      In our example, it would be `c:/opensim-ad-core-dependencies-install`.
     * Obtained on your own:
         1. Simbody: Set the `SIMBODY_HOME` variable to where you installed
-           Simbody (e.g., `C:/Simbody`).
+           Simbody (e.g., `C:/Simbody-ad-install`).
         2. BTK: Set the variable `BTK_DIR` to the directory containing
            `BTKConfig.cmake`. If the root directory of your BTK installation is
            `C:/BTKCore-install`, then set this variable to
@@ -183,24 +179,24 @@ On Windows using Visual Studio
            docopt.cpp installation is `C:/docopt.cpp-install`, then set this 
            variable to `C:/docopt.cpp-install/lib/cmake`.
 7. Set the remaining configuration options.
-    * `BUILD_API_EXAMPLES` to compile C++ API examples.
-    * `BUILD_TESTING` to ensure that OpenSim works correctly. The tests take a
-      while to build; if you want to build OpenSim quickly, you can turn this
-      off.
+    * `WITH_RECORDER` to compile OpenSim modified to enable the use of algorithmic differentiation.
+    * `BUILD_API_EXAMPLES` to compile C++ API examples. Note that most examples will not work with this new version of OpenSim. You could turn this off.
+    * `BUILD_TESTING` to ensure that OpenSim works correctly. Note that most tests will fail with this new version of OpenSim. **Nevertheless, you
+    should turn this on to build the external functions.**
     * `BUILD_JAVA_WRAPPING` if you want to access OpenSim through MATLAB or
-      Java; see dependencies above.
+      Java; see dependencies above. Please turn this off (not relevant for our applications).
     * `BUILD_PYTHON_WRAPPING` if you want to access OpenSim through Python; see
       dependencies above. CMake sets `PYTHON_*` variables to tell you the
-      Python version used when building the wrappers.
+      Python version used when building the wrappers. Please turn this off (not relevant for our applications).
     * `OPENSIM_PYTHON_VERSION` to choose if the Python wrapping is built for
-      Python 2 or Python 3.
+      Python 2 or Python 3. Please turn this off (not relevant for our applications).
     * `BUILD_API_ONLY` if you don't want to build the command-line applications.
 8. Click the **Configure** button again. Then, click **Generate** to make
    Visual Studio project files in the build directory.
 
-#### Build and install
+#### Build
 
-1. Open `C:/opensim-core-build/OpenSim.sln` in Visual Studio.
+1. Open `C:/opensim-ad-core-build/OpenSim.sln` in Visual Studio.
 2. Select your desired *Solution configuration* from the drop-down at the top.
     * **Debug**: debugger symbols; no optimizations (more than 10x slower).
       Library names end with `_d`.
@@ -215,31 +211,43 @@ On Windows using Visual Studio
     should install the release configuration *last* to ensure that you use the
     release version of the command-line applications instead of the slow debug
     versions.
-3. Build the API documentation. This is optional, and you can only do this if
-   you have Doxygen. Build the documentation by right-clicking **doxygen** and
-   selecting **Build**.
-4. Build the libraries, etc. by right-clicking  **ALL_BUILD** and selecting
-   **Build**.
-5. Run the tests by right-clicking **RUN_TESTS_PARALLEL** and selecting
-   **Build**.
-6. Install OpenSim-Core by right-clicking **INSTALL** and selecting **Build**.
+4. Build the libraries. **For our applications, we only need to build osimCommon and osimSimulation, building all libraries will fail.** 
+   Right-click on osimCommon in the folder Libraries and select **Build**. Process in the same way for osimSimulation.
+5. Copy Simbody DLLs, Right-click on osimCommon in the folder Libraries and select **Build**.
+   
+Build external functions
+------------------------
 
-#### Set environment variables
+In the folder **External_Functions**, you can find a series of example external functions we used for different applications. To add your own external
+function, take a look at an example in `C:/opensim-ad-core/OpenSim/External_Functions`. Don't forget to edit the CMakeLists. Your new external function
+will appear in Visual Studio after re-configuring through CMake. For the rest of the instructions, we will use the example **PredSim**.
 
-In order to use the OpenSim-Core command-line applications or use OpenSim-Core
-libraries in your own application, you must add the OpenSim-Core `bin/`
-directory to your `PATH` environment variable.
+1. Build the external function. Right-click on PredSim and select **Build**. To skip the next step (Run executable), you can also right-click on PredSim, select
+**Set as StartUp Project, click on Debug (toolbar) and click on **Start Without Debugging**. If you followed the second approach, you should find
+a MATLAB file foo.m in the folder `C:/opensim-ad-core-build/OpenSim/External_Functions/PredSim`.
 
-1. In the Windows toolbar (Windows 10), Start screen (Windows 8) or Start menu
-   (Windows 7), search `environment`.
-2. Select **Edit the system environment variables**.
-3. Click **Environment Variables...**.
-4. Under **System variables**, click **Path**, then click **Edit**.
-5. Add **C:/opensim-core/bin;** to the front of of the text field. Don't forget
-   the semicolon!
 
-On Mac OSX using Xcode
-======================
+Run executable
+--------------
+
+If you haven't run the executable yet (e.g., through **Start Without Debugging**):
+1. Open `C:/opensim-ad-core-build/RelWithDebInfo` in a terminal window (assuming you are in RelWithDebInfo mode):
+
+    cd C:/opensim-ad-core-build/RelWithDebInfo
+    
+2. Run the executable:
+
+    PredSim.exe
+    
+You should find a MATLAB file foo.m in the folder `C:/opensim-ad-core-build/RelWithDebInfo`.
+
+Generate C code
+---------------
+
+   
+
+On Mac OSX using Xcode (instructions have not yet been updated for this modified version of OpenSim, please adjust based on the Windows instructions)
+-----------------------------------------------------------------------------------------------------------------------------------------------------
 
 ### For Mac OSX 10.11 El Capitan
 Get **Xcode** from the App store. Open **Xcode** and *Agree* to license agreement. To *Agree* to to the license agreement, you may need to type in **Terminal**:
@@ -451,8 +459,8 @@ You can get most of these dependencies using [Homebrew](http://brew.sh):
 Your changes will only take effect in new terminal windows.
 
 
-On Ubuntu using Unix Makefiles
-==============================
+On Ubuntu using Unix Makefiles (instructions have not yet been updated for this modified version of OpenSim, please adjust based on the Windows instructions)
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #### Get the dependencies
 
