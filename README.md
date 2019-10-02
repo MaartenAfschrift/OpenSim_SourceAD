@@ -7,10 +7,10 @@ OpenSim's source code if you do not intend to exploit algorithmic differentiatio
 In addition, please make sure you verify your results. We cannot guarantee that our changes did not affect the original code.**
 
 OpenSim is a software that lets users develop models of musculoskeletal structures and create dynamic simulations of movement. In this work,
-we have expanded OpenSim and created a framework for solving trajectory optimization problems using direct collocation methods.
+we have expanded OpenSim and created a framework for solving trajectory optimization problems using direct collocation and algorithmic differentiation.
 This framework relies on OpenSim for the musculoskeletal structures and multibody dynamics models and on [CasADi](https://web.casadi.org/) for the
 nonlinear optimization and algorithmic differentiation. To enable the use of algorithmic differentiation in OpenSim, we have developed a tool named
-Recorder that we integrated as part of a modified version of Simbody. More information about this framework and Recorder can be found in this publication.
+Recorder that we integrated as part of a modified version of Simbody. More information about this framework and Recorder can be found in [this publication](https://www.biorxiv.org/content/10.1101/644245v1).
 
 Solving trajectory optimization problems with our framework allows generating computationally efficient predictive simulations of movement.
 For example, you can produce the following predictive simulation of walking with a complex musculoskeletal models (29 degrees of freedom, 92 muscles,
@@ -27,15 +27,15 @@ Solving trajectory optimization problems with our framework consists of differen
 
 * Build the source code of the modified versions of OpenSim and Simbody that enable the use of algorithmic differentiation ([On Windows using Microsoft Visual Studio](#on-windows-using-visual-studio)).
 
-* Build the OpenSim code intended to be used when formulating the trajectory optimization problem ([Build external functions](#build-external-functions)). For instance, this code may perform inverse dynamics with joint states and controls as input and joint torques as output. We provide a series of examples of how this code may look like in the folder External_Functions. Among them is the code used for generating the predictive simulation in the animation above. We will refer to such code as an external function. You should build this code as an executable.
+* Build the OpenSim code intended to be used when formulating the trajectory optimization problems ([Build external functions](#build-external-functions)). For instance, this code may perform inverse dynamics with joint states and controls as input and joint torques as output. We provide a series of examples of how this code may look like in the folder [OpenSim/External_Functions](https://github.com/antoinefalisse/opensim-core/tree/AD-recorder/OpenSim/External_Functions). Among them is the code used for generating the predictive simulation in the animation above. We will refer to this code as an external function. You should build this code as an executable.
 
-* Run the executable ([Run executable](#run-executable)). This will generate a MATLAB file, named by default 'foo.m'. This file contains the expression graph of the external function in a format that CasADi can interpret. Expression graphs are at the core of algorithmic differentiation.
+* Run the executable ([Run executable](#run-executable)). This will generate a MATLAB file, named by default `foo.m`. This file contains the expression graph of the external function in a format that CasADi can interpret. Expression graphs are at the core of algorithmic differentiation.
 
-* Generate C-code with CasADi ([Generate C-code](#generate-c-code)). From the expression graph generated in the previous step, CasADi can generate C-code allowing to evaluate the (external) function and its derivatives. To generate the C-code, we rely on the code generation feature of CasADi through a few MATLAB commands. We provide a series of examples of how this should be done in the folder cgeneration (details below).
+* Generate C-code with CasADi ([Generate C-code](#generate-c-code)). From the expression graph generated in the previous step, CasADi can generate C-code allowing to evaluate the (external) function and its derivatives. To generate the C-code, we rely on the code generation feature of CasADi through a few MATLAB commands. We provide a series of examples of how this should be done in the folder [cgeneration](https://github.com/antoinefalisse/opensim-core/tree/AD-recorder/cgeneration).
 
 * Compile the generated c-code as a Dynamic Link Library (dll) ([Compile C-code](#compile-c-code)). This dll can then be imported within the CasADi environment when formulating the trajectory optimization problems. 
 
-* Formulate and solve trajectory optimization problem ([Formulate and solve trajectory optimization problem](#formulate-and-solve-trajectory-optimization-problem)). [In this repository](https://github.com/antoinefalisse/3dpredictsim), you can find the code used to generate the predictive simulation in the animation above. [At this line](https://github.com/antoinefalisse/3dpredictsim/blob/master/OCP/PredSim_all.m#L435), we import the dll (compiled in the previous step) as an external function in our environment. We then [evaluate this function](https://github.com/antoinefalisse/3dpredictsim/blob/master/OCP/PredSim_all.m#L1161) when formulating our nonlinear programming problem (NLP). When solving the problem, CasADi provides the NLP solver (e.g., IPOPT) with evaluations of the NLP objective function, constraints, objective function gradient, constraint Jacobian, and Hessian of the Lagrangian. CasADi efficiently queries evaluation of the external function and its derivatives to construct the full derivative matrices.
+* Formulate and solve trajectory optimization problems ([Formulate and solve trajectory optimization problems](#formulate-and-solve-trajectory-optimization-problems)). [In this repository](https://github.com/antoinefalisse/3dpredictsim), you can find the code used to generate the predictive simulation in the animation above. [At this line](https://github.com/antoinefalisse/3dpredictsim/blob/master/OCP/PredSim_all.m#L435), we import the dll (compiled in the previous step) as an external function in our environment. We then [evaluate this function](https://github.com/antoinefalisse/3dpredictsim/blob/master/OCP/PredSim_all.m#L1161) when formulating our nonlinear programming problem (NLP). When solving the problem, CasADi provides the NLP solver (e.g., IPOPT) with evaluations of the NLP objective function, constraints, objective function gradient, constraint Jacobian, and Hessian of the Lagrangian. CasADi efficiently queries evaluation of the external function and its derivatives to construct the full derivative matrices.
 
 Building from the source code
 -----------------------------
@@ -53,7 +53,7 @@ On Windows using Visual Studio
 * **operating system**: Windows 10.
 * **cross-platform build system**:
   [CMake](http://www.cmake.org/cmake/resources/software.html) >= 3.2
-* **compiler / IDE**: [Visual Studio 2015](https://www.visualstudio.com/). We started this project before the release of Visual Studio 2017 and 2019, you might experience bugs with these later versions so please stick to Visual Studio 2015 (or contribute to the code to make it work with the newer versions :)). You should be able to find Visual Studio Community 2015 after a little bit of googling.
+* **compiler / IDE**: [Visual Studio 2015](https://www.visualstudio.com/). We started this project before the release of Visual Studio 2017 and 2019, you might experience bugs with these later versions so please stick to Visual Studio 2015 (or contribute to the code to make it work with the newer versions :)). You should be able to find Visual Studio Community 2015 after a little bit of googling ([here maybe](https://stackoverflow.com/questions/44290672/how-to-download-visual-studio-community-edition-2015-not-2017)).
     * *Visual Studio Community 2015* is sufficient and is free for everyone.
     * Visual Studio 2015 does not install C++
       support by default. During the installation you must select
@@ -82,7 +82,7 @@ On Windows using Visual Studio
     * Let OpenSim get this for you using superbuild (see below); much easier!
     * [Build on your own](https://github.com/docopt/docopt.cpp) (no instructions).
 
-#### Download the OpenSim-Core source code modified to enable algorithmic differentiation (OpenSim-AD-Core)
+#### Download the OpenSim-Core source code modified to enable the use of algorithmic differentiation (OpenSim-AD-Core)
 
 * Clone the opensim-ad-core git repository. We'll assume you clone it into `C:/opensim-ad-core-source`.
   **Be careful that the repository is not on the `master` branch but on the `AD-recorder` branch.** 
@@ -109,7 +109,7 @@ On Windows using Visual Studio
    `C:/opensim-ad-core-dependencies-build`.
 4. Click the **Configure** button.
     1. Choose the *Visual Studio 14 2015* generator. Make sure
-       your build as 64-bit (x64; it's 32-bit by default in later CMake version).
+       your build as 64-bit (x64; it might be 32-bit by default).
     2. Click **Finish**.
 5. Where do you want to install OpenSim dependencies on your computer? Set this
    by changing the `CMAKE_INSTALL_PREFIX` variable. Let's say this is
@@ -127,7 +127,7 @@ On Windows using Visual Studio
 
         cmake --build . --config RelWithDebInfo
 
-   Alternative values for `--config` in this command are:
+   Building in **RelWithDebInfo** mode is fine and sufficient for our applications. Yet alternative values for `--config` in this command are:
    
    * **Debug**: debugger symbols; no optimizations (more than 10x slower).
      Library names end with `_d`.
@@ -135,11 +135,6 @@ On Windows using Visual Studio
    * **RelWithDebInfo**: debugger symbols; optimized. Bigger but not slower
      than Release; choose this if unsure.
    * **MinSizeRel**: minimum size; optimized.
-
-   You must run this command for each of the configurations you plan to use
-   with OpenSim (see below). You should run this command for the release
-   configuration *last* to ensure that you use the release version of the
-   command-line applications instead of the slow debug versions.
 10. If you like, you can now remove the directory used for building
     dependencies (`c:/opensim-ad-core-dependencies-build`).
 
@@ -152,7 +147,7 @@ On Windows using Visual Studio
    directory. This is *not* where we are installing OpenSim-Core; see below.
 4. Click the **Configure** button.
     1. Choose the *Visual Studio 14 2015* generator. Make sure
-       your build as 64-bit (x64; it's 32-bit by default in later CMake version).
+       your build as 64-bit (x64; it might be 32-bit by default).
     2. Click **Finish**.
 5. Where do you want to install OpenSim-AD-Core on your computer? Set this by
    changing the `CMAKE_INSTALL_PREFIX` variable. We'll assume you set it to
@@ -175,8 +170,8 @@ On Windows using Visual Studio
            variable to `C:/docopt.cpp-install/lib/cmake`.
 7. Set the remaining configuration options.
     * `WITH_RECORDER` to compile OpenSim modified to enable the use of algorithmic differentiation.
-    * `BUILD_API_EXAMPLES` to compile C++ API examples. Note that most examples will not work with this new version of OpenSim. You could turn this off.
-    * `BUILD_TESTING` to ensure that OpenSim works correctly. Note that most tests will fail with this new version of OpenSim. **Nevertheless, you
+    * `BUILD_API_EXAMPLES` to compile C++ API examples. Note that most examples will not work with this modified version of OpenSim. You could turn this off.
+    * `BUILD_TESTING` to ensure that OpenSim works correctly. Note that most tests will fail with this modified version of OpenSim. **Nevertheless, you
     should turn this on to build the external functions.**
     * `BUILD_JAVA_WRAPPING` if you want to access OpenSim through MATLAB or
       Java; see dependencies above. Please turn this off (not relevant for our applications).
@@ -217,7 +212,7 @@ In the folder **External_Functions**, you can find a series of example external 
 function, take a look at an example in `C:/opensim-ad-core/OpenSim/External_Functions`. Don't forget to edit the CMakeLists. Your new external function
 will appear in Visual Studio after re-configuring through CMake. For the rest of the instructions, we will use the example **PredSim**.
 
-1. Build the external function. Right-click on PredSim and select **Build**. To skip the next step (Run executable), you can also right-click on PredSim, select
+1. Build the external function. Right-click on PredSim and select **Build**. To skip the next step ([Run executable](#run-executable)), you can also right-click on PredSim, select
 **Set as StartUp Project**, click on Debug (toolbar) and click on **Start Without Debugging**. If you followed the second approach, you should find
 a MATLAB file `foo.m` in the folder `C:/opensim-ad-core-build/OpenSim/External_Functions/PredSim`.
 
@@ -256,7 +251,7 @@ Compile C-code
    `C:/opensim-ad-external-function/PredSim/PredSim-build`.
 4. Click the **Configure** button.
     1. Choose the *Visual Studio 14 2015* generator. Make sure
-       your build as 64-bit (x64; it's 32-bit by default in later CMake version).
+       your build as 64-bit (x64; it might be 32-bit by default).
     2. Click **Finish**.
 5. Where do you want to install the PredSim dll on your computer? Set this by
    changing the `CMAKE_INSTALL_PREFIX` variable. We'll assume you set it to
@@ -274,22 +269,22 @@ Compile C-code
         cmake --install . --config RelWithDebInfo
         
 You should find a file `PredSim.dll` in `C:/opensim-ad-external-function/PredSim/PredSim-install/bin`.
-You can now perform the same steps for PredSim_pp instead of PredSim (this is a different external function).
+You can now perform the same steps for PredSim_pp (redo the steps from [Build external functions](#build-external-functions)) instead of PredSim (this is a different external function).
 
-Formulate and solve trajectory optimization problem
----------------------------------------------------
+Formulate and solve trajectory optimization problems
+----------------------------------------------------
 
 With the libraries `PredSim.dll` and `PredSim_pp.dll`, you have all your need to formulate and solve your trajectory optimization problem
 and generate a predictive simulation of walking such as in the animation above.
 
-Clone the 3dpredictsim git repository. We'll assume you clone it into `C:/3dpredictsim`. 
+Clone the [3dpredictsim git repository](https://github.com/antoinefalisse/3dpredictsim). We'll assume you clone it into `C:/3dpredictsim`. 
 
   If using a Git Bash or Git Shell, run the following:
   
         $ git clone https://github.com/antoinefalisse/3dpredictsim.git C:/3dpredictsim 
         
 In `C:/3dpredictsim/ExternalFunctions`, you can see that you already have the libraries `PredSim.dll` and `PredSim_pp.dll`. If you want to make
-sure that you performed all the steps correctly, delete those libraries and copy the ones you created before.
+sure that you performed all the steps above correctly, delete those libraries and copy the ones you created before.
 
 Run the script `C:/3dpredictsim/OCP/PredSim_all.m`. It should converge in 1045 iterations (Windows 10, MATLAB2017b) and take about 30 minutes (it depends on your laptop).
 Open the OpenSim GUI, select the model `C:/3dpredictsim/OpenSimModel/subject1/subject1.osim` and load the motion file `C:/3dpredictsim/Results/PredSim_all/D_c1_v133_T4_N50_E500_Ak50000_AE1000000_P1000_A2000_eE2_G1_M1_Gm0_W0_vM0_pW0_mE0_cc0.mot` (this file has been generated after solving the optimization problem and processing the results). The animation should look like the one above.
