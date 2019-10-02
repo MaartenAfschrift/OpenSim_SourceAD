@@ -8,23 +8,18 @@ OpenSim's source code if you do not intend to exploit algorithmic differentiatio
 In addition, please make sure you verify your results. We cannot guarantee that our changes did not affect the original code.**
 
 OpenSim is a software that lets users develop models of musculoskeletal structures and create dynamic simulations of movement. In this work,
-we have expanded OpenSim and created a framework for solving trajectory optimization problems. This framework relies on OpenSim for the
-musculoskeletal structures and multibody dynamics models and [CasADi](https://web.casadi.org/) for the nonlinear optimization and
-algorithmic differentiation. To enable the use of algorithmic differentiation in OpenSim, we have developed a tool named Recorder that we integrated
-as part of a modifed version of Simbody. More information about this framework and this Recorder can be found in this publication.
+we have expanded OpenSim and created a framework for solving trajectory optimization problems using direct collocation methods.
+This framework relies on OpenSim for the musculoskeletal structures and multibody dynamics models and [CasADi](https://web.casadi.org/) for the
+nonlinear optimization and algorithmic differentiation. To enable the use of algorithmic differentiation in OpenSim, we have developed a tool named
+Recorder that we integrated as part of a modifed version of Simbody. More information about this framework and Recorder can be found in this publication.
 
 Solving trajectory optimization problems with our framework allows generating computationally efficient predictive simulations of movement.
 For example, you can produce the following predictive simulation of walking with a complex musculoskeletal models (29 degrees of freedom, 92 muscles,
 and 6 contact spheres per foot) in only about 20 minutes of CPU time on a single core of a standard laptop computer:
 
+![Predictive simulation of human walking by Antoine Falisse (doi:10.1098/rsif.2019.0402)][predwalking_gif]
 
 More information about these predictive simulations can be found in this publication:
-
-
- such as this one:
-
-![Simulation of human running by Sam Hamner (doi:
-10.1016/j.jbiomech.2010.06.025)][running_gif]
 
 More information can be found at our websites:
 
