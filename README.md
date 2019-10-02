@@ -17,7 +17,7 @@ Solving trajectory optimization problems with our framework allows generating co
 For example, you can produce the following predictive simulation of walking with a complex musculoskeletal models (29 degrees of freedom, 92 muscles,
 and 6 contact spheres per foot) in only about 20 minutes of CPU time on a single core of a standard laptop computer:
 
-![Predictive simulation of human walking by Antoine Falisse (doi:10.1098/rsif.2019.0402)](opensim_predwalking.gif)
+![Predictive simulation of human walking by Antoine Falisse (doi:10.1098/rsif.2019.0402)](.\doc\imagesopensim_predwalking.gif)
 
 More information about these predictive simulations can be found in this publication:
 
