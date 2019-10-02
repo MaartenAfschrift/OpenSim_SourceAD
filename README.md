@@ -26,13 +26,13 @@ Brief overview of the framework
 
 Solving trajectory optimization problems with our framework consists of different steps:
 
-* Build the source code of the modified versions of OpenSim and Simbody that enable the use of algorithmic differentiation (#on-windows-using-visual-studio).
+* Build the source code of the modified versions of OpenSim and Simbody that enable the use of algorithmic differentiation ([On Windows using Microsoft Visual Studio](#on-windows-using-visual-studio)).
 
-* Build the OpenSim code intended to be used when formulating the trajectory optimization problem (#build-external-functions). For instance, this code may perform inverse dynamics with joint states and controls as input and joint torques as output. We provide a series of examples of how this code may look like in the folder External_Functions. Among them is the code used for generating the predictive simulation in the animation above. We will refer to such code as an external function. You should build this code as an executable.
+* Build the OpenSim code intended to be used when formulating the trajectory optimization problem ([Build external functions](#build-external-functions)). For instance, this code may perform inverse dynamics with joint states and controls as input and joint torques as output. We provide a series of examples of how this code may look like in the folder External_Functions. Among them is the code used for generating the predictive simulation in the animation above. We will refer to such code as an external function. You should build this code as an executable.
 
-* Run the executable (#run-executable). This will generate a MATLAB file, named by default 'foo.m'. This file contains the expression graph of the external function in a format that CasADi can interpret. Expression graphs are at the core of algorithmic differentiation.
+* Run the executable ([Run executable](#run-executable)). This will generate a MATLAB file, named by default 'foo.m'. This file contains the expression graph of the external function in a format that CasADi can interpret. Expression graphs are at the core of algorithmic differentiation.
 
-* Generate C-code with CasADi (#generate-c-code). From the expression graph generated in the previous step, CasADi can generate C-code allowing to evaluate the (external) function and its derivatives. To generate the C-code, we rely on the code generation feature of CasADi through a few MATLAB commands. We provide a series of examples of how this should be done in the folder cgeneration (details below).
+* Generate C-code with CasADi ([Generate C-code](#generate-c-code)). From the expression graph generated in the previous step, CasADi can generate C-code allowing to evaluate the (external) function and its derivatives. To generate the C-code, we rely on the code generation feature of CasADi through a few MATLAB commands. We provide a series of examples of how this should be done in the folder cgeneration (details below).
 
 * Compile the generated c-code as a Dynamic Link Library (dll) (details below). This dll can then be imported within the CasADi environment when formulating the trajectory optimization problems. 
 
@@ -213,7 +213,7 @@ On Windows using Visual Studio
     versions.
 4. Build the libraries. **For our applications, we only need to build osimCommon and osimSimulation, building all libraries will fail.** 
    Right-click on osimCommon in the folder Libraries and select **Build**. Process in the same way for osimSimulation.
-5. Copy Simbody DLLs, Right-click on osimCommon in the folder Libraries and select **Build**.
+5. Copy Simbody DLLs. Right-click on Copy Simbody DLLs and select **Build**.
    
 Build external functions
 ------------------------
@@ -223,7 +223,7 @@ function, take a look at an example in `C:/opensim-ad-core/OpenSim/External_Func
 will appear in Visual Studio after re-configuring through CMake. For the rest of the instructions, we will use the example **PredSim**.
 
 1. Build the external function. Right-click on PredSim and select **Build**. To skip the next step (Run executable), you can also right-click on PredSim, select
-**Set as StartUp Project, click on Debug (toolbar) and click on **Start Without Debugging**. If you followed the second approach, you should find
+**Set as StartUp Project**, click on Debug (toolbar) and click on **Start Without Debugging**. If you followed the second approach, you should find
 a MATLAB file foo.m in the folder `C:/opensim-ad-core-build/OpenSim/External_Functions/PredSim`.
 
 
@@ -233,15 +233,15 @@ Run executable
 If you haven't run the executable yet (e.g., through **Start Without Debugging**):
 1. Open `C:/opensim-ad-core-build/RelWithDebInfo` in a terminal window (assuming you are in RelWithDebInfo mode):
 
-    cd C:/opensim-ad-core-build/RelWithDebInfo
+        cd C:/opensim-ad-core-build/RelWithDebInfo
     
 2. Run the executable:
 
-    PredSim.exe
+        PredSim.exe
     
 You should find a MATLAB file foo.m in the folder `C:/opensim-ad-core-build/RelWithDebInfo`.
 
-Generate C code
+Generate C-code
 ---------------
 
    
