@@ -52,6 +52,7 @@ On Windows using Visual Studio
 
 * **operating system**: Windows 10.
 * **tool for nonlinear optimization and algorithmic differentiation**: [CasADi](https://web.casadi.org/), install the MATLAB version.
+* **version control**: [git](https://git-scm.com/downloads).
 * **cross-platform build system**:
   [CMake](http://www.cmake.org/cmake/resources/software.html) >= 3.2
 * **compiler / IDE**: [Visual Studio 2015](https://www.visualstudio.com/). We started this project before the release of Visual Studio 2017 and 2019, you might experience bugs with these later versions so please stick to Visual Studio 2015 (or contribute to the code to make it work with the newer versions :)). You should be able to find Visual Studio Community 2015 after a little bit of googling ([here maybe](https://stackoverflow.com/questions/44290672/how-to-download-visual-studio-community-edition-2015-not-2017)).
