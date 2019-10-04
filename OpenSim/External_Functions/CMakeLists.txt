@@ -10,6 +10,8 @@ if(BUILD_TESTING)
     add_subdirectory(TrackSim_2)
     add_subdirectory(PredSimProsthesis)
     add_subdirectory(PredSimProsthesis_pp)
+    add_subdirectory(PredSim_2D)
+    add_subdirectory(PredSim_2D_pp)
 endif()
 
 
