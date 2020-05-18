@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\opensim-ad-core-source\cgeneration\SimExo_2D_pp\foo_jac.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\opensim-ad-core-source\cgeneration\SimExo_2D_pp\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{2CBAA6CA-B2E7-3837-97B0-E2ABB730AAA3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
