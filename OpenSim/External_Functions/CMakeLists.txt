@@ -43,7 +43,9 @@ if(BUILD_TESTING)
 	add_subdirectory(PredSim_2D_Pog_s1_mtp)
 	add_subdirectory(PredSim_2D_Pog_s1_mtp_pp)
 	add_subdirectory(PredSim_3D_GRF)
-
+	add_subdirectory(SimExo_3D_talus)
+	add_subdirectory(DebugCode)
+	add_subdirectory(SimExo_3D_talus_out)
 endif()
 
 
