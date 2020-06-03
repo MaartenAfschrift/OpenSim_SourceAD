@@ -44,9 +44,9 @@ constexpr int ndof = 31;           // # degrees of freedom (excluding locked)
 constexpr int ndofr = ndof + 2;    // # degrees of freedom (including locked)
 constexpr int NX = ndof * 2;       // # states
 constexpr int NU = ndof + 2;           // # controls
-constexpr int NR = ndof + 6 + 5*6;   // # residual torques + joint origins + residual torques
+constexpr int NR = ndof + 6 + 5 * 6 + 1;   // # residual torques + joint origins + residual torques
 
-								   // Helper function value
+									   // Helper function value
 template<typename T>
 T value(const Recorder& e) { return e; }
 template<>
@@ -521,7 +521,7 @@ int F_generic(const T** arg, T** res) {
 	std::vector<T> u(arg[1], arg[1] + NU);
 
 	// States and controls
-	T ua[ndof+2]; /// joint accelerations (Qdotdots) - controls (+2 because of locked joints)
+	T ua[ndof + 2]; /// joint accelerations (Qdotdots) - controls (+2 because of locked joints)
 	Vector QsUs(NX + 4); /// joint positions (Qs) and velocities (Us) - states
 
 						 // Assign inputs to model variables
@@ -533,7 +533,7 @@ int F_generic(const T** arg, T** res) {
 	QsUs[NX + 2] = 1.51;
 	QsUs[NX + 3] = 0;
 	/// Controls
-	T ut[ndof + 2 ]; //(+2 because of locked joints), -2 because of torque actuators
+	T ut[ndof + 2]; //(+2 because of locked joints), -2 because of torque actuators
 	for (int i = 0; i < ndof; ++i) ut[i] = u[i];
 	/// pro_sup dofs are locked so Qdotdots are hard coded (0)
 	/// Need to have a temporary vector to add 0s to the vector before
@@ -632,10 +632,10 @@ int F_generic(const T** arg, T** res) {
 	for (int i = 0; i < ndofr; ++i) knownUdot[i] = ua[i];
 
 	/// apply the exoskeleton torque
-	Vec3 ExoTorque_l  = Vec3(0);
+	Vec3 ExoTorque_l = Vec3(0);
 	Vec3 ExoTorque_r = Vec3(0);
 	ExoTorque_l[2] = u[ndof];
-	ExoTorque_r[2] = u[ndof+1];
+	ExoTorque_r[2] = u[ndof + 1];
 	ExoActuation(*model, *tibia_l, *calcn_l, *state, ExoTorque_l, appliedBodyForces);
 	ExoActuation(*model, *tibia_r, *calcn_r, *state, ExoTorque_r, appliedBodyForces);
 
@@ -662,16 +662,23 @@ int F_generic(const T** arg, T** res) {
 	SpatialVec GRF_r = GRF_1_r + GRF_2_r + GRF_3_r + GRF_4_r + GRF_5_r + GRF_6_r;
 	SpatialVec GRF_l = GRF_1_l + GRF_2_l + GRF_3_l + GRF_4_l + GRF_5_l + GRF_6_l;
 
+	/*
+	// Extract contact information in world
+	SpatialVec GRF_1_l_world;
+	GRF_1_l_world[0] = Vec3(Force_values_1_l[3], Force_values_1_l[4], Force_values_1_l[5]);
+	GRF_1_l_world[1] = Vec3(Force_values_1_l[0], Force_values_1_l[1], Force_values_1_l[2]);
+	*/
+
 	// Residual forces in OpenSim order
 	T res_os[ndofr];
 	/// OpenSim and Simbody have different state orders so we need to adjust
 	auto indicesSimbodyInOS = getIndicesSimbodyInOS(*model);
 	for (int i = 0; i < ndofr; ++i) res_os[i] =
 		value<T>(residualMobilityForces[indicesSimbodyInOS[i]]);
-	
+
 	// Extract results
 	int nc = 3;
-	
+
 	/// Residual forces (0-30)
 	for (int i = 0; i < ndof; ++i) res[0][i] = res_os[i];
 
@@ -681,47 +688,63 @@ int F_generic(const T** arg, T** res) {
 	}
 	for (int i = 0; i < nc; ++i) {
 		res[0][i + ndof + nc] = value<T>(GRF_l[1][i]);  /// GRF_l
-	}	
+	}
 
 	/// Joint origins - calcaneus (37-42)
 	for (int i = 0; i < nc; ++i) {
-		res[0][i + ndof + nc*2] = value<T>(calcn_or_r[i]);
+		res[0][i + ndof + nc * 2] = value<T>(calcn_or_r[i]);
 	}
 	for (int i = 0; i < nc; ++i) {
-		res[0][i + ndof + nc*3] = value<T>(calcn_or_l[i]);
+		res[0][i + ndof + nc * 3] = value<T>(calcn_or_l[i]);
 	}
 
 	/// Joint origins - femur (43-48)
 	for (int i = 0; i < nc; ++i) {
-		res[0][i + ndof + nc*4] = value<T>(femur_or_r[i]); 
+		res[0][i + ndof + nc * 4] = value<T>(femur_or_r[i]);
 	}
 	for (int i = 0; i < nc; ++i) {
-		res[0][i + ndof + nc*5] = value<T>(femur_or_l[i]);
+		res[0][i + ndof + nc * 5] = value<T>(femur_or_l[i]);
 	}
 
 	/// Joint origins - hand (49-54)
 	for (int i = 0; i < nc; ++i) {
-		res[0][i + ndof + nc*6] = value<T>(hand_or_r[i]);
+		res[0][i + ndof + nc * 6] = value<T>(hand_or_r[i]);
 	}
 	for (int i = 0; i < nc; ++i) {
-		res[0][i + ndof + nc*7] = value<T>(hand_or_l[i]);
+		res[0][i + ndof + nc * 7] = value<T>(hand_or_l[i]);
 	}
 
 	/// Joint origins tibia (55-60)
 	for (int i = 0; i < nc; ++i) {
-		res[0][i + ndof + nc*8] = value<T>(tibia_or_r[i]);
+		res[0][i + ndof + nc * 8] = value<T>(tibia_or_r[i]);
 	}
 	for (int i = 0; i < nc; ++i) {
-		res[0][i + ndof + nc*9] = value<T>(tibia_or_l[i]);
+		res[0][i + ndof + nc * 9] = value<T>(tibia_or_l[i]);
 	}
 
 	/// Joint origins toes (61-66)
 	for (int i = 0; i < nc; ++i) {
-		res[0][i + ndof + nc*10] = value<T>(toes_or_r[i]);
+		res[0][i + ndof + nc * 10] = value<T>(toes_or_r[i]);
 	}
 	for (int i = 0; i < nc; ++i) {
-		res[0][i + ndof + nc*11] = value<T>(toes_or_l[i]);
+		res[0][i + ndof + nc * 11] = value<T>(toes_or_l[i]);
 	}
+
+	
+	
+	res[0][ndof + nc * 12] = value<T>(Force_values_1_l[0]);
+
+	/// ground reaction forces in world (67-72)
+	///for (int i = 0; i < nc; ++i) {
+	///	res[0][i + ndof + nc * 12] = value<T>(GRF_1_l_world[1][i]);       /// GRF_r
+	///}
+
+	///for (int i = 0; i < nc; ++i) {
+	///	res[0][i + ndof + nc * 13] = value<T>(GRF_1_l_world[1][i]);       /// GRF_r
+	///}
+
+
+
 
 	return 0;
 
