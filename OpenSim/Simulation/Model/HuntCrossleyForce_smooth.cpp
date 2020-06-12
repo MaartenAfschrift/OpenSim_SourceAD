@@ -171,7 +171,7 @@ namespace OpenSim {
 		simtkForce.calcForceContribution(state, bodyForces, particleForces,
 			mobilityForces);
 
-	  //on Ground
+	    //on Ground
 		const auto& thisBodyForce = bodyForces(0);
 		SimTK::Vec3 forces = thisBodyForce[1];
 		SimTK::Vec3 torques = thisBodyForce[0];

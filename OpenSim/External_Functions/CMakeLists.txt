@@ -47,6 +47,7 @@ if(BUILD_TESTING)
 	add_subdirectory(DebugCode)
 	add_subdirectory(SimExo_3D_talus_out)
 	add_subdirectory(SimExo_3D_ExportAll)
+	add_subdirectory(SimpleExample_Contact)
 endif()
 
 

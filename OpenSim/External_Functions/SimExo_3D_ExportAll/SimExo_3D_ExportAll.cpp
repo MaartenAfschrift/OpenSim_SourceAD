@@ -44,7 +44,7 @@ constexpr int ndof = 31;           // # degrees of freedom (excluding locked)
 constexpr int ndofr = ndof + 2;    // # degrees of freedom (including locked)
 constexpr int NX = ndof * 2;       // # states
 constexpr int NU = ndof + 2;           // # controls
-constexpr int NR = ndof + 6 + 5 * 6 + 1;   // # residual torques + joint origins + residual torques
+constexpr int NR = ndof + 6 + 5 * 6 + 6;   // # residual torques + joint origins + residual torques
 
 									   // Helper function value
 template<typename T>
@@ -662,13 +662,21 @@ int F_generic(const T** arg, T** res) {
 	SpatialVec GRF_r = GRF_1_r + GRF_2_r + GRF_3_r + GRF_4_r + GRF_5_r + GRF_6_r;
 	SpatialVec GRF_l = GRF_1_l + GRF_2_l + GRF_3_l + GRF_4_l + GRF_5_l + GRF_6_l;
 
-	/*
-	// Extract contact information in world
-	SpatialVec GRF_1_l_world;
-	GRF_1_l_world[0] = Vec3(Force_values_1_l[3], Force_values_1_l[4], Force_values_1_l[5]);
-	GRF_1_l_world[1] = Vec3(Force_values_1_l[0], Force_values_1_l[1], Force_values_1_l[2]);
-	*/
+	// Computation Forces and moment in ground
+	SpatialVec GRF_calcn_l = GRF_1_l + GRF_2_l + GRF_3_l + GRF_4_l;
+	SpatialVec GRF_toes_l = GRF_5_l + GRF_6_l;
+	SpatialVec GRF_calcn_r = GRF_1_r + GRF_2_r + GRF_3_r + GRF_4_r;
+	SpatialVec GRF_toes_r = GRF_5_r + GRF_6_r;
 
+	/// Expresss contact wrenches in ground
+	Vec3 Torque_ground_calcn_l = GRF_calcn_l[0] + cross(calcn_or_l, GRF_calcn_l[1]);
+	Vec3 Torque_ground_toes_l = GRF_toes_l[0] + cross(toes_or_l, GRF_toes_l[1]);
+	Vec3 Torque_ground_calcn_r = GRF_calcn_r[0] + cross(calcn_or_r, GRF_calcn_r[1]);
+	Vec3 Torque_ground_toes_r = GRF_toes_r[0] + cross(toes_or_r, GRF_toes_r[1]);
+
+	Vec3 TorqueLeft = Torque_ground_calcn_l + Torque_ground_toes_l;
+	Vec3 TorqueRight = Torque_ground_calcn_r + Torque_ground_toes_r;
+	
 	// Residual forces in OpenSim order
 	T res_os[ndofr];
 	/// OpenSim and Simbody have different state orders so we need to adjust
@@ -730,21 +738,13 @@ int F_generic(const T** arg, T** res) {
 		res[0][i + ndof + nc * 11] = value<T>(toes_or_l[i]);
 	}
 
-	
-	
-	res[0][ndof + nc * 12] = value<T>(Force_values_1_l[0]);
-
-	/// ground reaction forces in world (67-72)
-	///for (int i = 0; i < nc; ++i) {
-	///	res[0][i + ndof + nc * 12] = value<T>(GRF_1_l_world[1][i]);       /// GRF_r
-	///}
-
-	///for (int i = 0; i < nc; ++i) {
-	///	res[0][i + ndof + nc * 13] = value<T>(GRF_1_l_world[1][i]);       /// GRF_r
-	///}
-
-
-
+	/// Joint torques (67-72)
+	for (int i = 0; i < nc; ++i) {
+		res[0][i + ndof + nc * 12] = value<T>(TorqueRight[i]);
+	}
+	for (int i = 0; i < nc; ++i) {
+		res[0][i + ndof + nc * 13] = value<T>(TorqueLeft[i]);
+	}
 
 	return 0;
 
